@@ -14,6 +14,7 @@ build/
 dist/
 coverage/
 out/
+.vite/
 
 # vercel
 .vercel/
@@ -23,10 +24,9 @@ out/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
 # misc
 .DS_Store
 *.pem
 *.tsbuildinfo
-
+.eslintcache
