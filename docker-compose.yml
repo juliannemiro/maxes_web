@@ -1,0 +1,21 @@
+services:
+  db-maxes-web:
+    image: postgres:16-alpine
+    container_name: db-maxes-web
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: db-maxes-web
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db-maxes-web"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-maxes-web-data:/var/lib/postgresql/data
+
+volumes:
+  db-maxes-web-data:

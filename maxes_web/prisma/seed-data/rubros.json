@@ -1,0 +1,217 @@
+[
+  {
+    "codigo": "ADAPTADORES",
+    "nombre": "Adaptadores",
+    "activo": true
+  },
+  {
+    "codigo": "VARIOS",
+    "nombre": "Varios",
+    "activo": true
+  },
+  {
+    "codigo": "COMPUTACION",
+    "nombre": "Computacion",
+    "activo": true
+  },
+  {
+    "codigo": "AURICULARES-BLUETOOT",
+    "nombre": "Auriculares Bluetooth",
+    "activo": true
+  },
+  {
+    "codigo": "OUTLET",
+    "nombre": "Outlet",
+    "activo": true
+  },
+  {
+    "codigo": "BELLEZA-Y-CUIDADO-PE",
+    "nombre": "Belleza y Cuidado Personal",
+    "activo": true
+  },
+  {
+    "codigo": "HERRAMIENTAS",
+    "nombre": "Herramientas",
+    "activo": true
+  },
+  {
+    "codigo": "PEQUENOS-ELECTRODOME",
+    "nombre": "Pequeños Electrodomesticos",
+    "activo": true
+  },
+  {
+    "codigo": "ILUMINACION",
+    "nombre": "iluminacion",
+    "activo": true
+  },
+  {
+    "codigo": "SOPORTE",
+    "nombre": "Soporte",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-INALAMBRI",
+    "nombre": "Cargadores Inalambricos",
+    "activo": true
+  },
+  {
+    "codigo": "AURICULARES-CON-CABL",
+    "nombre": "Auriculares con Cable",
+    "activo": true
+  },
+  {
+    "codigo": "BAZAR",
+    "nombre": "Bazar",
+    "activo": true
+  },
+  {
+    "codigo": "PARLANTE",
+    "nombre": "Parlante",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-VARIOS",
+    "nombre": "Cargadores Varios",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-TIPO-C",
+    "nombre": "Cargadores Tipo C",
+    "activo": true
+  },
+  {
+    "codigo": "CABEZALES",
+    "nombre": "Cabezales",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADOR-PARA-AUTO",
+    "nombre": "Cargador Para Auto",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-MICRO-USB",
+    "nombre": "Cargadores Micro Usb/V8",
+    "activo": true
+  },
+  {
+    "codigo": "CABLE-IPHONE",
+    "nombre": "Cable Iphone",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-IPHONE",
+    "nombre": "Cargadores Iphone",
+    "activo": true
+  },
+  {
+    "codigo": "CABLES-VARIOS",
+    "nombre": "Cables varios",
+    "activo": true
+  },
+  {
+    "codigo": "CABLE-TIPO-C",
+    "nombre": "Cable Tipo C",
+    "activo": true
+  },
+  {
+    "codigo": "SIN-RUBRO",
+    "nombre": "Sin rubro",
+    "activo": true
+  },
+  {
+    "codigo": "CABLE-MICRO-V8",
+    "nombre": "Cable Micro/V8",
+    "activo": true
+  },
+  {
+    "codigo": "RELOJ-SMART",
+    "nombre": "Reloj smart",
+    "activo": true
+  },
+  {
+    "codigo": "CAMARAS",
+    "nombre": "Camaras",
+    "activo": true
+  },
+  {
+    "codigo": "PRE-VENTA",
+    "nombre": "Pre-Venta",
+    "activo": true
+  },
+  {
+    "codigo": "PILAS-PILAS-RECARGAB",
+    "nombre": "Pilas / Pilas Recargables",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-NOTEBOOK",
+    "nombre": "Cargadores Notebook",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-PORTATILE",
+    "nombre": "Cargadores Portatiles",
+    "activo": true
+  },
+  {
+    "codigo": "CARGADORES-UNIVERSAL",
+    "nombre": "Cargadores Universales",
+    "activo": true
+  },
+  {
+    "codigo": "CARTUCHOS-TONERS",
+    "nombre": "Cartuchos/Toners",
+    "activo": true
+  },
+  {
+    "codigo": "CONVERTIDOR",
+    "nombre": "Convertidor",
+    "activo": true
+  },
+  {
+    "codigo": "CONSOLAS-GAMER",
+    "nombre": "Consolas Gamer",
+    "activo": true
+  },
+  {
+    "codigo": "JOYSTICK-VARIOS",
+    "nombre": "Joystick Varios",
+    "activo": true
+  },
+  {
+    "codigo": "JOYSTICK-PC",
+    "nombre": "Joystick Pc",
+    "activo": true
+  },
+  {
+    "codigo": "JOYSTICK-PS3",
+    "nombre": "Joystick Ps3",
+    "activo": true
+  },
+  {
+    "codigo": "JOYSTICK-PS4",
+    "nombre": "Joystick Ps4",
+    "activo": true
+  },
+  {
+    "codigo": "PENDRIVE-Y-MEMORIA",
+    "nombre": "Pendrive y Memoria",
+    "activo": true
+  },
+  {
+    "codigo": "MICROFONO",
+    "nombre": "Microfono",
+    "activo": true
+  },
+  {
+    "codigo": "RADIO",
+    "nombre": "Radio",
+    "activo": true
+  },
+  {
+    "codigo": "TELEFONOS",
+    "nombre": "Telefonos",
+    "activo": true
+  }
+]

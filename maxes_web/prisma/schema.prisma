@@ -1,0 +1,113 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Rubro {
+  id        Int        @id @default(autoincrement())
+  codigo    String     @db.VarChar(20)
+  nombre    String?    @db.VarChar(100)
+  activo    Boolean    @default(true)
+  articulos Articulo[]
+
+  @@map("rubro_web")
+}
+
+model Articulo {
+  id               Int              @id @default(autoincrement())
+  articuloOrigenId Int              @map("articulo_origen_id")
+  articuloCod      String           @unique @db.VarChar(20) @map("articulo_cod")
+  articuloDes      String?          @db.VarChar(30) @map("articulo_des")
+  articuloTextoWeb String?          @db.Text @map("articulo_texto_web")
+  articuloImagenId Int?             @map("articulo_imagen_id")
+  precioMayorista  Decimal?         @db.Decimal(18, 2) @map("precio_mayorista")
+  precioMinorista  Decimal?         @db.Decimal(18, 2) @map("precio_minorista")
+  rubroId          Int?             @map("rubro_id")
+  proveedorDes     String?          @db.VarChar(20) @map("proveedor_des")
+  stockWeb         Int?             @map("stock_web")
+  destacado        String           @default("N") @db.Char(1)
+  visible          String           @default("S") @db.Char(1)
+  fechaPublicacion DateTime         @default(now()) @db.Timestamptz @map("fecha_publicacion")
+
+  rubro            Rubro?           @relation(fields: [rubroId], references: [id], onDelete: SetNull)
+  detalles         PedidoDetalle[]
+  imagenes         ArticuloImagen[] @relation("ImagenesDeArticulo")
+  imagenPrincipal  ArticuloImagen?  @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
+
+  @@map("articulo_web")
+}
+
+model Pedido {
+  id              Int             @id @default(autoincrement())
+  fecha           DateTime?       @default(now()) @db.Timestamptz
+  cliente_nro     String?         @db.VarChar(50)
+  nombre          String?         @db.VarChar(100)
+  apellido        String?         @db.VarChar(100)
+  doc_tipo        String?         @db.VarChar(20)
+  doc_numero      String?         @db.VarChar(20)
+  cuit            String?         @db.VarChar(20)
+  email_pedido    String?         @db.VarChar(150)
+  celular_pedido  String?         @db.VarChar(50)
+  cant_productos  Int?
+  cant_unidades   Int?
+  tipo_compra     String?         @db.VarChar(20)
+  monto_total     Decimal?        @db.Decimal(18, 2)
+  tipo_despacho   String?         @db.VarChar(20)
+  localidad       String?         @db.VarChar(150)
+  observaciones   String?         @db.Text
+  estado          String?         @default("nuevo") @db.VarChar(30)
+  detalles        PedidoDetalle[]
+
+  @@map("pedido_web")
+}
+
+model PedidoDetalle {
+  id              Int          @id @default(autoincrement())
+  pedido_id       Int
+  articulo_id     Int?
+  cantidad        Int
+  precio_unitario Decimal      @db.Decimal(18, 2)
+  comentarioCliente String?    @db.VarChar(30) @map("comentario_cliente")
+
+  pedido          Pedido       @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  articulo        Articulo?    @relation(fields: [articulo_id], references: [id], onDelete: SetNull)
+
+  @@map("pedido_detalle_web")
+}
+
+model ArticuloImagen {
+  id          Int         @id @default(autoincrement())
+  articuloId  Int         @map("articulo_id")
+  imagen_url  String      @db.VarChar(500)
+  orden       Int         @default(0)
+
+  articulo    Articulo    @relation("ImagenesDeArticulo", fields: [articuloId], references: [id], onDelete: Cascade)
+  comoPrincipalDe Articulo[] @relation("ImagenPrincipalArticulo")
+
+  @@map("articulo_imagen_web")
+}
+
+model CarruselHome {
+  id           Int     @id @default(autoincrement())
+  titulo       String? @db.VarChar(150)
+  link_destino String? @db.VarChar(250)
+  imagen_url   String  @db.VarChar(500)
+  activo       Boolean @default(true)
+  orden        Int     @default(0)
+
+  @@map("carrusel_home_web")
+}
+
+model Configuracion {
+  id                   Int     @id @default(autoincrement())
+  whatsapp_contacto    String  @db.VarChar(50)
+  direccion_local      String  @db.VarChar(250)
+  email_notificaciones String? @db.VarChar(150)
+  mantenimiento        Boolean @default(false)
+
+  @@map("configuracion_web")
+}

@@ -1,0 +1,86 @@
+{
+  "generado_en": "2026-07-01T18:38:33.787Z",
+  "origen": {
+    "clientes": "/home/jnemiro/Descargas/clientes.xls",
+    "productos": "/home/jnemiro/Descargas/productos.xls"
+  },
+  "productos": {
+    "filas": 4686,
+    "rubros_unicos": 43,
+    "columnas_origen": [
+      "CODIGO",
+      "DETALLE",
+      "QxB",
+      "Costo",
+      "Precio #1",
+      "Precio #2",
+      "Precio #3",
+      "Precio #4",
+      "Precio #5",
+      "Stock Deposito 1",
+      "Despacho",
+      "Pto Pedido",
+      "Proveedor",
+      "Rubro"
+    ],
+    "mapeo_principal": {
+      "CODIGO": "articulo.codigo",
+      "DETALLE": "articulo.descripcion_publica",
+      "Precio #1": "articulo.precio_publicado",
+      "Rubro": "rubro.nombre + articulo.rubro_id (via rubro.codigo)"
+    },
+    "columnas_sin_destino_directo": [
+      "QxB",
+      "Costo",
+      "Precio #2",
+      "Precio #3",
+      "Precio #4",
+      "Precio #5",
+      "Stock Deposito 1",
+      "Despacho",
+      "Pto Pedido",
+      "Proveedor"
+    ]
+  },
+  "clientes": {
+    "filas": 712,
+    "columnas_origen": [
+      "CODIGO",
+      "DETALLE",
+      "Domicilio",
+      "Localidad",
+      "Provincia",
+      "Cod. Postal",
+      "C.U.I.T. No",
+      "Contacto",
+      "No. Telefono",
+      "Credito",
+      "Dias Plazo",
+      "email",
+      "Transporte",
+      "Condicion",
+      "Vendedor",
+      "Moneda"
+    ],
+    "compatible_con_esquema_actual": false,
+    "destino_actual_mas_cercano": "pedido.cliente_nombre / pedido.doc_tipo / pedido.doc_numero / pedido.cuit",
+    "columnas_sin_destino_directo": [
+      "CODIGO",
+      "DETALLE",
+      "Domicilio",
+      "Localidad",
+      "Provincia",
+      "Cod. Postal",
+      "C.U.I.T. No",
+      "Contacto",
+      "No. Telefono",
+      "Credito",
+      "Dias Plazo",
+      "email",
+      "Transporte",
+      "Condicion",
+      "Vendedor",
+      "Moneda"
+    ]
+  }
+}
