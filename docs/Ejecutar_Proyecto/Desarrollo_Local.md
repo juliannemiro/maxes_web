@@ -39,6 +39,7 @@ Esas rutas usan Prisma y leen la base desde `DATABASE_URL`.
 
 * En desarrollo, `DATABASE_URL` debe apuntar al PostgreSQL local de Docker.
 * En produccion, `DATABASE_URL` debe apuntar al PostgreSQL de Supabase desde las variables de entorno de Vercel.
+* Para Vercel se recomienda usar el connection string del pooler de Supabase, no la conexion directa `db.<project>.supabase.co:5432`.
 * No se usa `NEXT_PUBLIC_API_URL` para el catalogo.
 * Las variables `NEXT_PUBLIC_*` solo se usan para datos que deban estar disponibles en el navegador.
 
@@ -122,7 +123,7 @@ Frontend local:
 
 * URL habitual: `http://localhost:3785`
 
-Si el frontend necesita apuntar a otra URL de backend, definir `NEXT_PUBLIC_API_URL`.
+El frontend local usa sus rutas internas `/api/public/*`; no requiere `NEXT_PUBLIC_API_URL`.
 
 ## 4. Detener la base local
 
@@ -152,7 +153,7 @@ docker compose up -d db-maxes-web
 
 ## Notas
 
-* El esquema Prisma actual usa tablas en singular: `rubro`, `articulo`, `pedido`, `pedido_detalle`, `imagen_articulo`, `carrusel_home`, `configuracion`.
+* El esquema Prisma actual usa tablas fisicas con sufijo `_web`: `rubro_web`, `articulo_web`, `pedido_web`, `pedido_detalle_web`, `articulo_imagen_web`, `carrusel_home_web`, `configuracion_web`.
 * Supabase queda reservado para produccion.
 * Primero conviene validar migraciones y datos sobre `db-maxes-web` antes de conectar produccion.
 * En desarrollo, `npm run dev` en ambos proyectos intenta cerrar el proceso que ya este escuchando en su puerto antes de iniciar de nuevo.

@@ -4,9 +4,10 @@ Los archivos `clientes.xls` y `productos.xls` están exportados como HTML, por l
 
 ## Estado del esquema actual
 
-- `articulo_web` ya fue renombrada a `articulo`.
+- El modelo Prisma `Articulo` usa la tabla fisica `articulo_web`.
+- El modelo Prisma `Rubro` usa la tabla fisica `rubro_web`.
 - No existe `cliente_web` ni `cliente` en el esquema Prisma actual.
-- Los datos del comprador hoy se guardan únicamente dentro de `pedido`.
+- Los datos del comprador hoy se guardan únicamente dentro de `pedido_web`.
 
 ## Mapeo de productos
 
@@ -66,7 +67,7 @@ Salida generada en `maxes_web/prisma/seed-data/`:
 
 ## Importación directa a base
 
-Solo rubros (`rubro_web` renombrada a `rubro`):
+Solo rubros (modelo Prisma `Rubro`, tabla fisica `rubro_web`):
 
 ```bash
 cd maxes_web
@@ -76,7 +77,7 @@ node ./scripts/importar-rubros-desde-xls.mjs \
 
 Ese script toma el `distinct` lógico de la columna `Rubro` y hace `upsert` por `codigo`.
 
-Si querés cargar solo `articulo_web` (`articulo` en el esquema actual) y `rubro`:
+Si querés cargar artículos y rubros (modelos Prisma `Articulo` y `Rubro`, tablas fisicas `articulo_web` y `rubro_web`):
 
 ```bash
 cd maxes_web
@@ -86,8 +87,8 @@ node ./scripts/importar-articulos-desde-xls.mjs \
 
 Ese script:
 
-- crea o actualiza `rubro` por `codigo`
-- crea o actualiza `articulo` por `codigo`
+- crea o actualiza `rubro_web` por `codigo`
+- crea o actualiza `articulo_web` por `articulo_cod`
 - usa `Precio #1` como `precio_mayorista`
 - usa `Precio #2` como `precio_minorista`
 

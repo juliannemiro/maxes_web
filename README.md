@@ -29,7 +29,9 @@ maxes_web_full/
 │   ├── package.json
 │   └── tsconfig.json
 │
-└── maxes_web_cli/             # Cliente Frontend Público (Next.js App Router)
+└── maxes_web_cli/             # Cliente Frontend Público + API routes (Next.js App Router)
+    ├── prisma/
+    │   └── schema.prisma      # Schema Prisma usado por las API routes de Next
     ├── src/
     │   ├── app/               # Páginas, layout y estilos globales (CSS Premium)
     │   ├── components/        # Componentes UI (Header, Footer, Carrusel, ProductoCard)
@@ -45,6 +47,7 @@ maxes_web_full/
 ## Tecnologías Utilizadas
 
 * **Frontend**: Next.js + React + TypeScript + Custom Premium CSS.
+* **API pública del catálogo**: API routes de Next en `maxes_web_cli/src/app/api/public`.
 * **Backend**: Node.js + Express + TypeScript + Prisma ORM.
 * **Base de Datos Local**: PostgreSQL en Docker (`db-maxes-web`).
 * **Base de Datos Producción**: PostgreSQL en Supabase.
@@ -56,8 +59,10 @@ El proyecto queda planteado con estrategia `local primero`:
 
 * **Local**: contenedor Docker `db-maxes-web`.
 * **Producción**: instancia PostgreSQL en Supabase.
-* **Variables de entorno backend**: `maxes_web/.env`, `maxes_web/.env.desarrollo` y `maxes_web/.env.produccion`.
-* **Variables de entorno frontend**: `maxes_web_cli/.env`, `maxes_web_cli/.env.desarrollo` y `maxes_web_cli/.env.produccion`.
+* **Variables de entorno backend/integración**: `maxes_web/.env`, `maxes_web/.env.desarrollo` y `maxes_web/.env.produccion`.
+* **Variables de entorno frontend/API pública**: `maxes_web_cli/.env`, `maxes_web_cli/.env.desarrollo` y `DATABASE_URL` en Vercel para producción.
+* **Catálogo público**: el navegador llama a `/api/public/*`; no se usa `NEXT_PUBLIC_API_URL`.
+* **Producción en Vercel**: configurar `DATABASE_URL` con el connection string del pooler de Supabase.
 * **Puerto servidor en desarrollo**: `4785`.
 * **Puerto cliente en desarrollo**: `3785`.
 * **Guía de arranque**: [Desarrollo_Local.md](/home/jnemiro/app_nodejs/maxes_web_full/docs/Ejecutar_Proyecto/Desarrollo_Local.md)
@@ -101,14 +106,14 @@ Cambios pendientes de revisión:
 | `SliderHomeWeb` | `CarruselHome` |
 | `ConfiguracionWeb` | `Configuracion` |
 
-Cambios ya aplicados en base de datos y Prisma:
+Tablas físicas usadas actualmente por Prisma:
 
-| Actual | Nuevo |
-| --- | --- |
-| `rubro_web` | `rubro` |
-| `pedido_web` | `pedido` |
-| `articulo_web` | `articulo` |
-| `pedido_detalle_web` | `pedido_detalle` |
-| `imagen_articulo_web` | `imagen_articulo` |
-| `slider_home_web` | `carrusel_home` |
-| `configuracion_web` | `configuracion` |
+| Tabla |
+| --- |
+| `rubro_web` |
+| `pedido_web` |
+| `articulo_web` |
+| `pedido_detalle_web` |
+| `articulo_imagen_web` |
+| `carrusel_home_web` |
+| `configuracion_web` |

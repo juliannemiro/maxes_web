@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Maxes Web CLI
 
-## Getting Started
+Frontend público de Maxes Insumos construido con Next.js App Router.
 
-First, run the development server:
+## Flujo de datos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+El navegador consulta rutas internas del mismo proyecto:
+
+```text
+/api/public/rubros
+/api/public/articulos
+/api/public/carruseles
+/api/public/config
+/api/public/pedido
 ```
 
-Open [http://localhost:3785](http://localhost:3785) with your browser to see the result.
+Esas rutas usan Prisma y leen PostgreSQL desde `DATABASE_URL`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Entornos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Desarrollo
 
-## Learn More
+La base local es el contenedor Docker `db-maxes-web`.
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/db-maxes-web?schema=public
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Produccion
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+En Vercel configurar `DATABASE_URL` con el connection string del pooler de Supabase:
 
-## Deploy on Vercel
+```env
+DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?schema=public
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+No se usa `NEXT_PUBLIC_API_URL` para el catalogo.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Comandos
+
+```bash
+npm install
+npm run dev
+npm run build
+```
+
+El servidor local escucha normalmente en:
+
+```text
+http://localhost:3785
+```

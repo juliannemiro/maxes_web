@@ -15,7 +15,7 @@ El objetivo de este proyecto es implementar la plataforma web para **Maxes Insum
 
 ## 2. Arquitectura General y Stack Tecnológico
 
-La solución se compone de dos proyectos dentro de este repositorio y dos entornos de datos claramente separados: uno local para desarrollo y otro productivo para despliegue.
+La solución se compone de dos proyectos dentro de este repositorio y dos entornos de datos claramente separados: uno local para desarrollo y otro productivo para despliegue. El catálogo público desplegado en Vercel se sirve desde rutas internas de Next en `maxes_web_cli`, que consultan PostgreSQL con Prisma.
 
 1. **`maxes_web` (Servidor / API)**:
    * **Tecnología**: Node.js (Express o NestJS) o Serverless Functions.
@@ -23,7 +23,8 @@ La solución se compone de dos proyectos dentro de este repositorio y dos entorn
    * **Hosting**: **Vercel** (despliegue del servidor backend/API).
 2. **`maxes_web_cli` (Cliente / Frontend)**:
    * **Tecnología**: Next.js + React + TypeScript.
-   * **Hosting**: **Vercel** (despliegue del cliente estático/híbrido).
+   * **Hosting**: **Vercel** (despliegue del cliente y API routes públicas).
+   * **API pública web**: rutas internas `/api/public/*` para rubros, artículos, carruseles, configuración y pedidos.
 3. **Base de Datos Web**:
    * **Tecnología**: PostgreSQL.
    * **Desarrollo local**: contenedor Docker `db-maxes-web`.
@@ -31,10 +32,10 @@ La solución se compone de dos proyectos dentro de este repositorio y dos entorn
 
 ### Flujo de Despliegue (CI/CD)
 El control de versiones y el despliegue se manejan mediante **GitHub**:
-* Al realizar un *push* a la rama principal en GitHub, Vercel compila y publica automáticamente las actualizaciones del cliente (`maxes_web_cli`) y del servidor (`maxes_web`).
+* Al realizar un *push* a la rama principal en GitHub, Vercel compila y publica automáticamente las actualizaciones del cliente (`maxes_web_cli`).
 * Los cambios en la estructura de la base de datos se manejan mediante migraciones de **Prisma**.
 * El desarrollo y las pruebas iniciales se realizan sobre `db-maxes-web` en Docker.
-* Supabase queda reservado para el entorno de producción.
+* Supabase queda reservado para el entorno de producción y se configura en Vercel mediante `DATABASE_URL`.
 
 ```mermaid
 graph TD
@@ -49,7 +50,7 @@ graph TD
         end
         
         subgraph "Vercel"
-            API[maxes_web - API Node.js + Prisma]
+            API[maxes_web_cli - API routes publicas Next + Prisma]
             WEB[maxes_web_cli - Cliente Next.js]
         end
     end
@@ -59,14 +60,13 @@ graph TD
     end
 
     %% Despliegues
-    GH ==>|Despliegue Automático| API
     GH ==>|Despliegue Automático| WEB
 
     %% Flujos de datos
     KEYTRON ==>|1. API Novedades: Publica Catalogo| API
     API <=>|Desarrollo local con Prisma| DB_LOCAL
     API <=>|Produccion con Prisma| DB_WEB
-    WEB <=>|Consulta Catálogo y Crea Pedido| API
+    WEB <=>|/api/public: Consulta Catalogo y Crea Pedido| API
     API ==>|2. API Pedidos: Entrega Pedidos| KEYTRON
     
     style KEYTRON fill:#f9f,stroke:#333,stroke-width:2px
@@ -84,36 +84,37 @@ graph TD
 ### 3.1 Estrategia de Entornos
 
 * **Entorno local**:
-  * Archivos: `maxes_web/.env` y `maxes_web/.env.desarrollo`
+  * Archivo frontend: `maxes_web_cli/.env.desarrollo`
+  * Archivo backend/integración: `maxes_web/.env.desarrollo`
   * Motor: PostgreSQL en Docker
   * Base: `db-maxes-web`
+  * `DATABASE_URL`: `postgresql://postgres:postgres@localhost:5432/db-maxes-web?schema=public`
 * **Entorno de producción**:
-  * Archivo: `maxes_web/.env.produccion`
+  * Variable de entorno en Vercel para `maxes_web_cli`: `DATABASE_URL`
   * Motor: PostgreSQL en Supabase
+  * Usar preferentemente el connection string del pooler de Supabase.
 
 ### 3.2 Esquema de Prisma
 
-La base de datos web es independiente de Keytron. El archivo de referencia actual de tablas es `docs/Planificacion/tablas.md` y la nomenclatura objetivo ya queda definida en singular y sin sufijo `_web`.
+La base de datos web es independiente de Keytron. El esquema Prisma operativo actual usa tablas físicas con sufijo `_web`.
 
-* **`rubro`**: Categorías visibles en la web.
-* **`articulo`**: Catálogo de productos publicados.
-* **`pedido`**: Cabecera de los pedidos de clientes.
-* **`pedido_detalle`**: Detalle de artículos de cada pedido.
-* **`imagen_articulo`**: Imágenes adicionales por artículo.
-* **`carrusel_home`**: Banners de la portada.
-* **`configuracion`**: Parámetros de control de la página.
+* **`rubro_web`**: Categorías visibles en la web.
+* **`articulo_web`**: Catálogo de productos publicados.
+* **`pedido_web`**: Cabecera de los pedidos de clientes.
+* **`pedido_detalle_web`**: Detalle de artículos de cada pedido.
+* **`articulo_imagen_web`**: Imágenes adicionales por artículo.
+* **`carrusel_home_web`**: Banners de la portada.
+* **`configuracion_web`**: Parámetros de control de la página.
 
-### 3.3 Propuesta de Renombre de Tablas
+### 3.3 Configuración de producción
 
-| Nombre anterior | Nombre actual |
-| --- | --- |
-| `rubro_web` | `rubro` |
-| `articulo_web` | `articulo` |
-| `pedido_web` | `pedido` |
-| `pedido_detalle_web` | `pedido_detalle` |
-| `imagen_articulo_web` | `imagen_articulo` |
-| `slider_home_web` | `carrusel_home` |
-| `configuracion_web` | `configuracion` |
+En Vercel, el proyecto `maxes_web_cli` debe tener:
+
+```env
+DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?schema=public
+```
+
+No se usa `NEXT_PUBLIC_API_URL` para el catálogo. Las variables `NEXT_PUBLIC_*` solo corresponden a datos que deben estar disponibles en el navegador.
 
 ---
 

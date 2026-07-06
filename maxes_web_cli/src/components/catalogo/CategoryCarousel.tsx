@@ -55,7 +55,8 @@ export default function CategoryCarousel({ rubros, onSelect }: CategoryCarouselP
     const firstCard = scroller.querySelector<HTMLElement>("[data-rubro-card='true']");
     const gap = window.innerWidth < 640 ? 12 : 16;
     const cardWidth = firstCard?.offsetWidth || (window.innerWidth < 640 ? 144 : 160);
-    const step = cardWidth + gap;
+    const visibleCards = window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 3 : 5;
+    const step = (cardWidth + gap) * visibleCards;
     const nextLeft = scroller.scrollLeft + direction * step;
     const maxLeft = scroller.scrollWidth - scroller.clientWidth;
 
@@ -72,7 +73,7 @@ export default function CategoryCarousel({ rubros, onSelect }: CategoryCarouselP
     scroller.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
-  const featured = rubros.filter((rubro) => rubro.activo).slice(0, 5);
+  const featured = rubros.filter((rubro) => rubro.activo);
 
   useEffect(() => {
     if (featured.length <= 1) {
@@ -91,7 +92,7 @@ export default function CategoryCarousel({ rubros, onSelect }: CategoryCarouselP
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[980px] px-4 sm:px-8 xl:px-10">
+    <div className="relative mx-auto w-full max-w-[332px] px-4 sm:max-w-[576px] sm:px-8 lg:max-w-[928px] xl:max-w-[944px] xl:px-10">
       <button
         type="button"
         onClick={() => scrollByAmount(-1)}
@@ -106,7 +107,7 @@ export default function CategoryCarousel({ rubros, onSelect }: CategoryCarouselP
       <div
         id="category-carousel-track"
         ref={scrollerRef}
-        className="flex snap-x justify-start gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:justify-center sm:gap-4 [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x justify-start gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden"
       >
         {featured.map((rubro, index) => (
           <button

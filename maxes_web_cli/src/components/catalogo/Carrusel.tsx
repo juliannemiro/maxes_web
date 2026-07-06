@@ -13,20 +13,17 @@ export default function Carrusel({ carruseles }: CarruselProps) {
       ? carruseles.slice(0, 2).map((item) => ({
           src: item.imagen_url,
           alt: item.titulo || "Banner MAXES",
-          title: item.titulo,
           href: item.link_destino,
         }))
       : [
           {
             src: "https://www.maxesinsumos.com/bannercat20241.jpg",
             alt: "Banner catalogo MAXES 1",
-            title: "Catalogo MAXES",
             href: null,
           },
           {
             src: "https://www.maxesinsumos.com/bannercat20242.jpg",
             alt: "Banner catalogo MAXES 2",
-            title: "Novedades MAXES",
             href: null,
           },
         ];
@@ -41,42 +38,25 @@ export default function Carrusel({ carruseles }: CarruselProps) {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  const activeSlide = slides[index];
-
   return (
-    <div className="relative w-full overflow-hidden rounded-[22px] bg-[var(--color-header)]">
-      <div className="relative aspect-square w-full md:aspect-[16/9] xl:aspect-[18/9] xl:max-h-[52vh]">
+    <div className="relative w-full overflow-hidden rounded-lg bg-black shadow-sm ring-1 ring-black/10">
+      <div className="relative aspect-[16/7] w-full sm:aspect-[16/6] lg:aspect-[16/5] xl:max-h-[46vh]">
         {slides.map((slide, slideIndex) => (
           <img
             key={`${slide.src}-${slideIndex}`}
             src={slide.src}
             alt={slide.alt}
-            className={`absolute inset-0 h-full w-full object-cover object-center transition-all duration-700 ${
-              slideIndex === index ? "scale-[1.05] opacity-100" : "scale-100 opacity-0"
+            className={`absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-700 ${
+              slideIndex === index ? "opacity-100" : "opacity-0"
             }`}
           />
         ))}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent md:from-black/35" />
-
-        {activeSlide?.title && (
-          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 lg:p-8 xl:p-10">
-            <div className="max-w-[78%] sm:max-w-[70%] lg:max-w-2xl">
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-white/75 sm:text-[0.65rem] sm:tracking-[0.28em]">
-                Catalogo MAXES
-              </p>
-              <h2 className="mt-2 text-lg font-black leading-tight text-white sm:text-2xl lg:text-4xl">
-                {activeSlide.title}
-              </h2>
-            </div>
-          </div>
-        )}
-
-        {activeSlide?.href && (
+        {slides[index]?.href && (
           <a
-            href={activeSlide.href}
+            href={slides[index].href}
             className="absolute inset-0 z-[1]"
-            aria-label={activeSlide.title || activeSlide.alt}
+            aria-label={slides[index].alt}
           />
         )}
       </div>
