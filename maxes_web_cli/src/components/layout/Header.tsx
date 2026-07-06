@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useCart } from "../../context/CartContext";
+import { useFavoritos } from "../../context/FavoritosContext";
 import { Rubro } from "../../types";
 
 interface HeaderProps {
@@ -25,6 +26,10 @@ export default function Header({
   showCart = false,
 }: HeaderProps) {
   const { getItemCount, isHydrated, setOpen } = useCart();
+  const {
+    getFavoritosCount,
+    isHydrated: favoritosHydrated,
+  } = useFavoritos();
   const sortedRubros = useMemo(
     () =>
       [...rubros].sort((a, b) =>
@@ -35,8 +40,9 @@ export default function Header({
     [rubros]
   );
   const cartCount = isHydrated ? getItemCount() : 0;
+  const favoritosCount = favoritosHydrated ? getFavoritosCount() : 0;
   const controlsGridClass = showCart
-    ? "grid min-w-0 grid-cols-[minmax(0,1fr)_72px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_72px] md:gap-4 lg:gap-6"
+    ? "grid min-w-0 grid-cols-[minmax(0,1fr)_58px_58px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px_64px] md:gap-4 lg:gap-6"
     : "grid min-w-0 grid-cols-1 items-center gap-2 md:grid-cols-2 md:gap-4 lg:gap-6";
 
   return (
@@ -85,7 +91,7 @@ export default function Header({
           )}
 
           {onSearch && (
-            <div className="min-w-0 md:order-1">
+            <div className="col-span-full min-w-0 md:order-1 md:col-auto">
               <label
                 htmlFor="header-search"
                 className="sr-only md:not-sr-only md:mb-1.5 md:block md:text-[0.65rem] md:font-semibold md:uppercase md:tracking-[0.22em] md:text-[var(--color-muted-foreground)]"
@@ -113,7 +119,35 @@ export default function Header({
           )}
 
           {showCart && (
-            <div className="min-w-0 md:order-3">
+            <div className="col-start-2 min-w-0 md:order-3 md:col-start-auto">
+              <label className="sr-only md:not-sr-only md:mb-1.5 md:block md:text-[0.65rem] md:font-semibold md:uppercase md:tracking-[0.22em] md:text-[var(--color-muted-foreground)]">
+                Favoritos
+              </label>
+              <Link
+                href="/favoritos"
+                aria-label="Ver favoritos"
+                className="relative flex h-11 w-full items-center justify-center rounded-md border border-transparent bg-white text-[var(--color-foreground)] transition hover:brightness-[0.98]"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`h-5 w-5 ${
+                    favoritosCount > 0 ? "fill-amber-400 text-amber-500" : "fill-transparent"
+                  }`}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
+                  <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z" />
+                </svg>
+                <span className="absolute -right-2 -top-2 inline-flex min-h-[1.7rem] min-w-[1.7rem] items-center justify-center rounded-full bg-amber-400 px-2 py-1 text-[0.8rem] font-black leading-none text-black">
+                  {favoritosCount}
+                </span>
+              </Link>
+            </div>
+          )}
+
+          {showCart && (
+            <div className="col-start-3 min-w-0 md:order-4 md:col-start-auto">
               <label className="sr-only md:not-sr-only md:mb-1.5 md:block md:text-[0.65rem] md:font-semibold md:uppercase md:tracking-[0.22em] md:text-[var(--color-muted-foreground)]">
                 Pedido
               </label>

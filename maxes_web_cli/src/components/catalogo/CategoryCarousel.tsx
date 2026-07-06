@@ -5,6 +5,7 @@ import { Rubro } from "../../types";
 
 interface CategoryCarouselProps {
   rubros: Rubro[];
+  selectedRubro?: number;
   onSelect: (categoryId: number | undefined) => void;
 }
 
@@ -44,7 +45,7 @@ function getCategoryImage(rubro: Rubro, index: number) {
   return mapped?.image || categoryImages[index % categoryImages.length];
 }
 
-export default function CategoryCarousel({ rubros, onSelect }: CategoryCarouselProps) {
+export default function CategoryCarousel({ rubros, selectedRubro, onSelect }: CategoryCarouselProps) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const scrollByAmount = (direction: number) => {
     const scroller = scrollerRef.current;
@@ -115,7 +116,12 @@ export default function CategoryCarousel({ rubros, onSelect }: CategoryCarouselP
             type="button"
             onClick={() => onSelect(rubro.id)}
             data-rubro-card="true"
-            className="group flex w-36 shrink-0 snap-start flex-col items-center overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white text-center shadow-sm sm:w-40"
+            aria-pressed={selectedRubro === rubro.id}
+            className={`group flex w-36 shrink-0 snap-start flex-col items-center overflow-hidden rounded-2xl border bg-white text-center shadow-sm transition ${
+              selectedRubro === rubro.id
+                ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]"
+                : "border-[var(--color-border)] hover:border-[var(--color-primary)]"
+            } sm:w-40`}
           >
             <span className="mt-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--color-primary)] bg-[linear-gradient(180deg,#ffffff_0%,#fff7d6_100%)] sm:h-28 sm:w-28">
               <img

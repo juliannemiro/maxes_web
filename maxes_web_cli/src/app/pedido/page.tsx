@@ -5,17 +5,21 @@ import CantidadSelector from "../../components/common/CantidadSelector";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import { useCart } from "../../context/CartContext";
+import { useFavoritos } from "../../context/FavoritosContext";
 import { apiService, PedidoCreado } from "../../services/api";
-import { Configuracion } from "../../types";
+import { Articulo, Configuracion } from "../../types";
 import Link from "next/link";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
 
 export default function CheckoutPage() {
-  const { cart, isHydrated, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
+  const { cart, isHydrated, addToCart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
+  const { favoritos, isHydrated: favoritosHydrated } = useFavoritos();
   const { tipoCompra } = usePurchaseMode();
   const safeCart = isHydrated ? cart : [];
   const [config, setConfig] = useState<Configuracion | null>(null);
+  const [favoriteArticles, setFavoriteArticles] = useState<Articulo[]>([]);
+  const [favoritosExpanded, setFavoritosExpanded] = useState(false);
   const fieldMaxLengths = {
     nombre: 100,
     apellido: 100,
@@ -59,6 +63,44 @@ export default function CheckoutPage() {
     }
     loadConfig();
   }, []);
+
+  useEffect(() => {
+    if (!favoritosHydrated || favoritos.length === 0) {
+      setFavoriteArticles([]);
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadFavoriteArticles() {
+      try {
+        const articles = await Promise.all(
+          favoritos.map(async (articuloId) => {
+            try {
+              const response = await apiService.getArticuloById(articuloId);
+              return response.articulo;
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        if (!isCancelled) {
+          setFavoriteArticles(
+            articles.filter((articulo): articulo is Articulo => articulo !== null)
+          );
+        }
+      } catch (error) {
+        console.error("Error loading favorite articles", error);
+      }
+    }
+
+    loadFavoriteArticles();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [favoritos, favoritosHydrated]);
 
   const normalizeDocNumero = (value: string, tipo: string) => {
     if (tipo === "DNI") {
@@ -185,6 +227,11 @@ export default function CheckoutPage() {
   const whatsappLink = config?.whatsapp_contacto
     ? `https://wa.me/${config.whatsapp_contacto.replace(/[^0-9]/g, "")}`
     : null;
+  const cartIds = new Set(safeCart.map((item) => item.articulo.id));
+  const favoritosFueraDelCarrito = favoriteArticles.filter(
+    (articulo) => !cartIds.has(articulo.id)
+  );
+  const favoritosFueraCount = favoritosHydrated ? favoritosFueraDelCarrito.length : 0;
 
   const getArticuloTitulo = (item: (typeof safeCart)[number]) => {
     const articuloDes = item.articulo.articulo_des?.trim();
@@ -209,6 +256,10 @@ export default function CheckoutPage() {
       removeFromCart(pendingRemoveId);
     }
     setPendingRemoveId(null);
+  };
+
+  const handleAddFavoriteToCart = (articulo: Articulo) => {
+    addToCart(articulo, 1);
   };
 
   // If order was successfully submitted
@@ -293,6 +344,72 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:gap-8">
             {/* Cart Items List */}
             <div className="space-y-4 xl:col-span-7">
+              {favoritosFueraCount > 0 && (
+                <div className="overflow-hidden rounded-2xl border border-amber-300 bg-amber-300 text-slate-950 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setFavoritosExpanded((current) => !current)}
+                    aria-expanded={favoritosExpanded}
+                    className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-amber-200"
+                  >
+                    <span className="text-base font-black">
+                      Tienes {favoritosFueraCount} productos en favoritos fuera del carrito
+                    </span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className={`h-5 w-5 transition-transform ${
+                        favoritosExpanded ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+
+                  {favoritosExpanded && (
+                    <div className="space-y-2 border-t border-amber-400 bg-amber-50 p-3">
+                      {favoritosFueraDelCarrito.map((articulo) => {
+                        const titulo =
+                          articulo.articulo_des?.trim() ||
+                          articulo.descripcion_publica?.trim() ||
+                          "Producto sin descripción";
+
+                        return (
+                          <div
+                            key={articulo.id}
+                            className="grid grid-cols-[52px_minmax(0,1fr)] gap-3 rounded-xl border border-amber-200 bg-white p-2 sm:grid-cols-[52px_minmax(0,1fr)_auto] sm:items-center"
+                          >
+                            <img
+                              src={articulo.imagen_url || "/placeholder.svg"}
+                              alt={articulo.descripcion_publica || "Producto favorito"}
+                              className="h-[52px] w-[52px] rounded-lg border border-slate-100 bg-white object-contain"
+                            />
+                            <div className="min-w-0">
+                              <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-900">
+                                {titulo}
+                              </p>
+                              <p className="mt-1 text-sm font-black text-slate-800">
+                                {formatPrice(obtenerPrecio(articulo, tipoCompra))}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleAddFavoriteToCart(articulo)}
+                              className="col-span-full rounded-md bg-[var(--color-primary)] px-3 py-2 text-sm font-bold text-[var(--color-primary-foreground)] transition hover:brightness-95 sm:col-span-1"
+                            >
+                              Agregar
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
                 <h2 className="text-lg font-black text-slate-900">Resumen de Compra</h2>
               </div>

@@ -45,7 +45,7 @@ export function useCatalogo(): UseCatalogoResult {
   const [config, setConfig] = useState<Configuracion | null>(null);
   const [search, setSearch] = useState("");
   const [selectedRubro, setSelectedRubro] = useState<number | undefined>(undefined);
-  const [sortBy, setSortBy] = useState("default");
+  const [sortBy, setSortBy] = useState("description");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -88,8 +88,14 @@ export function useCatalogo(): UseCatalogoResult {
       sorted.sort((a, b) => obtenerPrecio(a, tipoCompra) - obtenerPrecio(b, tipoCompra));
     } else if (sortBy === "price_desc") {
       sorted.sort((a, b) => obtenerPrecio(b, tipoCompra) - obtenerPrecio(a, tipoCompra));
-    } else if (sortBy === "newest") {
-      sorted.sort((a, b) => getArticuloTimestamp(b) - getArticuloTimestamp(a));
+    } else if (sortBy === "description") {
+      sorted.sort((a, b) =>
+        (a.descripcion_publica || a.codigo || "").localeCompare(
+          b.descripcion_publica || b.codigo || "",
+          "es",
+          { sensitivity: "base" }
+        )
+      );
     } else {
       sorted.sort(compareByRelevancia);
     }

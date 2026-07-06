@@ -9,7 +9,6 @@ import Header from "../layout/Header";
 import FloatingActions from "../layout/FloatingActions";
 import Footer from "../layout/Footer";
 import { useCatalogo } from "../../hooks/useCatalogo";
-import { usePurchaseMode } from "../../context/PurchaseModeContext";
 
 export default function CatalogoHome() {
   const {
@@ -24,11 +23,41 @@ export default function CatalogoHome() {
     sortBy,
     setSortBy,
     isLoading,
-    shouldGroupByRubro,
-    groupedArticulos,
-    tipoCompra,
   } = useCatalogo();
-  const { setTipoCompra } = usePurchaseMode();
+  const selectedRubroName =
+    rubros.find((rubro) => rubro.id === selectedRubro)?.nombre ||
+    rubros.find((rubro) => rubro.id === selectedRubro)?.codigo ||
+    "";
+  const activeFilterLabel = selectedRubro
+    ? selectedRubroName.toUpperCase()
+    : search.trim()
+      ? search.trim()
+      : "TODOS LOS ARTICULOS";
+  const sortOptions = [
+    { value: "price_asc", label: "Menor precio" },
+    { value: "price_desc", label: "Mayor precio" },
+    { value: "description", label: "Descripción" },
+  ];
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+
+    if (value.trim()) {
+      setSelectedRubro(undefined);
+    }
+  };
+
+  const handleSelectRubro = (rubroId: number | undefined) => {
+    setSelectedRubro(rubroId);
+    setSearch("");
+
+    window.setTimeout(() => {
+      document.getElementById("catalogo-productos")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+  };
 
   if (config?.mantenimiento) {
     return (
@@ -52,10 +81,10 @@ export default function CatalogoHome() {
 
       <Header
         search={search}
-        onSearch={setSearch}
+        onSearch={handleSearch}
         rubros={rubros}
         selectedRubro={selectedRubro}
-        onSelectRubro={setSelectedRubro}
+        onSelectRubro={handleSelectRubro}
         showCart
       />
 
@@ -64,46 +93,60 @@ export default function CatalogoHome() {
       </section>
 
       <section className="mt-6">
-        <CategoryCarousel rubros={rubros} onSelect={setSelectedRubro} />
+        <CategoryCarousel
+          rubros={rubros}
+          selectedRubro={selectedRubro}
+          onSelect={handleSelectRubro}
+        />
       </section>
 
-      <main className="w-full px-4 pb-16 pt-8 xl:px-6">
-        <div className="mb-6 flex flex-col gap-3 rounded-lg border border-[var(--color-border)] bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            {search ? `Resultados para "${search}"` : ""}
-          </p>
-
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <label htmlFor="tipoCompra" className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">
-                Compra
-              </label>
-              <select
-                id="tipoCompra"
-                value={tipoCompra}
-                onChange={(e) => setTipoCompra(e.target.value as "mayorista" | "minorista")}
-                className="min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-foreground)] outline-none"
-              >
-                <option value="mayorista">Mayorista</option>
-                <option value="minorista">Minorista</option>
-              </select>
+      <main id="catalogo-productos" className="w-full scroll-mt-36 px-4 pb-16 pt-8 xl:px-6">
+        <div className="mb-6 border-y border-black/10 bg-[var(--color-primary)] px-4 py-3 text-[var(--color-primary-foreground)] shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-base font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-xl lg:text-2xl">
+                {activeFilterLabel}
+                <span className="ml-1 whitespace-nowrap text-xs font-bold text-black/65 sm:hidden">
+                  ({articulos.length} Art.)
+                </span>
+                <span className="ml-2 hidden whitespace-nowrap text-base font-bold text-black/65 sm:inline">
+                  ({articulos.length} artículos)
+                </span>
+              </h1>
             </div>
 
-            <div className="flex min-w-0 items-center gap-2">
-              <label htmlFor="sortBy" className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <p className="hidden text-xs font-semibold uppercase tracking-[0.2em] text-black/65 sm:block">
                 Ordenar
-              </label>
+              </p>
               <select
-                id="sortBy"
+                aria-label="Ordenar"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-foreground)] outline-none"
+                className="h-8 w-[7.5rem] rounded-md border border-black/15 bg-white/70 px-2 text-xs font-semibold text-[var(--color-foreground)] outline-none sm:hidden"
               >
-                <option value="default">Relevancia</option>
-                <option value="price_asc">Menor precio</option>
-                <option value="price_desc">Mayor precio</option>
-                <option value="newest">Más nuevos</option>
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
+              <div className="hidden flex-wrap items-center overflow-hidden rounded-md border border-black/15 bg-white/45 sm:flex">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setSortBy(option.value)}
+                    className={`h-9 px-3 text-sm font-semibold transition ${
+                      sortBy === option.value
+                        ? "bg-black text-white"
+                        : "text-[var(--color-foreground)] hover:bg-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -118,25 +161,12 @@ export default function CatalogoHome() {
           <p className="py-16 text-center text-[var(--color-muted-foreground)]">
             No se encontraron productos para tu búsqueda.
           </p>
-        ) : !shouldGroupByRubro ? (
+        ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {articulos.map((articulo) => (
               <ProductoCard key={articulo.id} articulo={articulo} />
             ))}
           </div>
-        ) : (
-          groupedArticulos.map(([category, items]) => (
-            <div key={category} className="mb-10">
-              <h2 className="mb-4 rounded bg-[var(--color-primary)] px-4 py-2 text-lg font-black uppercase tracking-wide text-[var(--color-primary-foreground)]">
-                {category}
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {items.map((articulo) => (
-                  <ProductoCard key={articulo.id} articulo={articulo} />
-                ))}
-              </div>
-            </div>
-          ))
         )}
       </main>
 

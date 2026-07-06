@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Articulo } from "../../types";
 import { useCart } from "../../context/CartContext";
+import { useFavoritos } from "../../context/FavoritosContext";
 import CantidadSelector from "../common/CantidadSelector";
 import ProductoModal from "./ProductoModal";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
@@ -14,6 +15,7 @@ interface ProductoCardProps {
 
 export default function ProductoCard({ articulo }: ProductoCardProps) {
   const { addToCart, cart, updateComment, updateQuantity, setOpen } = useCart();
+  const { isFavorito, toggleFavorito, isHydrated: favoritosHydrated } = useFavoritos();
   const { tipoCompra } = usePurchaseMode();
   const [comment, setComment] = useState("");
   const [qty, setQty] = useState("");
@@ -117,12 +119,37 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
     added && (qty !== lastSubmittedQty || comment.trim() !== lastSubmittedComment);
   const actionLabel = submittedStateChanged ? "Actualizar" : added ? "✓" : "Agregar";
   const precioActual = obtenerPrecio(articulo, tipoCompra);
+  const favorito = favoritosHydrated && isFavorito(articulo.id);
 
   return (
     <article className="flex h-full flex-col rounded-[18px] bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-      <h3 className="flex min-h-[3rem] items-center justify-center text-center text-[16px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance">
-        {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
-      </h3>
+      <div className="grid min-h-[3rem] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-1">
+        <span aria-hidden="true" />
+        <h3 className="flex min-h-[3rem] items-center justify-center text-center text-[16px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance">
+          {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
+        </h3>
+        <button
+          type="button"
+          onClick={() => toggleFavorito(articulo.id)}
+          aria-label={favorito ? "Quitar de favoritos" : "Agregar a favoritos"}
+          aria-pressed={favorito}
+          className="flex h-11 w-11 items-center justify-center justify-self-end rounded-full bg-white text-[var(--color-muted-foreground)] transition hover:scale-105 hover:bg-amber-50"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className={`h-7 w-7 transition ${
+              favorito
+                ? "fill-amber-400 text-amber-500"
+                : "fill-transparent text-[var(--color-muted-foreground)]"
+            }`}
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z" />
+          </svg>
+        </button>
+      </div>
 
       <p className="mt-1 text-center text-[11px] leading-none text-[var(--color-muted-foreground)]">
         {(articulo.rubro?.nombre || "NOVEDADES").toUpperCase()}

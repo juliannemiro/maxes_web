@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "../context/CartContext";
+import { FavoritosProvider } from "../context/FavoritosContext";
 import { PurchaseModeProvider } from "../context/PurchaseModeContext";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="es" data-scroll-behavior="smooth">
       <body>
         <PurchaseModeProvider>
-          <CartProvider>{children}</CartProvider>
+          <FavoritosProvider>
+            <CartProvider>{children}</CartProvider>
+          </FavoritosProvider>
         </PurchaseModeProvider>
       </body>
     </html>
