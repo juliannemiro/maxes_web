@@ -8,7 +8,7 @@ export interface PedidoCreado {
   total: number;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4785";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_URL}${endpoint}`;

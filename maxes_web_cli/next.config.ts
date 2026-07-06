@@ -4,12 +4,16 @@ import type { NextConfig } from "next";
 
 const raizProyecto = __dirname;
 const entorno = process.env.APP_ENV || (process.env.NODE_ENV === "production" ? "produccion" : "desarrollo");
+const estaEnVercel = process.env.VERCEL === "1";
 const archivosEntorno = [
-  path.join(raizProyecto, ".env"),
-  path.join(raizProyecto, entorno === "produccion" ? ".env.produccion" : ".env.desarrollo"),
+  { archivo: path.join(raizProyecto, ".env"), sobrescribir: false },
+  {
+    archivo: path.join(raizProyecto, entorno === "produccion" ? ".env.produccion" : ".env.desarrollo"),
+    sobrescribir: !estaEnVercel,
+  },
 ];
 
-for (const archivo of archivosEntorno) {
+for (const { archivo, sobrescribir } of archivosEntorno) {
   if (!fs.existsSync(archivo)) continue;
 
   const contenido = fs.readFileSync(archivo, "utf8");
@@ -24,7 +28,9 @@ for (const archivo of archivosEntorno) {
     const valorCrudo = lineaLimpia.slice(separador + 1).trim();
     const valor = valorCrudo.replace(/^["']|["']$/g, "");
 
-    process.env[clave] = valor;
+    if (sobrescribir || process.env[clave] === undefined) {
+      process.env[clave] = valor;
+    }
   }
 }
 
