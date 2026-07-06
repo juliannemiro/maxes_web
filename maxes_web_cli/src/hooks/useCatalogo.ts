@@ -53,20 +53,12 @@ export function useCatalogo(): UseCatalogoResult {
       setIsLoading(true);
 
       try {
-        const [rubrosRes, carruselesRes, configRes, articulosRes] = await Promise.all([
-          apiService.getRubros().catch(() => ({ rubros: [] })),
-          apiService.getCarruseles().catch(() => ({ carruseles: [] })),
-          apiService.getConfig().catch(() => ({ config: null })),
-          apiService.getArticulos({ limit: 200 }).catch(() => ({
-            articulos: [],
-            pagination: { totalCount: 0, totalPages: 1, currentPage: 1, limit: 200 },
-          })),
-        ]);
+        const catalogoRes = await apiService.getCatalogoInicial();
 
-        setRubros(rubrosRes.rubros);
-        setCarruseles(carruselesRes.carruseles);
-        setConfig("config" in configRes ? configRes.config : null);
-        setArticulos(articulosRes.articulos);
+        setRubros(catalogoRes.rubros);
+        setCarruseles(catalogoRes.carruseles);
+        setConfig(catalogoRes.config);
+        setArticulos(catalogoRes.articulos);
       } catch (error) {
         console.error("Error loading catalog:", error);
       } finally {

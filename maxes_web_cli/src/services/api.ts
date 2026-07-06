@@ -8,6 +8,19 @@ export interface PedidoCreado {
   total: number;
 }
 
+export interface CatalogoInicial {
+  rubros: Rubro[];
+  carruseles: CarruselHome[];
+  config: Configuracion | null;
+  articulos: Articulo[];
+  pagination: {
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
+}
+
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(endpoint, {
     ...options,
@@ -26,6 +39,11 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 }
 
 export const apiService = {
+  // Get initial public catalog in a single request.
+  async getCatalogoInicial(): Promise<CatalogoInicial> {
+    return fetchJson<CatalogoInicial>("/api/public/catalogo");
+  },
+
   // Get active rubros
   async getRubros(): Promise<{ rubros: Rubro[] }> {
     return fetchJson<{ rubros: Rubro[] }>("/api/public/rubros");
