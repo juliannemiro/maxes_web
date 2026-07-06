@@ -8,11 +8,8 @@ export interface PedidoCreado {
   total: number;
 }
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_URL}${endpoint}`;
-  const response = await fetch(url, {
+  const response = await fetch(endpoint, {
     ...options,
     headers: {
       "Content-Type": "application/json",

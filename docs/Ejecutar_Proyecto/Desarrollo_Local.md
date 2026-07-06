@@ -24,6 +24,24 @@ Levantar el proyecto en desarrollo con:
 * Variables frontend local: `maxes_web_cli/.env.desarrollo`
 * Variables frontend produccion: `maxes_web_cli/.env.produccion`
 
+## Variables del frontend
+
+El frontend consulta siempre sus propias rutas internas de Next:
+
+```text
+/api/public/rubros
+/api/public/articulos
+/api/public/carruseles
+/api/public/config
+```
+
+Esas rutas usan Prisma y leen la base desde `DATABASE_URL`.
+
+* En desarrollo, `DATABASE_URL` debe apuntar al PostgreSQL local de Docker.
+* En produccion, `DATABASE_URL` debe apuntar al PostgreSQL de Supabase desde las variables de entorno de Vercel.
+* No se usa `NEXT_PUBLIC_API_URL` para el catalogo.
+* Las variables `NEXT_PUBLIC_*` solo se usan para datos que deban estar disponibles en el navegador.
+
 ## Puertos de desarrollo
 
 * Cliente Next.js: `3785`
