@@ -42,8 +42,11 @@ export default function Header({
   const cartCount = isHydrated ? getItemCount() : 0;
   const favoritosCount = favoritosHydrated ? getFavoritosCount() : 0;
   const controlsGridClass = showCart
-    ? "grid min-w-0 grid-cols-[minmax(0,1fr)_58px_58px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px_64px] md:gap-4 lg:gap-6"
+    ? "grid min-w-0 grid-cols-[minmax(0,1fr)_52px_52px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px_64px] md:gap-4 lg:gap-6"
     : "grid min-w-0 grid-cols-1 items-center gap-2 md:grid-cols-2 md:gap-4 lg:gap-6";
+  const searchWrapperClass = showCart
+    ? "min-w-0 md:order-1 md:col-auto"
+    : "col-span-full min-w-0 md:order-1 md:col-auto";
 
   return (
     <header className="sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-foreground)] shadow-md">
@@ -91,7 +94,7 @@ export default function Header({
           )}
 
           {onSearch && (
-            <div className="col-span-full min-w-0 md:order-1 md:col-auto">
+            <div className={searchWrapperClass}>
               <label
                 htmlFor="header-search"
                 className="sr-only md:not-sr-only md:mb-1.5 md:block md:text-[0.65rem] md:font-semibold md:uppercase md:tracking-[0.22em] md:text-[var(--color-muted-foreground)]"
@@ -106,9 +109,9 @@ export default function Header({
                   onChange={(e) => onSearch(e.target.value)}
                   placeholder="Buscá tu producto"
                   aria-label="Buscar artículo"
-                  className="h-full w-full min-w-0 bg-transparent px-4 text-sm font-medium text-[var(--color-foreground)] outline-none placeholder:text-[var(--color-muted-foreground)]"
+                  className="h-full w-full min-w-0 bg-transparent px-3 text-sm font-medium text-[var(--color-foreground)] outline-none placeholder:text-[var(--color-muted-foreground)] sm:px-4"
                 />
-                <span className="flex h-full items-center bg-[var(--color-primary)] px-3 text-[var(--color-primary-foreground)]">
+                <span className="flex h-full items-center bg-[var(--color-primary)] px-2 text-[var(--color-primary-foreground)] sm:px-3">
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
@@ -130,8 +133,8 @@ export default function Header({
               >
                 <svg
                   viewBox="0 0 24 24"
-                  className={`h-5 w-5 ${
-                    favoritosCount > 0 ? "fill-amber-400 text-amber-500" : "fill-transparent"
+                  className={`h-6 w-6 text-amber-500 ${
+                    favoritosCount > 0 ? "fill-amber-400" : "fill-transparent"
                   }`}
                   stroke="currentColor"
                   strokeWidth="2"

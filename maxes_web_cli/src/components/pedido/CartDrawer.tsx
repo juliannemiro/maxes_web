@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import CantidadSelector from "../common/CantidadSelector";
 import { useCart } from "../../context/CartContext";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
@@ -36,7 +37,7 @@ export default function CartDrawer() {
       )}
 
       <aside
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-[var(--color-background)] shadow-xl transition-transform duration-300 ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-[420px] flex-col bg-[var(--color-background)] shadow-xl transition-transform duration-300 ${
           safeIsOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
@@ -57,86 +58,76 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {safeCart.length === 0 ? (
-            <p className="mt-10 text-center text-sm text-[var(--color-muted-foreground)]">
+            <p className="mx-4 mt-10 text-center text-sm text-[var(--color-muted-foreground)]">
               Tu pedido está vacío. Agregá productos del catálogo.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
-              {safeCart.map((item) => (
-                <li
-                  key={item.articulo.id}
-                  className="flex gap-3 rounded-lg border border-[var(--color-border)] bg-white p-3"
-                >
-                  <img
-                    src={item.articulo.imagen_url || "/placeholder.svg"}
-                    alt={item.articulo.descripcion_publica || "Producto"}
-                    className="h-14 w-14 shrink-0 rounded object-contain"
-                  />
+            <ul className="divide-y divide-[var(--color-border)] bg-white">
+              {safeCart.map((item) => {
+                const itemTotal = obtenerPrecio(item.articulo, tipoCompra) * item.cantidad;
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-[var(--color-card-foreground)]">
-                      {getArticuloTitulo(item)}
-                    </p>
-                    {item.articulo.proveedor_des && (
-                      <p className="truncate text-xs text-[var(--color-muted-foreground)]">
-                        {item.articulo.proveedor_des}
-                      </p>
-                    )}
-                    {item.comentario && (
-                      <p className="truncate text-xs text-[var(--color-muted-foreground)]">
-                        {item.comentario}
-                      </p>
-                    )}
-                    <p className="text-sm font-bold text-[var(--color-card-foreground)]">
-                      {formatPrice(obtenerPrecio(item.articulo, tipoCompra))}
-                    </p>
+                return (
+                  <li
+                    key={item.articulo.id}
+                    className="grid grid-cols-[80px_minmax(0,1fr)] gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--color-muted)]/35"
+                  >
+                    <img
+                      src={item.articulo.imagen_url || "/placeholder.svg"}
+                      alt={item.articulo.descripcion_publica || "Producto"}
+                      className="h-20 w-20 rounded-lg bg-white object-contain"
+                    />
 
-                    <div className="mt-1 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.articulo.id, item.cantidad - 1)}
-                        aria-label="Restar"
-                        className="rounded border border-[var(--color-border)] p-1 hover:bg-[var(--color-muted)]"
-                      >
-                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <path d="M5 12h14" />
-                        </svg>
-                      </button>
-                      <span className="w-6 text-center text-sm">{item.cantidad}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.articulo.id, item.cantidad + 1)}
-                        aria-label="Sumar"
-                        className="rounded border border-[var(--color-border)] p-1 hover:bg-[var(--color-muted)]"
-                      >
-                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <path d="M12 5v14M5 12h14" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeFromCart(item.articulo.id)}
-                        aria-label="Eliminar"
-                        className="ml-auto rounded p-1 text-red-600 hover:bg-[var(--color-muted)]"
-                      >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v6M14 11v6" />
-                        </svg>
-                      </button>
+                    <div className="flex min-h-20 min-w-0 flex-col justify-center">
+                      <p className="line-clamp-2 text-base font-black leading-tight text-[var(--color-card-foreground)] sm:text-sm">
+                        {getArticuloTitulo(item)}
+                      </p>
+
+                      <div className="mt-3 grid grid-cols-[100px_minmax(0,1fr)_38px] items-center gap-2 sm:grid-cols-[100px_minmax(92px,1fr)_38px]">
+                        <CantidadSelector
+                          value={item.cantidad}
+                          onChange={(value) =>
+                            updateQuantity(item.articulo.id, Number.parseInt(value.replace(/\D/g, ""), 10) || 0)
+                          }
+                          onDecrement={() => updateQuantity(item.articulo.id, item.cantidad - 1)}
+                          onIncrement={() => updateQuantity(item.articulo.id, item.cantidad + 1)}
+                          ariaLabel={`Cantidad para ${getArticuloTitulo(item)}`}
+                          className="w-[100px] rounded-md bg-white"
+                          buttonClassName="px-1.5 py-1 text-sm hover:bg-black/5"
+                          valueClassName="px-1 text-sm"
+                        />
+
+                        <span className="min-w-0 pr-1 text-right text-sm font-semibold leading-none text-slate-600">
+                          {formatPrice(itemTotal)}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.articulo.id)}
+                          aria-label="Eliminar"
+                          className="flex h-9 w-9 items-center justify-center justify-self-end rounded text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                            <path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v6M14 11v6" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
 
-        <div className="border-t border-[var(--color-border)] bg-white p-4">
-          <div className="mb-3 flex items-center justify-between text-lg font-bold text-[var(--color-card-foreground)]">
-            <span>Total</span>
-            <span>{formatPrice(getCartTotal(tipoCompra))}</span>
+        <div className="border-t border-[var(--color-border)] bg-white p-4 shadow-[0_-8px_20px_rgba(0,0,0,0.06)]">
+          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_38px] items-end gap-2 text-[var(--color-card-foreground)]">
+            <span className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
+              Total
+            </span>
+            <span className="text-2xl font-black leading-none">{formatPrice(getCartTotal(tipoCompra))}</span>
+            <span aria-hidden="true" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">

@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const [config, setConfig] = useState<Configuracion | null>(null);
   const [favoriteArticles, setFavoriteArticles] = useState<Articulo[]>([]);
   const [favoritosExpanded, setFavoritosExpanded] = useState(false);
+  const [favoriteQuantities, setFavoriteQuantities] = useState<Record<number, string>>({});
   const fieldMaxLengths = {
     nombre: 100,
     apellido: 100,
@@ -232,6 +233,10 @@ export default function CheckoutPage() {
     (articulo) => !cartIds.has(articulo.id)
   );
   const favoritosFueraCount = favoritosHydrated ? favoritosFueraDelCarrito.length : 0;
+  const favoritosFueraLabel =
+    favoritosFueraCount === 1
+      ? "Tiene 1 producto en favoritos fuera del carrito"
+      : `Tienes ${favoritosFueraCount} productos en favoritos fuera del carrito`;
 
   const getArticuloTitulo = (item: (typeof safeCart)[number]) => {
     const articuloDes = item.articulo.articulo_des?.trim();
@@ -258,8 +263,31 @@ export default function CheckoutPage() {
     setPendingRemoveId(null);
   };
 
+  const handleFavoriteQuantityChange = (articuloId: number, value: string) => {
+    setFavoriteQuantities((current) => ({
+      ...current,
+      [articuloId]: value.replace(/\D/g, ""),
+    }));
+  };
+
+  const handleFavoriteQuantityStep = (articuloId: number, step: number) => {
+    setFavoriteQuantities((current) => {
+      const currentValue = Number.parseInt(current[articuloId] || "1", 10) || 1;
+      const nextValue = Math.max(1, currentValue + step);
+      return {
+        ...current,
+        [articuloId]: String(nextValue),
+      };
+    });
+  };
+
   const handleAddFavoriteToCart = (articulo: Articulo) => {
-    addToCart(articulo, 1);
+    const cantidad = Number.parseInt(favoriteQuantities[articulo.id] || "1", 10) || 1;
+    addToCart(articulo, Math.max(1, cantidad));
+    setFavoriteQuantities((current) => ({
+      ...current,
+      [articulo.id]: "1",
+    }));
   };
 
   // If order was successfully submitted
@@ -353,7 +381,7 @@ export default function CheckoutPage() {
                     className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-amber-200"
                   >
                     <span className="text-base font-black">
-                      Tienes {favoritosFueraCount} productos en favoritos fuera del carrito
+                      {favoritosFueraLabel}
                     </span>
                     <svg
                       viewBox="0 0 24 24"
@@ -370,37 +398,74 @@ export default function CheckoutPage() {
                   </button>
 
                   {favoritosExpanded && (
-                    <div className="space-y-2 border-t border-amber-400 bg-amber-50 p-3">
+                    <div className="space-y-2 border-t border-amber-400 bg-amber-100 p-3">
                       {favoritosFueraDelCarrito.map((articulo) => {
                         const titulo =
                           articulo.articulo_des?.trim() ||
                           articulo.descripcion_publica?.trim() ||
                           "Producto sin descripción";
+                        const cantidadFavorito =
+                          Number.parseInt(favoriteQuantities[articulo.id] || "1", 10) || 1;
+                        const totalFavorito = obtenerPrecio(articulo, tipoCompra) * cantidadFavorito;
 
                         return (
                           <div
                             key={articulo.id}
-                            className="grid grid-cols-[52px_minmax(0,1fr)] gap-3 rounded-xl border border-amber-200 bg-white p-2 sm:grid-cols-[52px_minmax(0,1fr)_auto] sm:items-center"
+                            className="grid grid-cols-[72px_minmax(0,1fr)_96px_42px] items-center gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 transition-colors hover:border-amber-400 sm:grid-cols-[72px_minmax(0,1fr)_112px_120px_42px] sm:gap-3 sm:p-3.5"
                           >
                             <img
                               src={articulo.imagen_url || "/placeholder.svg"}
                               alt={articulo.descripcion_publica || "Producto favorito"}
-                              className="h-[52px] w-[52px] rounded-lg border border-slate-100 bg-white object-contain"
+                              className="h-[72px] w-[72px] rounded-lg border border-amber-200 bg-white object-contain"
                             />
                             <div className="min-w-0">
-                              <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-900">
+                              <p className="line-clamp-2 text-base font-semibold leading-snug text-slate-800 sm:text-lg">
                                 {titulo}
                               </p>
-                              <p className="mt-1 text-sm font-black text-slate-800">
-                                {formatPrice(obtenerPrecio(articulo, tipoCompra))}
+                              {articulo.proveedor_des && (
+                                <p className="mt-1 hidden truncate text-sm font-semibold text-slate-600 sm:block">
+                                  {articulo.proveedor_des}
+                                </p>
+                              )}
+                              <p className="mt-1 text-sm font-black text-slate-800 sm:hidden">
+                                {formatPrice(totalFavorito)}
                               </p>
+                            </div>
+                            <CantidadSelector
+                              value={favoriteQuantities[articulo.id] || "1"}
+                              onChange={(value) => handleFavoriteQuantityChange(articulo.id, value)}
+                              onDecrement={() => handleFavoriteQuantityStep(articulo.id, -1)}
+                              onIncrement={() => handleFavoriteQuantityStep(articulo.id, 1)}
+                              ariaLabel={`Cantidad para ${titulo}`}
+                              className="w-24 justify-self-end border-amber-200 bg-white sm:w-[112px]"
+                              buttonClassName="px-2 py-1.5 text-sm hover:bg-amber-100 sm:px-2 sm:py-2"
+                              valueClassName="px-1 text-sm"
+                            />
+                            <div className="hidden text-right sm:block sm:w-[120px]">
+                              <span className="text-base font-bold text-slate-800">
+                                {formatPrice(totalFavorito)}
+                              </span>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleAddFavoriteToCart(articulo)}
-                              className="col-span-full rounded-md bg-[var(--color-primary)] px-3 py-2 text-sm font-bold text-[var(--color-primary-foreground)] transition hover:brightness-95 sm:col-span-1"
+                              aria-label={`Agregar ${titulo} al carrito`}
+                              title="Agregar"
+                              className="group relative flex h-10 w-10 items-center justify-center justify-self-end rounded-full bg-amber-400 text-slate-950 shadow-sm transition hover:scale-105 hover:bg-amber-300"
                             >
-                              Agregar
+                              <span className="pointer-events-none absolute bottom-full right-0 mb-2 hidden rounded bg-slate-950 px-2 py-1 text-xs font-bold text-white shadow-sm group-hover:block">
+                                Agregar
+                              </span>
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                aria-hidden="true"
+                              >
+                                <path d="M12 5v14M5 12h14" />
+                              </svg>
                             </button>
                           </div>
                         );
@@ -431,6 +496,11 @@ export default function CheckoutPage() {
                       <h4 className="text-base font-semibold leading-snug text-slate-800 sm:text-lg">
                         {getArticuloTitulo(item)}
                       </h4>
+                      {item.articulo.proveedor_des && (
+                        <p className="mt-1 hidden truncate text-sm font-semibold text-slate-500 sm:block">
+                          {item.articulo.proveedor_des}
+                        </p>
+                      )}
                       <div className="mt-2 grid grid-cols-[1fr_auto_auto] items-center gap-3 sm:hidden">
                         <CantidadSelector
                           value={item.cantidad}
@@ -475,9 +545,12 @@ export default function CheckoutPage() {
                 );
               })}
 
-              <div className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-lg font-black text-slate-900 shadow-sm">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-lg font-black text-slate-900 shadow-sm sm:grid-cols-[72px_minmax(0,1fr)_150px_120px_40px] sm:px-3.5">
+                <span aria-hidden="true" className="hidden sm:block" />
                 <span>Total del Pedido</span>
-                <span className="min-w-[92px] text-right">{formattedTotal}</span>
+                <span aria-hidden="true" className="hidden sm:block" />
+                <span className="min-w-[92px] text-right sm:w-[120px]">{formattedTotal}</span>
+                <span aria-hidden="true" className="hidden sm:block" />
               </div>
             </div>
 

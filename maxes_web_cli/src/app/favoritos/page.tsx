@@ -19,12 +19,19 @@ export default function FavoritosPage() {
     setSearch,
     selectedRubro,
     setSelectedRubro,
+    sortBy,
+    setSortBy,
     isLoading,
   } = useCatalogo();
   const { favoritos, isHydrated } = useFavoritos();
   const favoritosSet = new Set(favoritos);
   const favoritosFiltrados = articulos.filter((articulo) => favoritosSet.has(articulo.id));
   const hasFavoritos = isHydrated && favoritos.length > 0;
+  const sortOptions = [
+    { value: "price_asc", label: "Menor precio" },
+    { value: "price_desc", label: "Mayor precio" },
+    { value: "description", label: "Descripción" },
+  ];
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -76,21 +83,57 @@ export default function FavoritosPage() {
       <main className="w-full px-4 pb-16 pt-8 xl:px-6">
         <div className="mb-6 border-y border-black/10 bg-[var(--color-primary)] px-4 py-3 text-[var(--color-primary-foreground)] shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-base font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-xl lg:text-2xl">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-base font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-xl lg:text-2xl">
                 Mis favoritos
-                <span className="ml-2 text-base font-bold text-black/65">
+                <span className="ml-1 whitespace-nowrap text-xs font-bold text-black/65 sm:hidden">
+                  ({favoritosFiltrados.length} Art.)
+                </span>
+                <span className="ml-2 hidden whitespace-nowrap text-base font-bold text-black/65 sm:inline">
                   ({favoritosFiltrados.length} artículos)
                 </span>
               </h1>
             </div>
 
-            <Link
-              href="/"
-              className="rounded-md bg-black px-3 py-2 text-sm font-bold text-white transition hover:bg-black/85"
-            >
-              Ver catálogo
-            </Link>
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <p className="hidden text-xs font-semibold uppercase tracking-[0.2em] text-black/65 sm:block">
+                Ordenar
+              </p>
+              <select
+                aria-label="Ordenar favoritos"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="h-8 w-[7.5rem] rounded-md border border-black/15 bg-white/70 px-2 text-xs font-semibold text-[var(--color-foreground)] outline-none sm:hidden"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="hidden flex-wrap items-center overflow-hidden rounded-md border border-black/15 bg-white/45 sm:flex">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setSortBy(option.value)}
+                    className={`h-9 px-3 text-sm font-semibold transition ${
+                      sortBy === option.value
+                        ? "bg-black text-white"
+                        : "text-[var(--color-foreground)] hover:bg-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <Link
+                href="/"
+                className="hidden h-9 items-center rounded-md border border-black/15 bg-white/45 px-3 text-sm font-bold text-[var(--color-foreground)] transition hover:bg-white lg:inline-flex"
+              >
+                Ver catálogo
+              </Link>
+            </div>
           </div>
         </div>
 
