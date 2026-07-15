@@ -1,6 +1,6 @@
 # Informe de Arquitectura — Proyecto Maxes Web
 
-Este documento describe la arquitectura de software, el stack tecnológico, la infraestructura y los flujos de integración para la plataforma web de **Maxes Insumos** dentro del contexto `/home/jnemiro/app_nodejs/maxes_web_full`.
+Este documento describe la arquitectura de software, el stack tecnológico, la infraestructura y los flujos de integración para la plataforma web de **Maxes Insumos** dentro del contexto `/home/jnemiro/app_nodejs/maxes/maxes_web`.
 
 ---
 

@@ -5,7 +5,7 @@ Este repositorio contiene la estructura completa del sitio web público y la API
 ## Estructura de Directorios
 
 ```text
-maxes_web_full/
+maxes_web/
 ├── docker-compose.yml         # Base PostgreSQL local (db-maxes-web)
 ├── docs/                      # Documentación del proyecto
 │   ├── Ejecutar_Proyecto/
@@ -65,13 +65,13 @@ El proyecto queda planteado con estrategia `local primero`:
 * **Producción en Vercel**: configurar `DATABASE_URL` con el connection string del pooler de Supabase.
 * **Puerto servidor en desarrollo**: `4785`.
 * **Puerto cliente en desarrollo**: `3785`.
-* **Guía de arranque**: [Desarrollo_Local.md](/home/jnemiro/app_nodejs/maxes_web_full/docs/Ejecutar_Proyecto/Desarrollo_Local.md)
+* **Guía de arranque**: [Desarrollo_Local.md](/home/jnemiro/app_nodejs/maxes/maxes_web/docs/Ejecutar_Proyecto/Desarrollo_Local.md)
 * **Reinicio en desarrollo**: `npm run dev` en backend y frontend libera el puerto si ya esta ocupado y vuelve a iniciar el proceso.
 
 ## Documentación
 
-* **Planificación**: [Informe_Arquitectura.md](/home/jnemiro/app_nodejs/maxes_web_full/docs/Planificacion/Informe_Arquitectura.md), [tablas.md](/home/jnemiro/app_nodejs/maxes_web_full/docs/Planificacion/tablas.md)
-* **Ejecutar Proyecto**: [Desarrollo_Local.md](/home/jnemiro/app_nodejs/maxes_web_full/docs/Ejecutar_Proyecto/Desarrollo_Local.md)
+* **Planificación**: [Informe_Arquitectura.md](/home/jnemiro/app_nodejs/maxes/maxes_web/docs/Planificacion/Informe_Arquitectura.md), [tablas.md](/home/jnemiro/app_nodejs/maxes/maxes_web/docs/Planificacion/tablas.md)
+* **Ejecutar Proyecto**: [Desarrollo_Local.md](/home/jnemiro/app_nodejs/maxes/maxes_web/docs/Ejecutar_Proyecto/Desarrollo_Local.md)
 
 ## Propuesta de Nombres
 
