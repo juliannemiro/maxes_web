@@ -82,6 +82,11 @@ export default function CartDrawer() {
                     <div className="flex min-h-20 min-w-0 flex-col justify-center">
                       <p className="line-clamp-2 text-base font-black leading-tight text-[var(--color-card-foreground)] sm:text-sm">
                         {getArticuloTitulo(item)}
+                        {item.articulo.proveedor_des && (
+                          <span className="font-medium text-[var(--color-muted-foreground)]">
+                            {` - ${item.articulo.proveedor_des}`}
+                          </span>
+                        )}
                       </p>
 
                       <div className="mt-3 grid grid-cols-[100px_minmax(0,1fr)_38px] items-center gap-2 sm:grid-cols-[100px_minmax(92px,1fr)_38px]">

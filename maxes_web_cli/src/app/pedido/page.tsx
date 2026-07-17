@@ -491,12 +491,12 @@ export default function CheckoutPage() {
                     <div className="flex min-h-[72px] min-w-0 flex-col justify-between text-left sm:block">
                       <h4 className="text-base font-semibold leading-snug text-slate-800 sm:text-lg">
                         {getArticuloTitulo(item)}
+                        {item.articulo.proveedor_des && (
+                          <span className="font-medium text-slate-500">
+                            {` - ${item.articulo.proveedor_des}`}
+                          </span>
+                        )}
                       </h4>
-                      {item.articulo.proveedor_des && (
-                        <p className="mt-1 hidden truncate text-sm font-semibold text-slate-500 sm:block">
-                          {item.articulo.proveedor_des}
-                        </p>
-                      )}
                       <div className="mt-2 grid grid-cols-[1fr_auto_auto] items-center gap-3 sm:hidden">
                         <CantidadSelector
                           value={item.cantidad}
@@ -744,14 +744,14 @@ export default function CheckoutPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex w-full items-center justify-center rounded-xl border border-amber-300 bg-amber-400 px-5 py-3.5 text-base font-bold text-amber-950 transition-colors hover:bg-amber-300 disabled:opacity-55"
+                      className="inline-flex w-full items-center justify-center rounded-xl border border-amber-300 bg-amber-400 px-5 py-3.5 text-base font-extrabold text-amber-950 transition-colors hover:bg-amber-300 disabled:opacity-55"
                     >
                       {isSubmitting ? "Procesando..." : "Confirmar Pedido"}
                     </button>
 
                     <Link
                       href="/"
-                      className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-5 py-3.5 text-center text-base font-bold text-slate-800 transition-colors hover:bg-slate-200"
+                      className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-5 py-3.5 text-center text-base font-extrabold text-slate-800 transition-colors hover:bg-slate-200"
                     >
                       Buscar más productos
                     </Link>

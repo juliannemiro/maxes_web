@@ -125,7 +125,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
     <article className="flex h-full flex-col rounded-[18px] bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
       <div className="grid min-h-[3rem] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-1">
         <span aria-hidden="true" />
-        <h3 className="flex min-h-[3rem] items-center justify-center text-center text-[16px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance">
+        <h3 className="flex min-h-[3rem] items-end justify-center text-center text-[16px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance">
           {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
         </h3>
         <button
@@ -151,8 +151,8 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
         </button>
       </div>
 
-      <p className="mt-1 text-center text-[11px] leading-none text-[var(--color-muted-foreground)]">
-        {(articulo.rubro?.nombre || "NOVEDADES").toUpperCase()}
+      <p className="mt-1.5 text-center text-[14px] font-medium leading-none text-[var(--color-muted-foreground)]">
+        {articulo.proveedor_des || "Sin marca"}
       </p>
 
       <div className="relative mt-1.5 aspect-[1/0.84] w-full overflow-hidden rounded-lg bg-white">

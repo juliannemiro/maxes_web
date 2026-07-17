@@ -111,11 +111,14 @@ export class PublicoController {
       }
 
       if (search) {
-        whereClause.OR = [
-          { articuloCod: { contains: search as string, mode: "insensitive" } },
-          { articuloDes: { contains: search as string, mode: "insensitive" } },
-          { articuloTextoWeb: { contains: search as string, mode: "insensitive" } },
-        ];
+        const searchTerms = (search as string).trim().split(/\s+/).filter(Boolean);
+        whereClause.AND = searchTerms.map((term) => ({
+          OR: [
+            { articuloCod: { contains: term, mode: "insensitive" } },
+            { articuloDes: { contains: term, mode: "insensitive" } },
+            { articuloTextoWeb: { contains: term, mode: "insensitive" } },
+          ],
+        }));
       }
 
       const [articulos, totalCount] = await prisma.$transaction([

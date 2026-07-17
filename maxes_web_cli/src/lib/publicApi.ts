@@ -158,11 +158,14 @@ export async function getArticulos(params: URLSearchParams) {
   }
 
   if (search) {
-    whereClause.OR = [
-      { articuloCod: { contains: search, mode: "insensitive" } },
-      { articuloDes: { contains: search, mode: "insensitive" } },
-      { articuloTextoWeb: { contains: search, mode: "insensitive" } },
-    ];
+    const searchTerms = search.trim().split(/\s+/).filter(Boolean);
+    whereClause.AND = searchTerms.map((term) => ({
+      OR: [
+        { articuloCod: { contains: term, mode: "insensitive" } },
+        { articuloDes: { contains: term, mode: "insensitive" } },
+        { articuloTextoWeb: { contains: term, mode: "insensitive" } },
+      ],
+    }));
   }
 
   const skip = (pageNumber - 1) * limitNumber;

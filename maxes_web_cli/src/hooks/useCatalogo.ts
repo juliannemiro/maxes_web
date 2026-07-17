@@ -41,6 +41,7 @@ export function useCatalogo(): UseCatalogoResult {
   const { tipoCompra } = usePurchaseMode();
   const [rubros, setRubros] = useState<Rubro[]>([]);
   const [articulos, setArticulos] = useState<Articulo[]>([]);
+  const [articulosIniciales, setArticulosIniciales] = useState<Articulo[]>([]);
   const [carruseles, setCarruseles] = useState<CarruselHome[]>([]);
   const [config, setConfig] = useState<Configuracion | null>(null);
   const [search, setSearch] = useState("");
@@ -59,6 +60,7 @@ export function useCatalogo(): UseCatalogoResult {
         setCarruseles(catalogoRes.carruseles);
         setConfig(catalogoRes.config);
         setArticulos(catalogoRes.articulos);
+        setArticulosIniciales(catalogoRes.articulos);
       } catch (error) {
         console.error("Error loading catalog:", error);
       } finally {
@@ -69,14 +71,52 @@ export function useCatalogo(): UseCatalogoResult {
     loadCatalogo();
   }, []);
 
+  useEffect(() => {
+    const searchTerm = search.trim();
+
+    if (!searchTerm && selectedRubro === undefined) {
+      const resetTimeoutId = window.setTimeout(() => {
+        setArticulos(articulosIniciales);
+      }, 0);
+
+      return () => window.clearTimeout(resetTimeoutId);
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await apiService.getArticulos({
+          rubro_id: selectedRubro,
+          search: searchTerm || undefined,
+          limit: 5000,
+        });
+
+        if (!controller.signal.aborted) {
+          setArticulos(response.articulos);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("Error filtering catalog:", error);
+        }
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [articulosIniciales, search, selectedRubro]);
+
   const filteredArticulos = useMemo(() => {
-    const searchTerm = normalizeCatalogText(search.trim());
+    const searchTerms = normalizeCatalogText(search.trim()).split(/\s+/).filter(Boolean);
 
     const filtered = articulos.filter((articulo) => {
-      const matchesSearch =
-        !searchTerm ||
-        normalizeCatalogText(articulo.descripcion_publica || "").includes(searchTerm) ||
-        normalizeCatalogText(articulo.codigo || "").includes(searchTerm);
+      const searchableText = normalizeCatalogText([
+        articulo.articulo_des,
+        articulo.descripcion_publica,
+        articulo.codigo,
+      ].filter(Boolean).join(" "));
+      const matchesSearch = searchTerms.every((term) => searchableText.includes(term));
 
       const matchesCategory = !selectedRubro || articulo.rubro_id === selectedRubro;
 
