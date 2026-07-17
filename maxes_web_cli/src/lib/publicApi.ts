@@ -308,7 +308,7 @@ export async function createPedido(body: PedidoBody) {
     validateMaxLength(finalDocNumeroValue, 20, "El número de documento"),
     validateMaxLength(finalCuit, 20, "El CUIT"),
     validateMaxLength(finalEmail, 150, "El email"),
-    validateMaxLength(finalCelular, 50, "El WhatsApp"),
+    validateMaxLength(finalCelular, 15, "El WhatsApp"),
     validateMaxLength(finalTipoCompra, 20, "El tipo de compra"),
     validateMaxLength(finalTipoDespachoValue, 20, "El tipo de despacho"),
     validateMaxLength(finalLocalidad, 150, "La localidad"),

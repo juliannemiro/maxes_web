@@ -75,7 +75,7 @@ export default function Header({
                   value={selectedRubro ?? "__all__"}
                   onChange={(e) => onSelectRubro(e.target.value === "__all__" ? undefined : Number(e.target.value))}
                   aria-label="Buscar por categoría"
-                  className="h-full w-full appearance-none bg-transparent px-4 pr-14 text-sm font-medium text-[var(--color-foreground)] outline-none"
+                  className="h-full w-full appearance-none bg-transparent px-4 pr-20 text-sm font-medium text-[var(--color-foreground)] outline-none"
                 >
                   <option value="__all__">Todas las categorías</option>
                   {sortedRubros.map((rubro) => (
@@ -84,6 +84,19 @@ export default function Header({
                     </option>
                   ))}
                 </select>
+                {selectedRubro !== undefined && (
+                  <button
+                    type="button"
+                    onClick={() => onSelectRubro(undefined)}
+                    aria-label="Mostrar todas las categorías"
+                    title="Mostrar todas las categorías"
+                    className="absolute right-10 flex h-full w-10 items-center justify-center text-[var(--color-muted-foreground)] transition hover:text-[var(--color-foreground)]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center bg-[var(--color-primary)] px-3 text-[var(--color-primary-foreground)]">
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <path d="m6 9 6 6 6-6" />

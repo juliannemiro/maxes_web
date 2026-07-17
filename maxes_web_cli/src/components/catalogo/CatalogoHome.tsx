@@ -28,28 +28,17 @@ export default function CatalogoHome() {
     rubros.find((rubro) => rubro.id === selectedRubro)?.nombre ||
     rubros.find((rubro) => rubro.id === selectedRubro)?.codigo ||
     "";
-  const activeFilterLabel = selectedRubro
-    ? selectedRubroName.toUpperCase()
-    : search.trim()
-      ? search.trim()
-      : "TODOS LOS ARTICULOS";
+  const activeFilterLabel = [selectedRubroName.toUpperCase(), search.trim()]
+    .filter(Boolean)
+    .join(" · ") || "TODOS LOS ARTICULOS";
   const sortOptions = [
     { value: "price_asc", label: "Menor precio" },
     { value: "price_desc", label: "Mayor precio" },
     { value: "description", label: "Descripción" },
   ];
 
-  const handleSearch = (value: string) => {
-    setSearch(value);
-
-    if (value.trim()) {
-      setSelectedRubro(undefined);
-    }
-  };
-
   const handleSelectRubro = (rubroId: number | undefined) => {
     setSelectedRubro(rubroId);
-    setSearch("");
 
     window.setTimeout(() => {
       document.getElementById("catalogo-productos")?.scrollIntoView({
@@ -81,7 +70,7 @@ export default function CatalogoHome() {
 
       <Header
         search={search}
-        onSearch={handleSearch}
+        onSearch={setSearch}
         rubros={rubros}
         selectedRubro={selectedRubro}
         onSelectRubro={handleSelectRubro}

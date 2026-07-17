@@ -29,7 +29,7 @@ export default function CheckoutPage() {
     docNumeroMasked: 10,
     localidad: 150,
     email: 150,
-    whatsapp: 50,
+    whatsapp: 15,
     numeroCliente: 50,
   } as const;
 
@@ -228,15 +228,11 @@ export default function CheckoutPage() {
   const whatsappLink = config?.whatsapp_contacto
     ? `https://wa.me/${config.whatsapp_contacto.replace(/[^0-9]/g, "")}`
     : null;
-  const cartIds = new Set(safeCart.map((item) => item.articulo.id));
-  const favoritosFueraDelCarrito = favoriteArticles.filter(
-    (articulo) => !cartIds.has(articulo.id)
-  );
-  const favoritosFueraCount = favoritosHydrated ? favoritosFueraDelCarrito.length : 0;
-  const favoritosFueraLabel =
-    favoritosFueraCount === 1
-      ? "Tiene 1 producto en favoritos fuera del carrito"
-      : `Tienes ${favoritosFueraCount} productos en favoritos fuera del carrito`;
+  const favoritosCount = favoritosHydrated ? favoriteArticles.length : 0;
+  const favoritosLabel =
+    favoritosCount === 1
+      ? "Tiene 1 producto en favoritos"
+      : `Tiene ${favoritosCount} productos en favoritos`;
 
   const getArticuloTitulo = (item: (typeof safeCart)[number]) => {
     const articuloDes = item.articulo.articulo_des?.trim();
@@ -330,9 +326,9 @@ export default function CheckoutPage() {
               )}
               <Link
                 href="/"
-                className="inline-flex items-center justify-center rounded-md border border-[var(--color-border)] px-4 py-3.5 text-base font-bold text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-400 px-4 py-3.5 text-base font-bold text-amber-950 transition-colors hover:bg-amber-300"
               >
-                Seguir Navegando
+                Volver a la página principal
               </Link>
             </div>
           </div>
@@ -372,7 +368,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:gap-8">
             {/* Cart Items List */}
             <div className="space-y-4 xl:col-span-7">
-              {favoritosFueraCount > 0 && (
+              {favoritosCount > 0 && (
                 <div className="overflow-hidden rounded-2xl border border-amber-300 bg-amber-300 text-slate-950 shadow-sm">
                   <button
                     type="button"
@@ -381,7 +377,7 @@ export default function CheckoutPage() {
                     className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-amber-200"
                   >
                     <span className="text-base font-black">
-                      {favoritosFueraLabel}
+                      {favoritosLabel}
                     </span>
                     <svg
                       viewBox="0 0 24 24"
@@ -399,7 +395,7 @@ export default function CheckoutPage() {
 
                   {favoritosExpanded && (
                     <div className="space-y-2 border-t border-amber-400 bg-amber-100 p-3">
-                      {favoritosFueraDelCarrito.map((articulo) => {
+                      {favoriteArticles.map((articulo) => {
                         const titulo =
                           articulo.articulo_des?.trim() ||
                           articulo.descripcion_publica?.trim() ||

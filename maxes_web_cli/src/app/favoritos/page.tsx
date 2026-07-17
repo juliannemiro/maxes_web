@@ -33,19 +33,6 @@ export default function FavoritosPage() {
     { value: "description", label: "Descripción" },
   ];
 
-  const handleSearch = (value: string) => {
-    setSearch(value);
-
-    if (value.trim()) {
-      setSelectedRubro(undefined);
-    }
-  };
-
-  const handleSelectRubro = (rubroId: number | undefined) => {
-    setSelectedRubro(rubroId);
-    setSearch("");
-  };
-
   const clearFilters = () => {
     setSearch("");
     setSelectedRubro(undefined);
@@ -73,10 +60,10 @@ export default function FavoritosPage() {
 
       <Header
         search={search}
-        onSearch={handleSearch}
+        onSearch={setSearch}
         rubros={rubros}
         selectedRubro={selectedRubro}
-        onSelectRubro={handleSelectRubro}
+        onSelectRubro={setSelectedRubro}
         showCart
       />
 
