@@ -8,6 +8,7 @@ import CantidadSelector from "../common/CantidadSelector";
 import ProductoModal from "./ProductoModal";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
+import OptimizedImage from "../common/OptimizedImage";
 
 interface ProductoCardProps {
   articulo: Articulo;
@@ -157,10 +158,12 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
 
       <div className="relative mt-1.5 aspect-[1/0.84] w-full overflow-hidden rounded-lg bg-white">
         {images.map((image, index) => (
-          <img
+          <OptimizedImage
             key={`${articulo.id}-${image}-${index}`}
             src={image || "/placeholder.svg"}
             alt={articulo.descripcion_publica || "Producto"}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className={`absolute inset-0 h-full w-full object-contain p-2 transition-all duration-700 ease-out ${
               index === imgIndex ? "scale-100 opacity-100" : "scale-[1.03] opacity-0"
             }`}

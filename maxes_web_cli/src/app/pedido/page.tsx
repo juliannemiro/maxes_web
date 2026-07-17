@@ -11,6 +11,7 @@ import { Articulo, Configuracion } from "../../types";
 import Link from "next/link";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 export default function CheckoutPage() {
   const { cart, isHydrated, addToCart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
@@ -18,7 +19,7 @@ export default function CheckoutPage() {
   const { tipoCompra } = usePurchaseMode();
   const safeCart = isHydrated ? cart : [];
   const [config, setConfig] = useState<Configuracion | null>(null);
-  const [favoriteArticles, setFavoriteArticles] = useState<Articulo[]>([]);
+  const [loadedFavoriteArticles, setLoadedFavoriteArticles] = useState<Articulo[]>([]);
   const [favoritosExpanded, setFavoritosExpanded] = useState(false);
   const [favoriteQuantities, setFavoriteQuantities] = useState<Record<number, string>>({});
   const fieldMaxLengths = {
@@ -67,7 +68,6 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!favoritosHydrated || favoritos.length === 0) {
-      setFavoriteArticles([]);
       return;
     }
 
@@ -75,21 +75,13 @@ export default function CheckoutPage() {
 
     async function loadFavoriteArticles() {
       try {
-        const articles = await Promise.all(
-          favoritos.map(async (articuloId) => {
-            try {
-              const response = await apiService.getArticuloById(articuloId);
-              return response.articulo;
-            } catch {
-              return null;
-            }
-          })
-        );
+        const response = await apiService.getArticulos({
+          ids: favoritos,
+          limit: favoritos.length,
+        });
 
         if (!isCancelled) {
-          setFavoriteArticles(
-            articles.filter((articulo): articulo is Articulo => articulo !== null)
-          );
+          setLoadedFavoriteArticles(response.articulos);
         }
       } catch (error) {
         console.error("Error loading favorite articles", error);
@@ -102,6 +94,11 @@ export default function CheckoutPage() {
       isCancelled = true;
     };
   }, [favoritos, favoritosHydrated]);
+
+  const favoritosSet = new Set(favoritos);
+  const favoriteArticles = favoritosHydrated
+    ? loadedFavoriteArticles.filter((articulo) => favoritosSet.has(articulo.id))
+    : [];
 
   const normalizeDocNumero = (value: string, tipo: string) => {
     if (tipo === "DNI") {
@@ -409,9 +406,12 @@ export default function CheckoutPage() {
                             key={articulo.id}
                             className="grid grid-cols-[72px_minmax(0,1fr)_96px_42px] items-center gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 transition-colors hover:border-amber-400 sm:grid-cols-[72px_minmax(0,1fr)_112px_120px_42px] sm:gap-3 sm:p-3.5"
                           >
-                            <img
+                            <OptimizedImage
                               src={articulo.imagen_url || "/placeholder.svg"}
                               alt={articulo.descripcion_publica || "Producto favorito"}
+                              width={72}
+                              height={72}
+                              sizes="72px"
                               className="h-[72px] w-[72px] rounded-lg border border-amber-200 bg-white object-contain"
                             />
                             <div className="min-w-0">
@@ -483,9 +483,12 @@ export default function CheckoutPage() {
                     key={item.articulo.id}
                     className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-300 sm:grid-cols-[72px_minmax(0,1fr)_150px_120px_40px] sm:items-center sm:p-3.5"
                   >
-                    <img
+                    <OptimizedImage
                       src={item.articulo.imagen_url || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=60"}
                       alt={item.articulo.descripcion_publica || ""}
+                      width={72}
+                      height={72}
+                      sizes="72px"
                       className="h-[72px] w-[72px] object-cover rounded-lg bg-slate-50 border border-slate-100"
                     />
                     <div className="flex min-h-[72px] min-w-0 flex-col justify-between text-left sm:block">

@@ -56,6 +56,9 @@ export const apiService = {
     destacado?: boolean;
     page?: number;
     limit?: number;
+    sort_by?: string;
+    tipo_compra?: "mayorista" | "minorista";
+    ids?: number[];
   }): Promise<{
     articulos: Articulo[];
     pagination: {
@@ -72,6 +75,9 @@ export const apiService = {
       if (params.destacado !== undefined) query.append("destacado", params.destacado.toString());
       if (params.page !== undefined) query.append("page", params.page.toString());
       if (params.limit !== undefined) query.append("limit", params.limit.toString());
+      if (params.sort_by) query.append("sort_by", params.sort_by);
+      if (params.tipo_compra) query.append("tipo_compra", params.tipo_compra);
+      if (params.ids?.length) query.append("ids", params.ids.join(","));
     }
 
     const queryString = query.toString() ? `?${query.toString()}` : "";

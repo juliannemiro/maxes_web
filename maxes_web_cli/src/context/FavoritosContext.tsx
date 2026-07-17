@@ -19,22 +19,34 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
+    let isCancelled = false;
+    let savedIds: number[] = [];
+
     try {
       const savedFavoritos = window.localStorage.getItem(STORAGE_KEY);
       if (savedFavoritos) {
         const parsedFavoritos = JSON.parse(savedFavoritos);
 
         if (Array.isArray(parsedFavoritos)) {
-          setFavoritos(
-            parsedFavoritos.filter((id): id is number => Number.isInteger(id))
-          );
+          savedIds = parsedFavoritos.filter((id): id is number => Number.isInteger(id));
         }
       }
     } catch (error) {
       console.error("Error loading favoritos from localStorage", error);
-    } finally {
-      setIsHydrated(true);
     }
+
+    queueMicrotask(() => {
+      if (isCancelled) {
+        return;
+      }
+
+      setFavoritos(savedIds);
+      setIsHydrated(true);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   useEffect(() => {

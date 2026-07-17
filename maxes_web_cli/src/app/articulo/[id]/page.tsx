@@ -9,6 +9,7 @@ import { useCart } from "../../../context/CartContext";
 import Link from "next/link";
 import { usePurchaseMode } from "../../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../../lib/obtenerPrecio";
+import OptimizedImage from "../../../components/common/OptimizedImage";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -131,10 +132,12 @@ export default function ProductDetailPage({ params }: PageProps) {
           <div className="space-y-4">
             {/* Primary View */}
             <div className="h-96 w-full relative bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center">
-              <img
+              <OptimizedImage
                 src={activeImage}
                 alt={articulo.descripcion_publica || "Artículo"}
-                className="max-h-full max-w-full object-contain"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-contain"
               />
             </div>
 
@@ -145,11 +148,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                   <button
                     key={i}
                     onClick={() => setActiveImage(img)}
-                    className={`h-16 w-16 flex-shrink-0 bg-slate-50 border rounded-lg overflow-hidden transition-all ${
+                    className={`relative h-16 w-16 flex-shrink-0 bg-slate-50 border rounded-lg overflow-hidden transition-all ${
                       activeImage === img ? "border-sky-500 ring-2 ring-sky-100" : "border-slate-200"
                     }`}
                   >
-                    <img src={img} alt={`Imagen ${i + 1}`} className="w-full h-full object-cover" />
+                    <OptimizedImage src={img} alt={`Imagen ${i + 1}`} fill sizes="64px" className="object-cover" />
                   </button>
                 ))}
               </div>

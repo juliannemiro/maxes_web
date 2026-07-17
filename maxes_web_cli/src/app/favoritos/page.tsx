@@ -22,7 +22,7 @@ export default function FavoritosPage() {
     sortBy,
     setSortBy,
     isLoading,
-  } = useCatalogo();
+  } = useCatalogo({ loadAll: true });
   const { favoritos, isHydrated } = useFavoritos();
   const favoritosSet = new Set(favoritos);
   const favoritosFiltrados = articulos.filter((articulo) => favoritosSet.has(articulo.id));

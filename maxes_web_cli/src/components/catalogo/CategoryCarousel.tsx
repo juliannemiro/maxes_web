@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Rubro } from "../../types";
+import OptimizedImage from "../common/OptimizedImage";
 
 interface CategoryCarouselProps {
   rubros: Rubro[];
@@ -123,11 +124,13 @@ export default function CategoryCarousel({ rubros, selectedRubro, onSelect }: Ca
                 : "border-[var(--color-border)] hover:border-[var(--color-primary)]"
             } sm:w-40`}
           >
-            <span className="mt-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--color-primary)] bg-[linear-gradient(180deg,#ffffff_0%,#fff7d6_100%)] sm:h-28 sm:w-28">
-              <img
+            <span className="relative mt-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--color-primary)] bg-[linear-gradient(180deg,#ffffff_0%,#fff7d6_100%)] sm:h-28 sm:w-28">
+              <OptimizedImage
                 src={getCategoryImage(rubro, index)}
                 alt={rubro.nombre || "Categoría"}
-                className="h-20 w-20 object-contain sm:h-24 sm:w-24"
+                fill
+                sizes="(max-width: 640px) 96px, 112px"
+                className="object-contain p-2"
               />
             </span>
             <span className="mt-3 flex min-h-[3.25rem] w-full items-center justify-center bg-[var(--color-primary)] px-3 py-2 text-xs font-semibold leading-tight text-[var(--color-primary-foreground)] sm:text-sm">

@@ -6,6 +6,7 @@ import { useCart } from "../../context/CartContext";
 import CantidadSelector from "../common/CantidadSelector";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
+import OptimizedImage from "../common/OptimizedImage";
 
 interface ProductoModalProps {
   articulo: Articulo;
@@ -107,10 +108,12 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
           <div className="flex min-h-0 flex-col bg-[linear-gradient(180deg,#fafafa_0%,#f3f3f3_100%)] p-8 sm:p-10">
             <div className="relative flex min-h-[320px] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white">
               {gallery.map((image, index) => (
-                <img
+                <OptimizedImage
                   key={`${articulo.id}-modal-${image}-${index}`}
                   src={image}
                   alt={articulo.descripcion_publica || "Producto"}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 58vw"
                   className={`absolute inset-0 h-full w-full object-contain p-6 transition-all duration-700 ease-out ${
                     index === imgIndex ? "scale-100 opacity-100" : "scale-[1.03] opacity-0"
                   }`}
@@ -150,13 +153,13 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                     key={`${articulo.id}-thumb-${index}`}
                     type="button"
                     onClick={() => setImgIndex(index)}
-                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-2xl border bg-white transition-all ${
+                    className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border bg-white transition-all ${
                       index === imgIndex
                         ? "border-[var(--color-primary)] ring-2 ring-[color:var(--color-primary)]/30"
                         : "border-slate-200"
                     }`}
                   >
-                    <img src={image} alt={`Vista ${index + 1}`} className="h-full w-full object-cover" />
+                    <OptimizedImage src={image} alt={`Vista ${index + 1}`} fill sizes="80px" className="object-cover" />
                   </button>
                 ))}
               </div>

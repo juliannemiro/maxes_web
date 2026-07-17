@@ -36,6 +36,14 @@ for (const { archivo, sobrescribir } of archivosEntorno) {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.50.2.2"],
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
+    ],
+  },
   turbopack: {
     root: raizProyecto,
   },

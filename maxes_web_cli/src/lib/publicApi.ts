@@ -138,6 +138,12 @@ export async function getArticulos(params: URLSearchParams) {
   const rubroId = params.get("rubro_id");
   const search = params.get("search");
   const destacado = params.get("destacado");
+  const sortBy = params.get("sort_by") || "relevance";
+  const tipoCompra = params.get("tipo_compra") === "minorista" ? "minorista" : "mayorista";
+  const ids = (params.get("ids") || "")
+    .split(",")
+    .map((id) => Number.parseInt(id, 10))
+    .filter((id) => Number.isInteger(id) && id > 0);
   const page = Number.parseInt(params.get("page") || "1", 10);
   const limit = Number.parseInt(params.get("limit") || "20", 10);
   const pageNumber = Number.isFinite(page) && page > 0 ? page : 1;
@@ -151,6 +157,10 @@ export async function getArticulos(params: URLSearchParams) {
 
   if (rubroId) {
     whereClause.rubroId = Number.parseInt(rubroId, 10);
+  }
+
+  if (ids.length > 0) {
+    whereClause.id = { in: ids };
   }
 
   if (destacado) {
@@ -169,6 +179,14 @@ export async function getArticulos(params: URLSearchParams) {
   }
 
   const skip = (pageNumber - 1) * limitNumber;
+  const orderBy: Prisma.ArticuloOrderByWithRelationInput[] =
+    sortBy === "price_asc"
+      ? [{ [tipoCompra === "minorista" ? "precioMinorista" : "precioMayorista"]: "asc" }]
+      : sortBy === "price_desc"
+        ? [{ [tipoCompra === "minorista" ? "precioMinorista" : "precioMayorista"]: "desc" }]
+        : sortBy === "description"
+          ? [{ articuloDes: "asc" }]
+          : [{ destacado: "desc" }, { fechaPublicacion: "desc" }];
   const [articulos, totalCount] = await prisma.$transaction([
     prisma.articulo.findMany({
       where: whereClause,
@@ -181,7 +199,7 @@ export async function getArticulos(params: URLSearchParams) {
       },
       skip,
       take: limitNumber,
-      orderBy: { fechaPublicacion: "desc" },
+      orderBy,
     }),
     prisma.articulo.count({ where: whereClause }),
   ]);

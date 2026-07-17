@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiService } from "../services/api";
 import { Articulo, CarruselHome, Configuracion, Rubro } from "../types";
 import { groupArticulosByCategoria, normalizeCatalogText } from "../lib/catalogo";
@@ -19,10 +19,21 @@ interface UseCatalogoResult {
   sortBy: string;
   setSortBy: (value: string) => void;
   isLoading: boolean;
+  isLoadingMore: boolean;
+  totalCount: number;
+  hasMore: boolean;
+  loadMore: () => void;
   shouldGroupByRubro: boolean;
   groupedArticulos: Array<[string, Articulo[]]>;
   tipoCompra: "mayorista" | "minorista";
 }
+
+interface UseCatalogoOptions {
+  loadAll?: boolean;
+}
+
+const PAGE_SIZE = 50;
+const ALL_ARTICLES_LIMIT = 5000;
 
 function getArticuloTimestamp(articulo: Articulo) {
   const time = new Date(articulo.fecha_publicacion).getTime();
@@ -37,7 +48,7 @@ function compareByRelevancia(a: Articulo, b: Articulo) {
   return getArticuloTimestamp(b) - getArticuloTimestamp(a);
 }
 
-export function useCatalogo(): UseCatalogoResult {
+export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCatalogoResult {
   const { tipoCompra } = usePurchaseMode();
   const [rubros, setRubros] = useState<Rubro[]>([]);
   const [articulos, setArticulos] = useState<Articulo[]>([]);
@@ -48,6 +59,11 @@ export function useCatalogo(): UseCatalogoResult {
   const [selectedRubro, setSelectedRubro] = useState<number | undefined>(undefined);
   const [sortBy, setSortBy] = useState("description");
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [initialTotalCount, setInitialTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const activeQueryRef = useRef("");
 
   useEffect(() => {
     async function loadCatalogo() {
@@ -59,8 +75,14 @@ export function useCatalogo(): UseCatalogoResult {
         setRubros(catalogoRes.rubros);
         setCarruseles(catalogoRes.carruseles);
         setConfig(catalogoRes.config);
-        setArticulos(catalogoRes.articulos);
-        setArticulosIniciales(catalogoRes.articulos);
+        const articulosData = loadAll
+          ? await apiService.getArticulos({ page: 1, limit: ALL_ARTICLES_LIMIT })
+          : catalogoRes;
+
+        setArticulos(articulosData.articulos);
+        setArticulosIniciales(articulosData.articulos);
+        setTotalCount(articulosData.pagination.totalCount);
+        setInitialTotalCount(articulosData.pagination.totalCount);
       } catch (error) {
         console.error("Error loading catalog:", error);
       } finally {
@@ -69,14 +91,18 @@ export function useCatalogo(): UseCatalogoResult {
     }
 
     loadCatalogo();
-  }, []);
+  }, [loadAll]);
 
   useEffect(() => {
     const searchTerm = search.trim();
+    const queryKey = `${selectedRubro ?? "all"}:${searchTerm}:${sortBy}:${tipoCompra}`;
+    activeQueryRef.current = queryKey;
 
-    if (!searchTerm && selectedRubro === undefined) {
+    if (!searchTerm && selectedRubro === undefined && sortBy === "description") {
       const resetTimeoutId = window.setTimeout(() => {
         setArticulos(articulosIniciales);
+        setTotalCount(initialTotalCount);
+        setCurrentPage(1);
       }, 0);
 
       return () => window.clearTimeout(resetTimeoutId);
@@ -88,11 +114,16 @@ export function useCatalogo(): UseCatalogoResult {
         const response = await apiService.getArticulos({
           rubro_id: selectedRubro,
           search: searchTerm || undefined,
-          limit: 5000,
+          page: 1,
+          limit: loadAll ? ALL_ARTICLES_LIMIT : PAGE_SIZE,
+          sort_by: sortBy,
+          tipo_compra: tipoCompra,
         });
 
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && activeQueryRef.current === queryKey) {
           setArticulos(response.articulos);
+          setTotalCount(response.pagination.totalCount);
+          setCurrentPage(1);
         }
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -105,7 +136,47 @@ export function useCatalogo(): UseCatalogoResult {
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [articulosIniciales, search, selectedRubro]);
+  }, [articulosIniciales, initialTotalCount, loadAll, search, selectedRubro, sortBy, tipoCompra]);
+
+  const hasMore = articulos.length < totalCount;
+  const loadMore = useCallback(() => {
+    if (loadAll || isLoading || isLoadingMore || !hasMore) {
+      return;
+    }
+
+    const queryKey = activeQueryRef.current;
+    const nextPage = currentPage + 1;
+    setIsLoadingMore(true);
+
+    void apiService.getArticulos({
+      rubro_id: selectedRubro,
+      search: search.trim() || undefined,
+      page: nextPage,
+      limit: PAGE_SIZE,
+      sort_by: sortBy,
+      tipo_compra: tipoCompra,
+    }).then((response) => {
+      if (activeQueryRef.current !== queryKey) {
+        return;
+      }
+
+      setArticulos((current) => {
+        const existingIds = new Set(current.map((articulo) => articulo.id));
+        return [
+          ...current,
+          ...response.articulos.filter((articulo) => !existingIds.has(articulo.id)),
+        ];
+      });
+      setTotalCount(response.pagination.totalCount);
+      setCurrentPage(nextPage);
+    }).catch((error) => {
+      console.error("Error loading more catalog articles:", error);
+    }).finally(() => {
+      if (activeQueryRef.current === queryKey) {
+        setIsLoadingMore(false);
+      }
+    });
+  }, [currentPage, hasMore, isLoading, isLoadingMore, loadAll, search, selectedRubro, sortBy, tipoCompra]);
 
   const filteredArticulos = useMemo(() => {
     const searchTerms = normalizeCatalogText(search.trim()).split(/\s+/).filter(Boolean);
@@ -161,6 +232,10 @@ export function useCatalogo(): UseCatalogoResult {
     sortBy,
     setSortBy,
     isLoading,
+    isLoadingMore,
+    totalCount,
+    hasMore,
+    loadMore,
     shouldGroupByRubro,
     groupedArticulos,
     tipoCompra,

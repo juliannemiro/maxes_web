@@ -5,6 +5,7 @@ import CantidadSelector from "../common/CantidadSelector";
 import { useCart } from "../../context/CartContext";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
+import OptimizedImage from "../common/OptimizedImage";
 
 function getArticuloTitulo(item: (ReturnType<typeof useCart>["cart"])[number]) {
   const articuloDes = item.articulo.articulo_des?.trim();
@@ -73,9 +74,12 @@ export default function CartDrawer() {
                     key={item.articulo.id}
                     className="grid grid-cols-[80px_minmax(0,1fr)] gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--color-muted)]/35"
                   >
-                    <img
+                    <OptimizedImage
                       src={item.articulo.imagen_url || "/placeholder.svg"}
                       alt={item.articulo.descripcion_publica || "Producto"}
+                      width={80}
+                      height={80}
+                      sizes="80px"
                       className="h-20 w-20 rounded-lg bg-white object-contain"
                     />
 

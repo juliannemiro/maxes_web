@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CarruselHome } from "../../types";
+import OptimizedImage from "../common/OptimizedImage";
 
 interface CarruselProps {
   carruseles: CarruselHome[];
@@ -42,10 +43,13 @@ export default function Carrusel({ carruseles }: CarruselProps) {
     <div className="relative w-full overflow-hidden rounded-lg bg-black shadow-sm ring-1 ring-black/10">
       <div className="relative aspect-[16/7] w-full sm:aspect-[16/6] lg:aspect-[16/5] xl:max-h-[46vh]">
         {slides.map((slide, slideIndex) => (
-          <img
+          <OptimizedImage
             key={`${slide.src}-${slideIndex}`}
             src={slide.src}
             alt={slide.alt}
+            fill
+            sizes="100vw"
+            priority={slideIndex === 0}
             className={`absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-700 ${
               slideIndex === index ? "opacity-100" : "opacity-0"
             }`}

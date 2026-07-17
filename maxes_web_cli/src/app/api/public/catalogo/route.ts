@@ -9,7 +9,9 @@ export async function GET() {
     const rubrosData = await getRubros();
     const carruselesData = await getCarruseles();
     const configData = await getConfig();
-    const articulosData = await getArticulos(new URLSearchParams({ limit: "200" }));
+    const articulosData = await getArticulos(
+      new URLSearchParams({ limit: "50", sort_by: "description" })
+    );
 
     return NextResponse.json({
       success: true,

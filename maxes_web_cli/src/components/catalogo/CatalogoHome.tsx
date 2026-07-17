@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Carrusel from "./Carrusel";
 import CategoryCarousel from "./CategoryCarousel";
 import ProductoCard from "./ProductoCard";
@@ -23,7 +24,12 @@ export default function CatalogoHome() {
     sortBy,
     setSortBy,
     isLoading,
+    isLoadingMore,
+    totalCount,
+    hasMore,
+    loadMore,
   } = useCatalogo();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const selectedRubroName =
     rubros.find((rubro) => rubro.id === selectedRubro)?.nombre ||
     rubros.find((rubro) => rubro.id === selectedRubro)?.codigo ||
@@ -36,6 +42,25 @@ export default function CatalogoHome() {
     { value: "price_desc", label: "Mayor precio" },
     { value: "description", label: "Descripción" },
   ];
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "600px 0px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   const handleSelectRubro = (rubroId: number | undefined) => {
     setSelectedRubro(rubroId);
@@ -96,10 +121,10 @@ export default function CatalogoHome() {
               <h1 className="truncate text-base font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-xl lg:text-2xl">
                 {activeFilterLabel}
                 <span className="ml-1 whitespace-nowrap text-xs font-bold text-black/65 sm:hidden">
-                  ({articulos.length} Art.)
+                  ({totalCount} Art.)
                 </span>
                 <span className="ml-2 hidden whitespace-nowrap text-base font-bold text-black/65 sm:inline">
-                  ({articulos.length} artículos)
+                  ({totalCount} artículos)
                 </span>
               </h1>
             </div>
@@ -151,11 +176,20 @@ export default function CatalogoHome() {
             No se encontraron productos para tu búsqueda.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {articulos.map((articulo) => (
-              <ProductoCard key={articulo.id} articulo={articulo} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {articulos.map((articulo) => (
+                <ProductoCard key={articulo.id} articulo={articulo} />
+              ))}
+            </div>
+            <div ref={loadMoreRef} className="flex min-h-24 items-center justify-center py-6">
+              {isLoadingMore && (
+                <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">
+                  Cargando más productos...
+                </p>
+              )}
+            </div>
+          </>
         )}
       </main>
 
