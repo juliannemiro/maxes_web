@@ -17,7 +17,7 @@ interface ProductoCardProps {
 export default function ProductoCard({ articulo }: ProductoCardProps) {
   const { addToCart, cart, updateComment, updateQuantity, setOpen } = useCart();
   const { isFavorito, toggleFavorito, isHydrated: favoritosHydrated } = useFavoritos();
-  const { tipoCompra } = usePurchaseMode();
+  const { tipoPrecio } = usePurchaseMode();
   const [comment, setComment] = useState("");
   const [qty, setQty] = useState("");
   const [added, setAdded] = useState(false);
@@ -119,7 +119,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
   const submittedStateChanged =
     added && (qty !== lastSubmittedQty || comment.trim() !== lastSubmittedComment);
   const actionLabel = submittedStateChanged ? "Actualizar" : added ? "✓" : "Agregar";
-  const precioActual = obtenerPrecio(articulo, tipoCompra);
+  const precioActual = obtenerPrecio(articulo, tipoPrecio);
   const favorito = favoritosHydrated && isFavorito(articulo.id);
 
   return (

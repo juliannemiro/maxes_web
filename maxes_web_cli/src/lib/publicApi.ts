@@ -11,12 +11,15 @@ type ArticuloWithRelations = Prisma.ArticuloGetPayload<{
 
 type PedidoItemInput = {
   articulo_id?: unknown;
+  articulo_cod?: unknown;
+  articulo_des?: unknown;
   cantidad?: unknown;
   precio_unitario?: unknown;
   comentario_cliente?: unknown;
 };
 
 type PedidoBody = Record<string, unknown> & {
+  id_analytics_session?: string;
   cliente_nombre?: string;
   nombre?: string;
   apellido?: string;
@@ -31,7 +34,7 @@ type PedidoBody = Record<string, unknown> & {
   celular_pedido?: string;
   observaciones?: string;
   componente?: string;
-  tipo_compra?: string;
+  tipo_precio?: string;
   total?: number;
   monto_total?: number;
   tipo_despacho?: string;
@@ -53,7 +56,7 @@ type PedidoInsert = {
   celular_pedido: string | null;
   cant_productos: number | null;
   cant_unidades: number | null;
-  tipo_compra: string | null;
+  tipo_precio: string | null;
   monto_total: Prisma.Decimal | number | string | null;
   tipo_despacho: string | null;
   localidad: string | null;
@@ -139,7 +142,7 @@ export async function getArticulos(params: URLSearchParams) {
   const search = params.get("search");
   const destacado = params.get("destacado");
   const sortBy = params.get("sort_by") || "relevance";
-  const tipoCompra = params.get("tipo_compra") === "minorista" ? "minorista" : "mayorista";
+  const tipoPrecio = params.get("tipo_precio") === "minorista" ? "minorista" : "mayorista";
   const ids = (params.get("ids") || "")
     .split(",")
     .map((id) => Number.parseInt(id, 10))
@@ -181,9 +184,9 @@ export async function getArticulos(params: URLSearchParams) {
   const skip = (pageNumber - 1) * limitNumber;
   const orderBy: Prisma.ArticuloOrderByWithRelationInput[] =
     sortBy === "price_asc"
-      ? [{ [tipoCompra === "minorista" ? "precioMinorista" : "precioMayorista"]: "asc" }]
+      ? [{ [tipoPrecio === "minorista" ? "precioMinorista" : "precioMayorista"]: "asc" }]
       : sortBy === "price_desc"
-        ? [{ [tipoCompra === "minorista" ? "precioMinorista" : "precioMayorista"]: "desc" }]
+        ? [{ [tipoPrecio === "minorista" ? "precioMinorista" : "precioMayorista"]: "desc" }]
         : sortBy === "description"
           ? [{ articuloDes: "asc" }]
           : [{ destacado: "desc" }, { fechaPublicacion: "desc" }];
@@ -261,6 +264,7 @@ export async function getConfig() {
 
 export async function createPedido(body: PedidoBody) {
   const {
+    id_analytics_session,
     cliente_nombre,
     nombre,
     apellido,
@@ -275,7 +279,7 @@ export async function createPedido(body: PedidoBody) {
     celular_pedido,
     observaciones,
     componente,
-    tipo_compra,
+    tipo_precio,
     total,
     monto_total,
     tipo_despacho,
@@ -304,7 +308,7 @@ export async function createPedido(body: PedidoBody) {
   const finalCuit = normalizeWithoutTruncating(cuit);
   const finalEmail = normalizeWithoutTruncating(email_pedido || email);
   const finalCelular = normalizeWhatsapp(celular_pedido || whatsapp);
-  const finalTipoCompra = normalizeWithoutTruncating(tipo_compra);
+  const finalTipoPrecio = normalizeWithoutTruncating(tipo_precio);
   const finalTipoDespachoValue = normalizeWithoutTruncating(finalTipoDespacho);
   const finalLocalidad = normalizeWithoutTruncating(localidad);
   const finalObservaciones = normalizeNullableString(
@@ -330,7 +334,7 @@ export async function createPedido(body: PedidoBody) {
     validateMaxLength(finalCuit, 20, "El CUIT"),
     validateMaxLength(finalEmail, 150, "El email"),
     validateMaxLength(finalCelular, 15, "El WhatsApp"),
-    validateMaxLength(finalTipoCompra, 20, "El tipo de compra"),
+    validateMaxLength(finalTipoPrecio, 20, "El tipo de precio"),
     validateMaxLength(finalTipoDespachoValue, 20, "El tipo de despacho"),
     validateMaxLength(finalLocalidad, 150, "La localidad"),
     ...items.map((item, index: number) => {
@@ -342,6 +346,15 @@ export async function createPedido(body: PedidoBody) {
       }
       if (!Number.isFinite(Number(item.precio_unitario)) || Number(item.precio_unitario) < 0) {
         return `El precio de la línea ${index + 1} es inválido.`;
+      }
+      if (!normalizeNullableString(item.articulo_cod)) {
+        return `El código del artículo de la línea ${index + 1} es obligatorio.`;
+      }
+      if (String(item.articulo_cod).length > 20) {
+        return `El código del artículo de la línea ${index + 1} supera el máximo permitido.`;
+      }
+      if (item.articulo_des && String(item.articulo_des).length > 30) {
+        return `La descripción del artículo de la línea ${index + 1} supera el máximo permitido.`;
       }
       if (item.comentario_cliente && String(item.comentario_cliente).length > 30) {
         return `El comentario de la línea ${index + 1} supera el máximo permitido.`;
@@ -369,7 +382,7 @@ export async function createPedido(body: PedidoBody) {
           "celular_pedido",
           "cant_productos",
           "cant_unidades",
-          "tipo_compra",
+          "tipo_precio",
           "monto_total",
           "tipo_despacho",
           "localidad",
@@ -392,7 +405,7 @@ export async function createPedido(body: PedidoBody) {
           "celular_pedido",
           "cant_productos",
           "cant_unidades",
-          "tipo_compra",
+          "tipo_precio",
           "monto_total",
           "tipo_despacho",
           "localidad",
@@ -409,7 +422,7 @@ export async function createPedido(body: PedidoBody) {
       finalCelular,
       finalCantProductos,
       finalCantUnidades,
-      finalTipoCompra,
+      finalTipoPrecio,
       Number(finalMontoTotal),
       finalTipoDespachoValue,
       finalLocalidad,
@@ -420,15 +433,40 @@ export async function createPedido(body: PedidoBody) {
     const createdPedido = insertedOrders[0];
 
     for (const item of items) {
-      await tx.pedidoDetalle.create({
-        data: {
-          pedido_id: createdPedido.id,
-          articulo_id: item.articulo_id ? Number.parseInt(String(item.articulo_id), 10) : null,
-          cantidad: Number.parseInt(String(item.cantidad), 10),
-          precio_unitario: Number(item.precio_unitario),
-          comentarioCliente: item.comentario_cliente ? String(item.comentario_cliente).slice(0, 30) : null,
-        },
-      });
+      await tx.$executeRawUnsafe(
+        `INSERT INTO "pedido_detalle_web" (
+           "pedido_id", "articulo_id", "articulo_cod", "articulo_des",
+           "cantidad", "precio_unitario", "comentario_cliente"
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        createdPedido.id,
+        item.articulo_id ? Number.parseInt(String(item.articulo_id), 10) : null,
+        item.articulo_cod ? String(item.articulo_cod).slice(0, 20) : null,
+        item.articulo_des ? String(item.articulo_des).slice(0, 30) : null,
+        Number.parseInt(String(item.cantidad), 10),
+        Number(item.precio_unitario),
+        item.comentario_cliente ? String(item.comentario_cliente).slice(0, 30) : null
+      );
+    }
+
+    const idAnalyticsSession =
+      typeof id_analytics_session === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(id_analytics_session)
+        ? id_analytics_session
+        : null;
+
+    if (idAnalyticsSession) {
+      await tx.$executeRawUnsafe(
+        `UPDATE analytics_carrito SET
+           estado = 'pedido_generado',
+           etapa = 'pedido_generado',
+           pedido_id = $2,
+           fecha_hora_pedido_generado = CURRENT_TIMESTAMP,
+           fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+         WHERE id_analytics_session = $1
+           AND pedido_id IS NULL`,
+        idAnalyticsSession,
+        createdPedido.id
+      );
     }
 
     return createdPedido;

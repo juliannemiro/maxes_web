@@ -57,7 +57,7 @@ export const apiService = {
     page?: number;
     limit?: number;
     sort_by?: string;
-    tipo_compra?: "mayorista" | "minorista";
+    tipo_precio?: "mayorista" | "minorista";
     ids?: number[];
   }): Promise<{
     articulos: Articulo[];
@@ -76,7 +76,7 @@ export const apiService = {
       if (params.page !== undefined) query.append("page", params.page.toString());
       if (params.limit !== undefined) query.append("limit", params.limit.toString());
       if (params.sort_by) query.append("sort_by", params.sort_by);
-      if (params.tipo_compra) query.append("tipo_compra", params.tipo_compra);
+      if (params.tipo_precio) query.append("tipo_precio", params.tipo_precio);
       if (params.ids?.length) query.append("ids", params.ids.join(","));
     }
 

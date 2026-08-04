@@ -240,7 +240,7 @@ export class PublicoController {
         celular_pedido,
         observaciones,
         componente,
-        tipo_compra,
+        tipo_precio,
         total,
         monto_total,
         tipo_despacho,
@@ -269,7 +269,7 @@ export class PublicoController {
       const finalCuit = normalizeWithoutTruncating(cuit);
       const finalEmail = normalizeWithoutTruncating(email_pedido || email);
       const finalCelular = normalizeWhatsapp(celular_pedido || whatsapp);
-      const finalTipoCompra = normalizeWithoutTruncating(tipo_compra);
+      const finalTipoPrecio = normalizeWithoutTruncating(tipo_precio);
       const finalTipoDespachoValue = normalizeWithoutTruncating(finalTipoDespacho);
       const finalLocalidad = normalizeWithoutTruncating(localidad);
       const finalObservaciones = normalizeNullableString(
@@ -294,7 +294,7 @@ export class PublicoController {
         validateMaxLength(finalCuit, 20, "El CUIT"),
         validateMaxLength(finalEmail, 150, "El email"),
         validateMaxLength(finalCelular, 15, "El WhatsApp"),
-        validateMaxLength(finalTipoCompra, 20, "El tipo de compra"),
+        validateMaxLength(finalTipoPrecio, 20, "El tipo de precio"),
         validateMaxLength(finalTipoDespachoValue, 20, "El tipo de despacho"),
         validateMaxLength(finalLocalidad, 150, "La localidad"),
         ...items.map((item: any, index: number) => {
@@ -306,6 +306,15 @@ export class PublicoController {
           }
           if (!Number.isFinite(Number(item.precio_unitario)) || Number(item.precio_unitario) < 0) {
             return `El precio de la línea ${index + 1} es inválido.`;
+          }
+          if (!normalizeNullableString(item.articulo_cod)) {
+            return `El código del artículo de la línea ${index + 1} es obligatorio.`;
+          }
+          if (String(item.articulo_cod).length > 20) {
+            return `El código del artículo de la línea ${index + 1} supera el máximo permitido.`;
+          }
+          if (item.articulo_des && String(item.articulo_des).length > 30) {
+            return `La descripción del artículo de la línea ${index + 1} supera el máximo permitido.`;
           }
           if (item.comentario_cliente && String(item.comentario_cliente).length > 30) {
             return `El comentario de la línea ${index + 1} supera el máximo permitido.`;
@@ -334,7 +343,7 @@ export class PublicoController {
               "celular_pedido",
               "cant_productos",
               "cant_unidades",
-              "tipo_compra",
+              "tipo_precio",
               "monto_total",
               "tipo_despacho",
               "localidad",
@@ -357,7 +366,7 @@ export class PublicoController {
               "celular_pedido",
               "cant_productos",
               "cant_unidades",
-              "tipo_compra",
+              "tipo_precio",
               "monto_total",
               "tipo_despacho",
               "localidad",
@@ -374,7 +383,7 @@ export class PublicoController {
           finalCelular,
           finalCantProductos,
           finalCantUnidades,
-          finalTipoCompra,
+          finalTipoPrecio,
           Number(finalMontoTotal),
           finalTipoDespachoValue,
           finalLocalidad,
@@ -385,15 +394,20 @@ export class PublicoController {
 
         // 2. Create order details
         for (const item of items) {
-          await tx.pedidoDetalle.create({
-            data: {
-              pedido_id: pedido.id,
-              articulo_id: item.articulo_id ? parseInt(item.articulo_id) : null,
-              cantidad: parseInt(item.cantidad),
-              precio_unitario: Number(item.precio_unitario),
-              comentarioCliente: item.comentario_cliente ? String(item.comentario_cliente).slice(0, 30) : null,
-            },
-          });
+          await tx.$executeRawUnsafe(
+            `INSERT INTO "pedido_detalle_web" (
+               "pedido_id", "articulo_id", "articulo_cod", "articulo_des",
+               "cantidad", "precio_unitario", "comentario_cliente"
+             )
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            pedido.id,
+            Number(item.articulo_id),
+            String(item.articulo_cod),
+            item.articulo_des ? String(item.articulo_des) : null,
+            parseInt(item.cantidad),
+            Number(item.precio_unitario),
+            item.comentario_cliente ? String(item.comentario_cliente).slice(0, 30) : null
+          );
         }
 
         return pedido;

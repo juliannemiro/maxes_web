@@ -18,7 +18,7 @@ CREATE TABLE pedido (
     celular_pedido VARCHAR(50) NULL,
     cant_productos INT NULL,
     cant_unidades INT NULL,
-    tipo_compra VARCHAR(20) NULL,
+    tipo_precio VARCHAR(20) NULL,
     monto_total NUMERIC(18,2) NULL,
     tipo_despacho VARCHAR(20) NULL,
     localidad VARCHAR(150) NULL,

@@ -12,11 +12,17 @@ import Link from "next/link";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import {
+  finishAnalyticsSession,
+  getAnalyticsSessionId,
+  trackCheckoutStarted,
+  trackFavoriteEvent,
+} from "../../lib/analyticsClient";
 
 export default function CheckoutPage() {
   const { cart, isHydrated, addToCart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
   const { favoritos, isHydrated: favoritosHydrated } = useFavoritos();
-  const { tipoCompra } = usePurchaseMode();
+  const { tipoPrecio } = usePurchaseMode();
   const safeCart = isHydrated ? cart : [];
   const [config, setConfig] = useState<Configuracion | null>(null);
   const [loadedFavoriteArticles, setLoadedFavoriteArticles] = useState<Articulo[]>([]);
@@ -65,6 +71,14 @@ export default function CheckoutPage() {
     }
     loadConfig();
   }, []);
+
+  useEffect(() => {
+    if (!isHydrated || safeCart.length === 0) {
+      return;
+    }
+
+    void trackCheckoutStarted().catch(() => undefined);
+  }, [isHydrated, safeCart.length]);
 
   useEffect(() => {
     if (!favoritosHydrated || favoritos.length === 0) {
@@ -179,6 +193,7 @@ export default function CheckoutPage() {
 
     try {
       const pedidoData = {
+        id_analytics_session: getAnalyticsSessionId(),
         cliente_nombre: `${nombre.trim()} ${apellido.trim()}`.trim(),
         nombre: nombre.trim(),
         apellido: apellido.trim(),
@@ -186,8 +201,8 @@ export default function CheckoutPage() {
         doc_tipo: docTipo,
         doc_numero: docTipo === "DNI" ? docNumero.replace(/\D/g, "") : docNumero.trim(),
         cuit: null,
-        monto_total: getCartTotal(tipoCompra),
-        total: getCartTotal(tipoCompra),
+        monto_total: getCartTotal(tipoPrecio),
+        total: getCartTotal(tipoPrecio),
         email: email.trim(),
         email_pedido: email.trim(),
         whatsapp,
@@ -196,11 +211,13 @@ export default function CheckoutPage() {
         observaciones: observaciones.trim(),
         entrega,
         tipo_despacho: entrega === "retira_local" ? "retira" : "recibe transporte",
-        tipo_compra: tipoCompra,
+        tipo_precio: tipoPrecio,
         items: safeCart.map((item) => ({
           articulo_id: item.articulo.id,
+          articulo_cod: item.articulo.codigo,
+          articulo_des: item.articulo.articulo_des,
           cantidad: item.cantidad,
-          precio_unitario: obtenerPrecio(item.articulo, tipoCompra),
+          precio_unitario: obtenerPrecio(item.articulo, tipoPrecio),
           comentario_cliente: item.comentario?.trim() ? item.comentario.trim().slice(0, 30) : null,
         })),
       };
@@ -210,6 +227,7 @@ export default function CheckoutPage() {
       if (response.success) {
         setOrderSuccess(response.order);
         clearCart();
+        finishAnalyticsSession();
       } else {
         setErrorMessage("Hubo un error al procesar el pedido. Reintente por favor.");
       }
@@ -221,7 +239,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const formattedTotal = formatPrice(isHydrated ? getCartTotal(tipoCompra) : 0);
+  const formattedTotal = formatPrice(isHydrated ? getCartTotal(tipoPrecio) : 0);
   const whatsappLink = config?.whatsapp_contacto
     ? `https://wa.me/${config.whatsapp_contacto.replace(/[^0-9]/g, "")}`
     : null;
@@ -369,7 +387,19 @@ export default function CheckoutPage() {
                 <div className="overflow-hidden rounded-2xl border border-amber-300 bg-amber-300 text-slate-950 shadow-sm">
                   <button
                     type="button"
-                    onClick={() => setFavoritosExpanded((current) => !current)}
+                    onClick={() =>
+                      setFavoritosExpanded((current) => {
+                        const nextExpanded = !current;
+                        if (nextExpanded) {
+                          void trackFavoriteEvent({
+                            accion: "panel_pedido_abierto",
+                            origen: "pedido",
+                            cantidad_favoritos: favoritos.length,
+                          }).catch(() => undefined);
+                        }
+                        return nextExpanded;
+                      })
+                    }
                     aria-expanded={favoritosExpanded}
                     className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-amber-200"
                   >
@@ -399,7 +429,7 @@ export default function CheckoutPage() {
                           "Producto sin descripción";
                         const cantidadFavorito =
                           Number.parseInt(favoriteQuantities[articulo.id] || "1", 10) || 1;
-                        const totalFavorito = obtenerPrecio(articulo, tipoCompra) * cantidadFavorito;
+                        const totalFavorito = obtenerPrecio(articulo, tipoPrecio) * cantidadFavorito;
 
                         return (
                           <div
@@ -476,7 +506,7 @@ export default function CheckoutPage() {
               </div>
 
               {safeCart.map((item) => {
-                const itemTotal = obtenerPrecio(item.articulo, tipoCompra) * item.cantidad;
+                const itemTotal = obtenerPrecio(item.articulo, tipoPrecio) * item.cantidad;
                 const formattedItemTotal = formatPrice(itemTotal);
                 return (
                   <div

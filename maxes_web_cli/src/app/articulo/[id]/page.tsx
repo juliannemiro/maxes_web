@@ -19,7 +19,7 @@ export default function ProductDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const productId = parseInt(resolvedParams.id);
   const { addToCart } = useCart();
-  const { tipoCompra } = usePurchaseMode();
+  const { tipoPrecio } = usePurchaseMode();
 
   const [articulo, setArticulo] = useState<Articulo | null>(null);
   const [config, setConfig] = useState<Configuracion | null>(null);
@@ -100,7 +100,7 @@ export default function ProductDetailPage({ params }: PageProps) {
     );
   }
 
-  const formattedPrice = formatPrice(obtenerPrecio(articulo, tipoCompra));
+  const formattedPrice = formatPrice(obtenerPrecio(articulo, tipoPrecio));
 
   const allImages = [
     articulo.imagen_url || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=60",

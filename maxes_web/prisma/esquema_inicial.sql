@@ -47,6 +47,8 @@ CREATE TABLE "pedido_detalle_web" (
     "id" SERIAL NOT NULL,
     "pedido_id" INTEGER NOT NULL,
     "articulo_id" INTEGER,
+    "articulo_cod" VARCHAR(20),
+    "articulo_des" VARCHAR(30),
     "cantidad" INTEGER NOT NULL,
     "precio_unitario" DECIMAL(18,2) NOT NULL,
 

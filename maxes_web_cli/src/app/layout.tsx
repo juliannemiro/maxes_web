@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "../context/CartContext";
 import { FavoritosProvider } from "../context/FavoritosContext";
 import { PurchaseModeProvider } from "../context/PurchaseModeContext";
+import AnalyticsActivity from "../components/analytics/AnalyticsActivity";
 
 export const metadata: Metadata = {
   title: "MAXES | Tus insumos en un solo lugar",
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="es" data-scroll-behavior="smooth">
       <body>
+        <AnalyticsActivity />
         <PurchaseModeProvider>
           <FavoritosProvider>
             <CartProvider>{children}</CartProvider>

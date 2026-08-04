@@ -1,12 +1,12 @@
 import { Articulo } from "../types";
 
-export type TipoCompra = "mayorista" | "minorista";
+export type TipoPrecio = "mayorista" | "minorista";
 
-export function obtenerPrecio(articulo: Articulo, tipoCompra: TipoCompra): number {
+export function obtenerPrecio(articulo: Articulo, tipoPrecio: TipoPrecio): number {
   const precioSeleccionado =
-    tipoCompra === "minorista" ? articulo.precio_minorista : articulo.precio_mayorista;
+    tipoPrecio === "minorista" ? articulo.precio_minorista : articulo.precio_mayorista;
   const precioFallback =
-    tipoCompra === "minorista" ? articulo.precio_mayorista : articulo.precio_minorista;
+    tipoPrecio === "minorista" ? articulo.precio_mayorista : articulo.precio_minorista;
 
   return Number(precioSeleccionado ?? precioFallback ?? 0);
 }

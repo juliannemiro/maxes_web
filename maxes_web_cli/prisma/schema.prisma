@@ -18,75 +18,83 @@ model Rubro {
 }
 
 model Articulo {
-  id               Int              @id @default(autoincrement())
-  articuloOrigenId Int              @map("articulo_origen_id")
-  articuloCod      String           @unique @db.VarChar(20) @map("articulo_cod")
-  articuloDes      String?          @db.VarChar(30) @map("articulo_des")
-  articuloTextoWeb String?          @db.Text @map("articulo_texto_web")
-  articuloImagenId Int?             @map("articulo_imagen_id")
-  precioMayorista  Decimal?         @db.Decimal(18, 2) @map("precio_mayorista")
-  precioMinorista  Decimal?         @db.Decimal(18, 2) @map("precio_minorista")
-  rubroId          Int?             @map("rubro_id")
-  proveedorDes     String?          @db.VarChar(20) @map("proveedor_des")
-  stockWeb         Int?             @map("stock_web")
-  destacado        String           @default("N") @db.Char(1)
-  visible          String           @default("S") @db.Char(1)
-  fechaPublicacion DateTime         @default(now()) @db.Timestamptz @map("fecha_publicacion")
+  id               Int      @id @default(autoincrement())
+  articuloOrigenId Int      @map("articulo_origen_id")
+  articuloCod      String   @unique @map("articulo_cod") @db.VarChar(20)
+  articuloDes      String?  @map("articulo_des") @db.VarChar(30)
+  articuloTextoWeb String?  @map("articulo_texto_web") @db.Text
+  articuloImagenId Int?     @map("articulo_imagen_id")
+  precioMayorista  Decimal? @map("precio_mayorista") @db.Decimal(18, 2)
+  precioMinorista  Decimal? @map("precio_minorista") @db.Decimal(18, 2)
+  rubroId          Int?     @map("rubro_id")
+  proveedorDes     String?  @map("proveedor_des") @db.VarChar(20)
+  stockWeb         Int?     @map("stock_web")
+  destacado        String   @default("N") @db.Char(1)
+  visible          String   @default("S") @db.Char(1)
+  fechaPublicacion DateTime @default(now()) @map("fecha_publicacion") @db.Timestamptz
 
-  rubro            Rubro?           @relation(fields: [rubroId], references: [id], onDelete: SetNull)
-  detalles         PedidoDetalle[]
-  imagenes         ArticuloImagen[] @relation("ImagenesDeArticulo")
-  imagenPrincipal  ArticuloImagen?  @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
+  rubro              Rubro?                    @relation(fields: [rubroId], references: [id], onDelete: SetNull)
+  detalles           PedidoDetalle[]
+  imagenes           ArticuloImagen[]          @relation("ImagenesDeArticulo")
+  imagenPrincipal    ArticuloImagen?           @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
+  analyticsDetalles  CarritoAnalyticsDetalle[]
+  analyticsFavoritos FavoritoAnalyticsEvento[]
 
   @@map("articulo_web")
 }
 
 model Pedido {
-  id              Int             @id @default(autoincrement())
-  fecha           DateTime?       @default(now()) @db.Timestamptz
-  cliente_nro     String?         @db.VarChar(50)
-  nombre          String?         @db.VarChar(100)
-  apellido        String?         @db.VarChar(100)
-  doc_tipo        String?         @db.VarChar(20)
-  doc_numero      String?         @db.VarChar(20)
-  cuit            String?         @db.VarChar(20)
-  email_pedido    String?         @db.VarChar(150)
-  celular_pedido  String?         @db.VarChar(50)
-  cant_productos  Int?
-  cant_unidades   Int?
-  tipo_compra     String?         @db.VarChar(20)
-  monto_total     Decimal?        @db.Decimal(18, 2)
-  tipo_despacho   String?         @db.VarChar(20)
-  localidad       String?         @db.VarChar(150)
-  observaciones   String?         @db.Text
-  estado          String?         @default("nuevo") @db.VarChar(30)
-  detalles        PedidoDetalle[]
+  id                    Int               @id @default(autoincrement())
+  fecha                 DateTime?         @default(now()) @db.Timestamptz
+  cliente_nro           String?           @db.VarChar(50)
+  nombre                String?           @db.VarChar(100)
+  apellido              String?           @db.VarChar(100)
+  doc_tipo              String?           @db.VarChar(20)
+  doc_numero            String?           @db.VarChar(20)
+  cuit                  String?           @db.VarChar(20)
+  email_pedido          String?           @db.VarChar(150)
+  celular_pedido        String?           @db.VarChar(50)
+  cant_productos        Int?
+  cant_unidades         Int?
+  tipo_precio           String?           @db.VarChar(20)
+  monto_total           Decimal?          @db.Decimal(18, 2)
+  tipo_despacho         String?           @db.VarChar(20)
+  localidad             String?           @db.VarChar(150)
+  observaciones         String?           @db.Text
+  estado                String?           @default("nuevo") @db.VarChar(30)
+  estadoRechazadoMotivo String?           @map("estado_rechazado_motivo") @db.VarChar(500)
+  estadoUsuario         String?           @map("estado_usuario") @db.VarChar(100)
+  estadoFecha           DateTime?         @map("estado_fecha") @db.Timestamptz
+  detalles              PedidoDetalle[]
+  carritoAnalytics      CarritoAnalytics?
 
   @@map("pedido_web")
 }
 
 model PedidoDetalle {
-  id                Int       @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   pedido_id         Int
   articulo_id       Int?
+  articuloCod       String? @map("articulo_cod") @db.VarChar(20)
+  articuloDes       String? @map("articulo_des") @db.VarChar(30)
   cantidad          Int
-  precio_unitario   Decimal   @db.Decimal(18, 2)
-  comentarioCliente String?   @db.VarChar(30) @map("comentario_cliente")
+  precio_unitario   Decimal @db.Decimal(18, 2)
+  comentarioCliente String? @map("comentario_cliente") @db.VarChar(30)
 
-  pedido            Pedido    @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
-  articulo          Articulo? @relation(fields: [articulo_id], references: [id], onDelete: SetNull)
+  pedido   Pedido    @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  articulo Articulo? @relation(fields: [articulo_id], references: [id], onDelete: SetNull)
 
   @@map("pedido_detalle_web")
 }
 
 model ArticuloImagen {
-  id               Int        @id @default(autoincrement())
-  articuloId       Int        @map("articulo_id")
-  imagen_url       String     @db.VarChar(500)
-  orden            Int        @default(0)
+  id         Int    @id @default(autoincrement())
+  articuloId Int    @map("articulo_id")
+  imagen_url String @db.VarChar(500)
+  orden      Int    @default(0)
 
-  articulo         Articulo   @relation("ImagenesDeArticulo", fields: [articuloId], references: [id], onDelete: Cascade)
-  comoPrincipalDe  Articulo[] @relation("ImagenPrincipalArticulo")
+  articulo        Articulo   @relation("ImagenesDeArticulo", fields: [articuloId], references: [id], onDelete: Cascade)
+  comoPrincipalDe Articulo[] @relation("ImagenPrincipalArticulo")
 
   @@map("articulo_imagen_web")
 }
@@ -110,4 +118,80 @@ model Configuracion {
   mantenimiento        Boolean @default(false)
 
   @@map("configuracion_web")
+}
+
+model CarritoAnalytics {
+  id                          Int                       @id @default(autoincrement())
+  idAnalyticsSession          String                    @unique @map("id_analytics_session") @db.VarChar(100)
+  estado                      String                    @default("activo") @db.VarChar(30)
+  etapa                       String                    @default("carrito") @db.VarChar(30)
+  fueAbandonado               Boolean                   @default(false) @map("fue_abandonado")
+  cantidadReactivaciones      Int                       @default(0) @map("cantidad_reactivaciones")
+  tipoPrecio                  String?                   @map("tipo_precio") @db.VarChar(20)
+  tipoDispositivo             String                    @default("desconocido") @map("tipo_dispositivo") @db.VarChar(30)
+  sistemaOperativo            String                    @default("otro") @map("sistema_operativo") @db.VarChar(50)
+  navegador                   String                    @default("otro") @db.VarChar(50)
+  cantidadProductos           Int                       @default(0) @map("cantidad_productos")
+  cantidadUnidades            Int                       @default(0) @map("cantidad_unidades")
+  cantidadFavoritos           Int                       @default(0) @map("cantidad_favoritos")
+  montoEstimado               Decimal                   @default(0) @map("monto_estimado") @db.Decimal(18, 2)
+  fechaHoraCreacion           DateTime                  @default(now()) @map("fecha_hora_creacion") @db.Timestamptz
+  fechaHoraInicioCatalogo     DateTime                  @default(now()) @map("fecha_hora_inicio_catalogo") @db.Timestamptz
+  fechaHoraUltimaActividad    DateTime                  @default(now()) @map("fecha_hora_ultima_actividad") @db.Timestamptz
+  fechaHoraInicioPedido       DateTime?                 @map("fecha_hora_inicio_pedido") @db.Timestamptz
+  fechaHoraMarcadoAbandonado  DateTime?                 @map("fecha_hora_marcado_abandonado") @db.Timestamptz
+  fechaHoraUltimaReactivacion DateTime?                 @map("fecha_hora_ultima_reactivacion") @db.Timestamptz
+  fechaHoraPedidoGenerado     DateTime?                 @map("fecha_hora_pedido_generado") @db.Timestamptz
+  segundosNavegacionActiva    Int                       @default(0) @map("segundos_navegacion_activa")
+  pedidoId                    Int?                      @unique @map("pedido_id")
+  origenCampania              String?                   @map("origen_campania") @db.VarChar(100)
+  medioCampania               String?                   @map("medio_campania") @db.VarChar(100)
+  nombreCampania              String?                   @map("nombre_campania") @db.VarChar(150)
+  paginaIngreso               String?                   @map("pagina_ingreso") @db.VarChar(500)
+  sitioOrigen                 String?                   @map("sitio_origen") @db.VarChar(500)
+  pedido                      Pedido?                   @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
+  detalles                    CarritoAnalyticsDetalle[]
+  eventosFavoritos            FavoritoAnalyticsEvento[]
+
+  @@index([estado, fechaHoraUltimaActividad])
+  @@index([fueAbandonado])
+  @@map("analytics_carrito")
+}
+
+model CarritoAnalyticsDetalle {
+  id                          Int              @id @default(autoincrement())
+  carritoAnalyticsId          Int              @map("carrito_analytics_id")
+  idIncorporacion             String           @unique @map("id_incorporacion") @db.VarChar(100)
+  articuloId                  Int              @map("articulo_id")
+  cantidadInicial             Int              @map("cantidad_inicial")
+  cantidadUltima              Int              @map("cantidad_ultima")
+  precioUnitario              Decimal          @map("precio_unitario") @db.Decimal(18, 2)
+  tuvoComentario              Boolean          @default(false) @map("tuvo_comentario")
+  origenIncorporacion         String           @default("catalogo") @map("origen_incorporacion") @db.VarChar(40)
+  eraFavoritoAlAgregar        Boolean          @default(false) @map("era_favorito_al_agregar")
+  fechaHoraAgregado           DateTime         @default(now()) @map("fecha_hora_agregado") @db.Timestamptz
+  fechaHoraUltimaModificacion DateTime         @default(now()) @map("fecha_hora_ultima_modificacion") @db.Timestamptz
+  fechaHoraEliminado          DateTime?        @map("fecha_hora_eliminado") @db.Timestamptz
+  carrito                     CarritoAnalytics @relation(fields: [carritoAnalyticsId], references: [id], onDelete: Cascade)
+  articulo                    Articulo         @relation(fields: [articuloId], references: [id], onDelete: Restrict)
+
+  @@index([carritoAnalyticsId, fechaHoraEliminado])
+  @@index([articuloId])
+  @@map("analytics_carrito_detalle")
+}
+
+model FavoritoAnalyticsEvento {
+  id                 Int              @id @default(autoincrement())
+  carritoAnalyticsId Int              @map("carrito_analytics_id")
+  articuloId         Int?             @map("articulo_id")
+  accion             String           @db.VarChar(30)
+  origen             String           @db.VarChar(40)
+  cantidadFavoritos  Int              @map("cantidad_favoritos")
+  fechaHora          DateTime         @default(now()) @map("fecha_hora") @db.Timestamptz
+  carrito            CarritoAnalytics @relation(fields: [carritoAnalyticsId], references: [id], onDelete: Cascade)
+  articulo           Articulo?        @relation(fields: [articuloId], references: [id], onDelete: SetNull)
+
+  @@index([accion, origen])
+  @@index([articuloId])
+  @@map("analytics_favorito_evento")
 }

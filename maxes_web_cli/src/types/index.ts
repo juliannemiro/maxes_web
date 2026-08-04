@@ -51,6 +51,8 @@ export interface PedidoDetalle {
   id?: number;
   pedido_id?: number;
   articulo_id: number | null;
+  articulo_cod?: string | null;
+  articulo_des?: string | null;
   cantidad: number;
   precio_unitario: number;
   comentario_cliente?: string | null;
@@ -71,7 +73,7 @@ export interface Pedido {
   celular_pedido?: string | null;
   cant_productos?: number | null;
   cant_unidades?: number | null;
-  tipo_compra?: string | null;
+  tipo_precio?: string | null;
   monto_total?: number | null;
   total?: number;
   tipo_despacho?: string | null;

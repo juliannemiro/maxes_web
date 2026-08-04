@@ -11,7 +11,7 @@ export default function TopBar({
   direccionLocal = "Pasteur 70 | Once",
   whatsappContact = "+5491128478046",
 }: TopBarProps) {
-  const { tipoCompra, setTipoCompra } = usePurchaseMode();
+  const { tipoPrecio, setTipoPrecio } = usePurchaseMode();
   const whatsappLink = `https://wa.me/${whatsappContact.replace(/[^0-9]/g, "")}`;
 
   return (
@@ -39,8 +39,8 @@ export default function TopBar({
 
         <select
           aria-label="Tipo de compra"
-          value={tipoCompra}
-          onChange={(e) => setTipoCompra(e.target.value as "mayorista" | "minorista")}
+          value={tipoPrecio}
+          onChange={(e) => setTipoPrecio(e.target.value as "mayorista" | "minorista")}
           className="h-7 w-[6.4rem] justify-self-end rounded border border-black/15 bg-white px-2 text-[11px] font-bold uppercase text-[var(--color-foreground)] outline-none sm:h-8 sm:w-[7rem] sm:text-xs"
         >
           <option value="mayorista">Mayorista</option>

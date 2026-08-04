@@ -16,7 +16,7 @@ interface ProductoModalProps {
 
 export default function ProductoModal({ articulo, isOpen, onClose }: ProductoModalProps) {
   const { addToCart } = useCart();
-  const { tipoCompra } = usePurchaseMode();
+  const { tipoPrecio } = usePurchaseMode();
   const [imgIndex, setImgIndex] = useState(0);
   const [comment, setComment] = useState("");
   const [qty, setQty] = useState("1");
@@ -36,7 +36,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
   );
 
   const gallery = images.length > 0 ? images : ["/placeholder.svg"];
-  const precioActual = obtenerPrecio(articulo, tipoCompra);
+  const precioActual = obtenerPrecio(articulo, tipoPrecio);
 
   useEffect(() => {
     if (!isOpen) {

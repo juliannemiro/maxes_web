@@ -23,7 +23,7 @@ function getArticuloTitulo(item: (ReturnType<typeof useCart>["cart"])[number]) {
 
 export default function CartDrawer() {
   const { cart, isHydrated, isOpen, setOpen, updateQuantity, removeFromCart, getCartTotal } = useCart();
-  const { tipoCompra } = usePurchaseMode();
+  const { tipoPrecio } = usePurchaseMode();
   const safeCart = isHydrated ? cart : [];
   const safeIsOpen = isHydrated ? isOpen : false;
 
@@ -67,7 +67,7 @@ export default function CartDrawer() {
           ) : (
             <ul className="divide-y divide-[var(--color-border)] bg-white">
               {safeCart.map((item) => {
-                const itemTotal = obtenerPrecio(item.articulo, tipoCompra) * item.cantidad;
+                const itemTotal = obtenerPrecio(item.articulo, tipoPrecio) * item.cantidad;
 
                 return (
                   <li
@@ -135,7 +135,7 @@ export default function CartDrawer() {
             <span className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
               Total
             </span>
-            <span className="text-2xl font-black leading-none">{formatPrice(getCartTotal(tipoCompra))}</span>
+            <span className="text-2xl font-black leading-none">{formatPrice(getCartTotal(tipoPrecio))}</span>
             <span aria-hidden="true" />
           </div>
 

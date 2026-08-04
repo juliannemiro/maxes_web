@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { trackFavoriteEvent } from "../lib/analyticsClient";
 
 interface FavoritosContextType {
   favoritos: number[];
@@ -55,14 +56,36 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
     }
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favoritos));
+    void trackFavoriteEvent({
+      accion: "estado_actual",
+      origen: "sincronizacion",
+      cantidad_favoritos: favoritos.length,
+    }).catch(() => undefined);
   }, [favoritos, isHydrated]);
 
   const toggleFavorito = (articuloId: number) => {
-    setFavoritos((currentFavoritos) =>
-      currentFavoritos.includes(articuloId)
+    setFavoritos((currentFavoritos) => {
+      const wasFavorite = currentFavoritos.includes(articuloId);
+      const nextFavoritos = wasFavorite
         ? currentFavoritos.filter((id) => id !== articuloId)
-        : [...currentFavoritos, articuloId]
-    );
+        : [...currentFavoritos, articuloId];
+
+      void trackFavoriteEvent({
+        accion: wasFavorite ? "quitado" : "agregado",
+        articulo_id: articuloId,
+        origen:
+          window.location.pathname === "/favoritos"
+            ? "panel_favoritos"
+            : window.location.pathname === "/pedido"
+              ? "pedido"
+              : "catalogo",
+        cantidad_favoritos: nextFavoritos.length,
+      }).catch((error) => {
+        console.error("Error tracking favorite", error);
+      });
+
+      return nextFavoritos;
+    });
   };
 
   const isFavorito = (articuloId: number) => favoritos.includes(articuloId);

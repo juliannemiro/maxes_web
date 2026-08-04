@@ -1,33 +1,33 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { TipoCompra } from "../lib/obtenerPrecio";
+import { TipoPrecio } from "../lib/obtenerPrecio";
 
 interface PurchaseModeContextType {
-  tipoCompra: TipoCompra;
-  setTipoCompra: (value: TipoCompra) => void;
+  tipoPrecio: TipoPrecio;
+  setTipoPrecio: (value: TipoPrecio) => void;
 }
 
-const STORAGE_KEY = "maxes_tipo_compra";
+const STORAGE_KEY = "maxes_tipo_precio";
 
 const PurchaseModeContext = createContext<PurchaseModeContextType | undefined>(undefined);
 
 export function PurchaseModeProvider({ children }: { children: React.ReactNode }) {
-  const [tipoCompra, setTipoCompra] = useState<TipoCompra>(() => {
+  const [tipoPrecio, setTipoPrecio] = useState<TipoPrecio>(() => {
     if (typeof window === "undefined") {
       return "mayorista";
     }
 
-    const savedTipoCompra = window.localStorage.getItem(STORAGE_KEY);
-    return savedTipoCompra === "minorista" ? "minorista" : "mayorista";
+    const savedTipoPrecio = window.localStorage.getItem(STORAGE_KEY);
+    return savedTipoPrecio === "minorista" ? "minorista" : "mayorista";
   });
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, tipoCompra);
-  }, [tipoCompra]);
+    window.localStorage.setItem(STORAGE_KEY, tipoPrecio);
+  }, [tipoPrecio]);
 
   return (
-    <PurchaseModeContext.Provider value={{ tipoCompra, setTipoCompra }}>
+    <PurchaseModeContext.Provider value={{ tipoPrecio, setTipoPrecio }}>
       {children}
     </PurchaseModeContext.Provider>
   );

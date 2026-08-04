@@ -3,12 +3,19 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { Articulo } from "../types";
 import { apiService } from "../services/api";
-import { obtenerPrecio, TipoCompra } from "../lib/obtenerPrecio";
+import { obtenerPrecio, TipoPrecio } from "../lib/obtenerPrecio";
+import { createAnalyticsIncorporationId, syncAnalyticsCart } from "../lib/analyticsClient";
+import { usePurchaseMode } from "./PurchaseModeContext";
+import { useFavoritos } from "./FavoritosContext";
 
 export interface CartItem {
   articulo: Articulo;
   cantidad: number;
   comentario?: string;
+  id_incorporacion_analytics: string;
+  tuvo_comentario_analytics: boolean;
+  origen_incorporacion_analytics: string;
+  era_favorito_al_agregar_analytics: boolean;
 }
 
 interface CartContextType {
@@ -19,7 +26,7 @@ interface CartContextType {
   updateQuantity: (articuloId: number, cantidad: number) => void;
   updateComment: (articuloId: number, comentario: string) => void;
   clearCart: () => void;
-  getCartTotal: (tipoCompra?: TipoCompra) => number;
+  getCartTotal: (tipoPrecio?: TipoPrecio) => number;
   getItemCount: () => number;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -28,6 +35,8 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { tipoPrecio } = usePurchaseMode();
+  const { isFavorito } = useFavoritos();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isOpen, setOpen] = useState(false);
@@ -45,20 +54,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const parsedCart = JSON.parse(savedCart) as CartItem[];
+        const parsedCart = JSON.parse(savedCart) as Array<Partial<CartItem> & Pick<CartItem, "articulo" | "cantidad">>;
         const refreshedCart = await Promise.all(
           parsedCart.map(async (item) => {
+            const analyticsFields = {
+              id_incorporacion_analytics:
+                item.id_incorporacion_analytics || createAnalyticsIncorporationId(),
+              tuvo_comentario_analytics:
+                item.tuvo_comentario_analytics === true || Boolean(item.comentario?.trim()),
+              origen_incorporacion_analytics:
+                item.origen_incorporacion_analytics || "catalogo",
+              era_favorito_al_agregar_analytics:
+                item.era_favorito_al_agregar_analytics === true,
+            };
             try {
               const response = await apiService.getArticuloById(item.articulo.id);
               return {
                 ...item,
+                ...analyticsFields,
                 articulo: {
                   ...item.articulo,
                   ...response.articulo,
                 },
               };
             } catch {
-              return item;
+              return { ...item, ...analyticsFields } as CartItem;
             }
           })
         );
@@ -91,7 +111,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     window.localStorage.setItem("maxes_cart", JSON.stringify(cart));
-  }, [cart, isHydrated]);
+    void syncAnalyticsCart({
+      tipo_precio: tipoPrecio,
+      items: cart.map((item) => ({
+        id_incorporacion: item.id_incorporacion_analytics,
+        articulo_id: item.articulo.id,
+        cantidad: item.cantidad,
+        precio_unitario: obtenerPrecio(item.articulo, tipoPrecio),
+        tiene_comentario: item.tuvo_comentario_analytics || Boolean(item.comentario?.trim()),
+        origen_incorporacion: item.origen_incorporacion_analytics,
+        era_favorito_al_agregar: item.era_favorito_al_agregar_analytics,
+      })),
+    }).catch((error) => {
+      console.error("Error syncing analytics cart", error);
+    });
+  }, [cart, isHydrated, tipoPrecio]);
 
   const addToCart = (articulo: Articulo, cantidad = 1, comentario = "") => {
     const cantidadValida = cantidad > 0 ? cantidad : 1;
@@ -103,12 +137,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ? {
                 ...item,
                 cantidad: item.cantidad + cantidadValida,
-                comentario: comentario || item.comentario || "",
+              comentario: comentario || item.comentario || "",
+              tuvo_comentario_analytics:
+                item.tuvo_comentario_analytics || Boolean(comentario.trim()),
               }
             : item
         );
       }
-      return [...prevCart, { articulo, cantidad: cantidadValida, comentario }];
+      return [
+        ...prevCart,
+        {
+          articulo,
+          cantidad: cantidadValida,
+          comentario,
+          id_incorporacion_analytics: createAnalyticsIncorporationId(),
+          tuvo_comentario_analytics: Boolean(comentario.trim()),
+          origen_incorporacion_analytics:
+            window.location.pathname === "/favoritos"
+              ? "panel_favoritos"
+              : window.location.pathname === "/pedido"
+                ? "favoritos_en_pedido"
+                : "catalogo",
+          era_favorito_al_agregar_analytics: isFavorito(articulo.id),
+        },
+      ];
     });
   };
 
@@ -131,7 +183,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const updateComment = (articuloId: number, comentario: string) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
-        item.articulo.id === articuloId ? { ...item, comentario } : item
+        item.articulo.id === articuloId
+          ? {
+              ...item,
+              comentario,
+              tuvo_comentario_analytics:
+                item.tuvo_comentario_analytics || Boolean(comentario.trim()),
+            }
+          : item
       )
     );
   };
@@ -140,9 +199,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   };
 
-  const getCartTotal = (tipoCompra: TipoCompra = "mayorista") => {
+  const getCartTotal = (tipoPrecio: TipoPrecio = "mayorista") => {
     return cart.reduce((total, item) => {
-      const precio = obtenerPrecio(item.articulo, tipoCompra);
+      const precio = obtenerPrecio(item.articulo, tipoPrecio);
       return total + precio * item.cantidad;
     }, 0);
   };

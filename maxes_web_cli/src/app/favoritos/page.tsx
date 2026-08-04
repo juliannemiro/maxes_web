@@ -9,8 +9,11 @@ import TopBar from "../../components/layout/TopBar";
 import ProductoCard from "../../components/catalogo/ProductoCard";
 import { useFavoritos } from "../../context/FavoritosContext";
 import { useCatalogo } from "../../hooks/useCatalogo";
+import { useEffect, useRef } from "react";
+import { trackFavoriteEvent } from "../../lib/analyticsClient";
 
 export default function FavoritosPage() {
+  const panelViewTracked = useRef(false);
   const {
     rubros,
     articulos,
@@ -32,6 +35,19 @@ export default function FavoritosPage() {
     { value: "price_desc", label: "Mayor precio" },
     { value: "description", label: "Descripción" },
   ];
+
+  useEffect(() => {
+    if (!isHydrated || panelViewTracked.current) {
+      return;
+    }
+
+    panelViewTracked.current = true;
+    void trackFavoriteEvent({
+      accion: "panel_visto",
+      origen: "panel_favoritos",
+      cantidad_favoritos: favoritos.length,
+    }).catch(() => undefined);
+  }, [favoritos.length, isHydrated]);
 
   const clearFilters = () => {
     setSearch("");

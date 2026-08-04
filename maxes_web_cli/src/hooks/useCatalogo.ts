@@ -25,7 +25,7 @@ interface UseCatalogoResult {
   loadMore: () => void;
   shouldGroupByRubro: boolean;
   groupedArticulos: Array<[string, Articulo[]]>;
-  tipoCompra: "mayorista" | "minorista";
+  tipoPrecio: "mayorista" | "minorista";
 }
 
 interface UseCatalogoOptions {
@@ -49,7 +49,7 @@ function compareByRelevancia(a: Articulo, b: Articulo) {
 }
 
 export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCatalogoResult {
-  const { tipoCompra } = usePurchaseMode();
+  const { tipoPrecio } = usePurchaseMode();
   const [rubros, setRubros] = useState<Rubro[]>([]);
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [articulosIniciales, setArticulosIniciales] = useState<Articulo[]>([]);
@@ -95,7 +95,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
 
   useEffect(() => {
     const searchTerm = search.trim();
-    const queryKey = `${selectedRubro ?? "all"}:${searchTerm}:${sortBy}:${tipoCompra}`;
+    const queryKey = `${selectedRubro ?? "all"}:${searchTerm}:${sortBy}:${tipoPrecio}`;
     activeQueryRef.current = queryKey;
 
     if (!searchTerm && selectedRubro === undefined && sortBy === "description") {
@@ -117,7 +117,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
           page: 1,
           limit: loadAll ? ALL_ARTICLES_LIMIT : PAGE_SIZE,
           sort_by: sortBy,
-          tipo_compra: tipoCompra,
+          tipo_precio: tipoPrecio,
         });
 
         if (!controller.signal.aborted && activeQueryRef.current === queryKey) {
@@ -136,7 +136,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [articulosIniciales, initialTotalCount, loadAll, search, selectedRubro, sortBy, tipoCompra]);
+  }, [articulosIniciales, initialTotalCount, loadAll, search, selectedRubro, sortBy, tipoPrecio]);
 
   const hasMore = articulos.length < totalCount;
   const loadMore = useCallback(() => {
@@ -154,7 +154,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
       page: nextPage,
       limit: PAGE_SIZE,
       sort_by: sortBy,
-      tipo_compra: tipoCompra,
+      tipo_precio: tipoPrecio,
     }).then((response) => {
       if (activeQueryRef.current !== queryKey) {
         return;
@@ -176,7 +176,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
         setIsLoadingMore(false);
       }
     });
-  }, [currentPage, hasMore, isLoading, isLoadingMore, loadAll, search, selectedRubro, sortBy, tipoCompra]);
+  }, [currentPage, hasMore, isLoading, isLoadingMore, loadAll, search, selectedRubro, sortBy, tipoPrecio]);
 
   const filteredArticulos = useMemo(() => {
     const searchTerms = normalizeCatalogText(search.trim()).split(/\s+/).filter(Boolean);
@@ -196,9 +196,9 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
 
     const sorted = [...filtered];
     if (sortBy === "price_asc") {
-      sorted.sort((a, b) => obtenerPrecio(a, tipoCompra) - obtenerPrecio(b, tipoCompra));
+      sorted.sort((a, b) => obtenerPrecio(a, tipoPrecio) - obtenerPrecio(b, tipoPrecio));
     } else if (sortBy === "price_desc") {
-      sorted.sort((a, b) => obtenerPrecio(b, tipoCompra) - obtenerPrecio(a, tipoCompra));
+      sorted.sort((a, b) => obtenerPrecio(b, tipoPrecio) - obtenerPrecio(a, tipoPrecio));
     } else if (sortBy === "description") {
       sorted.sort((a, b) =>
         (a.descripcion_publica || a.codigo || "").localeCompare(
@@ -212,7 +212,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     }
 
     return sorted;
-  }, [articulos, search, selectedRubro, sortBy, tipoCompra]);
+  }, [articulos, search, selectedRubro, sortBy, tipoPrecio]);
 
   const shouldGroupByRubro = Boolean(selectedRubro);
   const groupedArticulos = useMemo(
@@ -238,6 +238,6 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     loadMore,
     shouldGroupByRubro,
     groupedArticulos,
-    tipoCompra,
+    tipoPrecio,
   };
 }
