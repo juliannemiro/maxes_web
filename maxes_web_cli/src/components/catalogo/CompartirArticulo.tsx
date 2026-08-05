@@ -48,7 +48,9 @@ export default function CompartirArticulo({
   const shareOnWhatsapp = () => {
     const productUrl = getProductUrl();
     const message = `Mirá este producto en MAXES Insumos\n${title}\nPrecio: ${precio}\n${productUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    const whatsappUrl = new URL("https://wa.me/");
+    whatsappUrl.searchParams.set("text", message);
+    window.open(whatsappUrl.toString(), "_blank");
     void trackProductShared({ articulo_id: articulo.id, metodo: "whatsapp" }).catch(console.error);
     setIsOpen(false);
   };
