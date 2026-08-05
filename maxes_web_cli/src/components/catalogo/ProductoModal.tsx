@@ -22,6 +22,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
   const [qty, setQty] = useState("1");
   const [added, setAdded] = useState(false);
   const [qtyError, setQtyError] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState("");
 
   const images = useMemo(
     () =>
@@ -83,6 +84,28 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
     setQtyError(false);
   };
 
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/articulo/${articulo.id}`;
+    const title = articulo.articulo_des || articulo.descripcion_publica || "Artículo MAXES";
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: `Mirá este artículo en MAXES: ${title}`, url: shareUrl });
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      setShareFeedback("Link copiado");
+      window.setTimeout(() => setShareFeedback(""), 2500);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+      setShareFeedback("No se pudo compartir");
+      window.setTimeout(() => setShareFeedback(""), 2500);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-sm"
@@ -102,6 +125,21 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
             <path d="m18 6-12 12" />
             <path d="m6 6 12 12" />
           </svg>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleShare}
+          aria-label="Compartir producto"
+          className="absolute right-16 top-4 z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:text-slate-950"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" />
+          </svg>
+          <span className="hidden sm:inline">{shareFeedback || "Compartir"}</span>
         </button>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">

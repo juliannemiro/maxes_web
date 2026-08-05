@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Carrusel from "./Carrusel";
 import CategoryCarousel from "./CategoryCarousel";
 import ProductoCard from "./ProductoCard";
@@ -10,8 +10,12 @@ import Header from "../layout/Header";
 import FloatingActions from "../layout/FloatingActions";
 import Footer from "../layout/Footer";
 import { useCatalogo } from "../../hooks/useCatalogo";
+import { apiService } from "../../services/api";
+import { Articulo } from "../../types";
+import ProductoModal from "./ProductoModal";
 
 export default function CatalogoHome() {
+  const [sharedArticulo, setSharedArticulo] = useState<Articulo | null>(null);
   const {
     rubros,
     articulos,
@@ -42,6 +46,33 @@ export default function CatalogoHome() {
     { value: "price_desc", label: "Mayor precio" },
     { value: "description", label: "Descripción" },
   ];
+
+  useEffect(() => {
+    const sharedId = Number.parseInt(new URLSearchParams(window.location.search).get("articulo") || "", 10);
+    if (!Number.isInteger(sharedId) || sharedId <= 0) {
+      return;
+    }
+
+    let active = true;
+    void apiService.getArticuloById(sharedId).then(({ articulo }) => {
+      if (active) {
+        setSharedArticulo(articulo);
+      }
+    }).catch((error) => {
+      console.error("Error loading shared article:", error);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const closeSharedArticulo = () => {
+    setSharedArticulo(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("articulo");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  };
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -196,6 +227,9 @@ export default function CatalogoHome() {
       <CartDrawer />
       <FloatingActions whatsappContact={config?.whatsapp_contacto} />
       <Footer direccionLocal={config?.direccion_local} telefono={config?.whatsapp_contacto} />
+      {sharedArticulo && (
+        <ProductoModal articulo={sharedArticulo} isOpen onClose={closeSharedArticulo} />
+      )}
     </div>
   );
 }

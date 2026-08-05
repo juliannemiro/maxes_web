@@ -29,6 +29,7 @@
       "seed:importar-articulos-excel-scrape": "node ./scripts/importar-articulos-excel-scrape.mjs",
       "seed:actualizar-imagenes-scrape": "node ./scripts/actualizar-imagenes-desde-scrape.mjs",
       "seed:generar-precarga": "node ./scripts/generar-precarga-inicial.mjs",
+      "seed:pedidos-prueba-agosto-2026": "node ./scripts/crear-pedidos-prueba-agosto-2026.mjs",
       "prisma:generate": "prisma generate",
       "prisma:migrate": "prisma migrate dev"
    }

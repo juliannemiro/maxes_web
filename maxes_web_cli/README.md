@@ -36,6 +36,13 @@ DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?schema=public
 
 No se usa `NEXT_PUBLIC_API_URL` para el catalogo.
 
+Para que los enlaces compartidos generen URLs absolutas correctas en las miniaturas,
+configurar también la URL pública, sin barra final:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://maxes-web.vercel.app
+```
+
 ## Comandos
 
 ```bash
