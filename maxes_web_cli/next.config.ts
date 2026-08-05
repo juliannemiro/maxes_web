@@ -36,6 +36,9 @@ for (const { archivo, sobrescribir } of archivosEntorno) {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.50.2.2"],
+  logging: {
+    incomingRequests: false,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 86400,

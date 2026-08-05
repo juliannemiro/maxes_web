@@ -11,6 +11,8 @@ interface CompartirArticuloProps {
   menuAlign?: "left" | "right";
 }
 
+const SHARE_PREVIEW_VERSION = "1";
+
 export default function CompartirArticulo({
   articulo,
   precio,
@@ -23,7 +25,7 @@ export default function CompartirArticulo({
 
   const title = articulo.articulo_des || articulo.descripcion_publica || "Artículo MAXES";
   const getProductUrl = () =>
-    `${window.location.origin}/articulo/${encodeURIComponent(articulo.codigo || String(articulo.id))}`;
+    `${window.location.origin}/articulo/${encodeURIComponent(articulo.codigo || String(articulo.id))}?v=${SHARE_PREVIEW_VERSION}`;
 
   useEffect(() => {
     if (!isOpen) return;

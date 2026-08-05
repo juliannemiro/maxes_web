@@ -12,12 +12,18 @@ import Link from "next/link";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import ActionButton from "../../components/common/ActionButton";
 import {
   finishAnalyticsSession,
   getAnalyticsSessionId,
   trackCheckoutStarted,
   trackFavoriteEvent,
 } from "../../lib/analyticsClient";
+
+const checkoutActionClass =
+  "inline-flex min-h-14 items-center justify-center rounded-xl px-5 py-3.5 text-center text-lg leading-tight [font-family:inherit] [font-weight:700]";
+const dialogActionClass =
+  "inline-flex min-h-12 items-center justify-center rounded-xl px-4 py-3 text-center text-base leading-tight [font-family:inherit] [font-weight:700]";
 
 export default function CheckoutPage() {
   const { cart, isHydrated, addToCart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
@@ -334,14 +340,14 @@ export default function CheckoutPage() {
                   href={orderWhatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-3.5 text-base font-bold text-white hover:bg-green-700"
+                  className={`${checkoutActionClass} bg-green-600 text-white hover:bg-green-700`}
                 >
                   Avisar por WhatsApp
                 </a>
               )}
               <Link
                 href="/"
-                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-400 px-4 py-3.5 text-base font-bold text-amber-950 transition-colors hover:bg-amber-300"
+                className={`${checkoutActionClass} border border-amber-300 bg-amber-400 text-amber-950 transition-colors hover:bg-amber-300`}
               >
                 Volver a la página principal
               </Link>
@@ -374,7 +380,7 @@ export default function CheckoutPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-md bg-[var(--color-primary)] px-4 py-3.5 text-base font-bold text-[var(--color-primary-foreground)] hover:brightness-95"
+              className={`${checkoutActionClass} bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:brightness-95`}
             >
               Ver Catálogo
             </Link>
@@ -774,20 +780,22 @@ export default function CheckoutPage() {
                   )}
 
                   <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="inline-flex w-full items-center justify-center rounded-xl border border-amber-300 bg-amber-400 px-5 py-3.5 text-base font-extrabold text-amber-950 transition-colors hover:bg-amber-300 disabled:opacity-55"
-                    >
-                      {isSubmitting ? "Procesando..." : "Confirmar Pedido"}
-                    </button>
-
-                    <Link
+                    <ActionButton
                       href="/"
-                      className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-5 py-3.5 text-center text-base font-extrabold text-slate-800 transition-colors hover:bg-slate-200"
+                      variant="secondary"
+                      className="min-h-14 w-full rounded-xl px-5 py-3.5 text-lg"
                     >
                       Buscar más productos
-                    </Link>
+                    </ActionButton>
+
+                    <ActionButton
+                      type="submit"
+                      disabled={isSubmitting}
+                      variant="primary"
+                      className="min-h-14 w-full rounded-xl px-5 py-3.5 text-lg"
+                    >
+                      {isSubmitting ? "Procesando..." : "Confirmar pedido"}
+                    </ActionButton>
                   </div>
                 </form>
               </div>
@@ -805,14 +813,14 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={handleConfirmRemove}
-                className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-[var(--color-primary-foreground)] transition-colors hover:brightness-95"
+                className={`${dialogActionClass} bg-[var(--color-primary)] text-[var(--color-primary-foreground)] transition-colors hover:brightness-95`}
               >
                 Sí
               </button>
               <button
                 type="button"
                 onClick={() => setPendingRemoveId(null)}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-800 transition-colors hover:bg-slate-200"
+                className={`${dialogActionClass} border border-slate-200 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200`}
               >
                 No
               </button>

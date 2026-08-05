@@ -244,9 +244,16 @@ export async function getArticuloById(id: number) {
 }
 
 export async function getArticuloByCodigo(codigo: string) {
+  let normalizedCode = codigo;
+  try {
+    normalizedCode = decodeURIComponent(codigo);
+  } catch {
+    // Conserva el valor original si el segmento contiene un porcentaje literal.
+  }
+
   const articulo = await prisma.articulo.findFirst({
     where: {
-      articuloCod: codigo,
+      articuloCod: normalizedCode,
       visible: "S",
       precioMayorista: { gt: 0 },
       precioMinorista: { gt: 0 },

@@ -40,9 +40,9 @@ export default async function ProductOpenGraphImage({ params }: { params: Promis
         }}
       >
         {productImage ? (
-          <img src={productImage} alt="" width="460" height="460" style={{ objectFit: "contain" }} />
+          <img src={productImage} alt="" width={460} height={460} style={{ objectFit: "contain" }} />
         ) : (
-          <div style={{ fontSize: 78, fontWeight: 900 }}>
+          <div style={{ display: "flex", fontSize: 78, fontWeight: 900 }}>
             M<span style={{ color: "#f3c544" }}>@</span>XES
           </div>
         )}
@@ -59,7 +59,7 @@ export default async function ProductOpenGraphImage({ params }: { params: Promis
             </div>
           )}
           {product?.codigo && (
-            <div style={{ background: "#e5e5e5", padding: "9px 16px", borderRadius: 999, fontSize: 18, fontWeight: 700 }}>
+            <div style={{ display: "flex", background: "#e5e5e5", padding: "9px 16px", borderRadius: 999, fontSize: 18, fontWeight: 700 }}>
               Cód. {product.codigo}
             </div>
           )}

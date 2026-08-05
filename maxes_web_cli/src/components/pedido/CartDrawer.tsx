@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import CantidadSelector from "../common/CantidadSelector";
+import ActionButton from "../common/ActionButton";
 import { useCart } from "../../context/CartContext";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
@@ -140,25 +140,23 @@ export default function CartDrawer() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
+            <ActionButton
               onClick={() => setOpen(false)}
-              className="rounded-md border border-[var(--color-border)] bg-white py-3 text-center text-sm font-bold text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+              variant="secondary"
+              className="w-full"
             >
               Seguir comprando
-            </button>
+            </ActionButton>
 
-            <Link
+            <ActionButton
               href="/pedido"
-              className={`rounded-md py-3 text-center text-sm font-bold ${
-                safeCart.length
-                  ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:brightness-95"
-                  : "pointer-events-none bg-[var(--color-muted)] text-[var(--color-muted-foreground)]"
-              }`}
+              disabled={!safeCart.length}
+              variant="primary"
+              className="w-full"
               onClick={() => setOpen(false)}
             >
               Realizar compra
-            </Link>
+            </ActionButton>
           </div>
         </div>
       </aside>
