@@ -10,6 +10,7 @@ Maxes Web:
 3. Uso de comentarios en los artículos.
 4. Tiempo transcurrido hasta generar un pedido.
 5. Uso y aporte comercial de favoritos.
+6. Artículos compartidos desde el catálogo.
 
 La implementación debe permitir medir el abandono aunque el visitante cierre el
 navegador y nunca vuelva al sitio.
@@ -41,6 +42,7 @@ Todas las tablas comienzan con `analytics_` para que queden agrupadas:
 analytics_carrito
 analytics_carrito_detalle
 analytics_favorito_evento
+analytics_articulo_compartido
 ```
 
 Los nombres anteriores quedan obsoletos:
@@ -546,6 +548,47 @@ Para atribuir una línea pedida a favoritos se utiliza la incorporación activa
 del artículo al momento de generar el pedido. Una modificación de cantidad no
 cambia su origen.
 
+## Medición de artículos compartidos
+
+El objetivo es conocer qué productos generan interés suficiente para que un
+visitante los envíe o copie su enlace. La métrica funcional se denomina
+`articulos_compartidos`.
+
+Se registra un evento después de que el visitante completa una de estas
+acciones desde el detalle del producto:
+
+| Método | Condición |
+| --- | --- |
+| `whatsapp` | El visitante abre WhatsApp o WhatsApp Web desde el menú de compartir. |
+| `copiar_link` | El enlace se copia correctamente al portapapeles. |
+
+Un error al copiar no genera un evento. Para WhatsApp se cuenta la apertura del
+enlace universal `wa.me`; la web no puede confirmar el envío final. La
+métrica cuenta acciones iniciadas, no aperturas posteriores del
+enlace ni destinatarios alcanzados.
+
+Cada evento conserva la sesión, el artículo, el método y la fecha/hora. No
+guarda el destinatario ni el contenido de la conversación.
+
+Los enlaces oficiales usan el código único del producto:
+
+```text
+https://maxes-web.vercel.app/articulo/{articulo_cod}
+```
+
+`articulo_cod` es único en `articulo_web`. El código se codifica para URL y la
+página declara ese enlace como canónico. Una URL canónica indica cuál es la
+dirección oficial cuando el mismo catálogo puede mostrarse desde distintas
+rutas o filtros; evita tratar esas variantes como páginas diferentes.
+
+Indicadores del panel:
+
+- total de acciones de compartir (`articulos_compartidos`);
+- productos distintos compartidos;
+- sesiones que compartieron al menos un producto;
+- distribución entre `whatsapp` y `copiar_link`;
+- ranking de artículos más compartidos por código.
+
 ## Campos propuestos
 
 ### `analytics_carrito`
@@ -613,6 +656,16 @@ cantidad_favoritos
 fecha_hora
 ```
 
+### `analytics_articulo_compartido`
+
+```text
+id
+carrito_analytics_id
+articulo_id
+metodo
+fecha_hora
+```
+
 ## Privacidad
 
 No se envían ni guardan en las tablas de analytics:
@@ -640,6 +693,7 @@ Implementado:
 - función de abandono a las 12 horas;
 - acumulación del tiempo activo;
 - medición de comentarios y favoritos;
+- medición y ranking de artículos compartidos;
 - tablas espejo de SQL Server;
 - sincronización conjunta de pedidos y analytics;
 - idempotencia por ID en la réplica.
@@ -669,7 +723,8 @@ Reglas:
 - `analytics_carrito_detalle`: se actualiza si el ID existe y se inserta si no
   existe;
 - `analytics_favorito_evento`: se inserta únicamente si el ID no existe;
-- las tres operaciones se ejecutan en la misma transacción de SQL Server que
+- `analytics_articulo_compartido`: se inserta únicamente si el ID no existe;
+- las cuatro operaciones se ejecutan en la misma transacción de SQL Server que
   los pedidos;
 - un error revierte la ejecución completa;
 - repetir la sincronización no genera duplicados.
@@ -686,7 +741,7 @@ Reglas:
 4. Iniciar `maxes_web`.
 5. Iniciar el backend de `maxes_admin_web`.
 6. Ejecutar una sincronización manual de pedidos.
-7. Verificar las tres tablas de SQL Server.
+7. Verificar las cuatro tablas de SQL Server.
 
 ### Producción
 
@@ -726,6 +781,11 @@ SELECT *
 FROM analytics_favorito_evento
 ORDER BY id DESC
 LIMIT 20;
+
+SELECT *
+FROM analytics_articulo_compartido
+ORDER BY id DESC
+LIMIT 20;
 ```
 
 Verificación de la tarea de abandono:
@@ -755,6 +815,10 @@ ORDER BY id DESC;
 SELECT TOP 20 *
 FROM dbo.analytics_favorito_evento
 ORDER BY id DESC;
+
+SELECT TOP 20 *
+FROM dbo.analytics_articulo_compartido
+ORDER BY id DESC;
 ```
 
 Verificación de la relación con pedidos:
@@ -783,6 +847,7 @@ Antes de desarrollar los informes debe comprobarse:
 - que las modificaciones del carrito llegan a
   `analytics_carrito_detalle`;
 - que favoritos genera registros en `analytics_favorito_evento`;
+- que compartir genera registros en `analytics_articulo_compartido`;
 - que un pedido finalizado completa `pedido_id`;
 - que Supabase Cron marca abandonos sin una nueva visita;
 - que la sincronización administrativa copia los cambios a SQL Server;
@@ -823,6 +888,7 @@ El endpoint consulta exclusivamente SQL Server y devuelve:
 - cantidad y acciones de favoritos;
 - incorporaciones y pedidos según su origen;
 - artículos marcados como favoritos con mayor frecuencia.
+- total, método y ranking de artículos compartidos.
 
 ### Componentes visuales
 
@@ -835,7 +901,8 @@ El panel presenta:
 5. tiempos medianos de decisión;
 6. comparación del uso de comentarios en carrito y pedido;
 7. origen de incorporaciones desde catálogo y favoritos;
-8. ranking de artículos comentados y favoritos.
+8. ranking de artículos comentados, favoritos y compartidos;
+9. resumen de métodos utilizados para compartir.
 
 El período puede cambiarse entre 7, 30 y 90 días. También existe una acción de
 actualización manual.

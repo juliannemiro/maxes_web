@@ -39,6 +39,7 @@ model Articulo {
   imagenPrincipal    ArticuloImagen?           @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
   analyticsDetalles  CarritoAnalyticsDetalle[]
   analyticsFavoritos FavoritoAnalyticsEvento[]
+  analyticsCompartidos ArticuloCompartidoAnalytics[]
 
   @@map("articulo_web")
 }
@@ -152,6 +153,7 @@ model CarritoAnalytics {
   pedido                      Pedido?                   @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
   detalles                    CarritoAnalyticsDetalle[]
   eventosFavoritos            FavoritoAnalyticsEvento[]
+  articulosCompartidos        ArticuloCompartidoAnalytics[]
 
   @@index([estado, fechaHoraUltimaActividad])
   @@index([fueAbandonado])
@@ -194,4 +196,18 @@ model FavoritoAnalyticsEvento {
   @@index([accion, origen])
   @@index([articuloId])
   @@map("analytics_favorito_evento")
+}
+
+model ArticuloCompartidoAnalytics {
+  id                 Int              @id @default(autoincrement())
+  carritoAnalyticsId Int              @map("carrito_analytics_id")
+  articuloId         Int?             @map("articulo_id")
+  metodo             String           @db.VarChar(40)
+  fechaHora          DateTime         @default(now()) @map("fecha_hora") @db.Timestamptz
+  carrito            CarritoAnalytics @relation(fields: [carritoAnalyticsId], references: [id], onDelete: Cascade)
+  articulo           Articulo?        @relation(fields: [articuloId], references: [id], onDelete: SetNull)
+
+  @@index([fechaHora])
+  @@index([articuloId])
+  @@map("analytics_articulo_compartido")
 }

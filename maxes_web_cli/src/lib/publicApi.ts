@@ -243,6 +243,24 @@ export async function getArticuloById(id: number) {
   return { success: true, articulo: serializeArticulo(articulo) };
 }
 
+export async function getArticuloByCodigo(codigo: string) {
+  const articulo = await prisma.articulo.findFirst({
+    where: {
+      articuloCod: codigo,
+      visible: "S",
+      precioMayorista: { gt: 0 },
+      precioMinorista: { gt: 0 },
+    },
+    include: {
+      rubro: true,
+      imagenes: { orderBy: { orden: "asc" } },
+      imagenPrincipal: true,
+    },
+  });
+
+  return articulo ? { success: true, articulo: serializeArticulo(articulo) } : null;
+}
+
 export async function getCarruseles() {
   const carruseles = await prisma.carruselHome.findMany({
     where: { activo: true },

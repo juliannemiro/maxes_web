@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getArticuloById } from "../../../lib/publicApi";
+import { getArticuloByCodigo } from "../../../lib/publicApi";
 
 interface ProductLayoutProps {
   children: React.ReactNode;
@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ProductLayoutProps): Promise<Metadata> {
   const { id } = await params;
-  const productId = Number.parseInt(id, 10);
-  const result = Number.isInteger(productId) && productId > 0 ? await getArticuloById(productId) : null;
+  const codigo = id;
+  const result = await getArticuloByCodigo(codigo);
 
   if (!result) {
     return {
@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: ProductLayoutProps): Promise<
   return {
     title,
     description,
+    alternates: { canonical: `/articulo/${encodeURIComponent(product.codigo || codigo)}` },
     openGraph: {
       type: "website",
       locale: "es_AR",

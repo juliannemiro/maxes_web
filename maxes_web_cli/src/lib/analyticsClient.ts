@@ -112,3 +112,14 @@ export async function trackFavoriteEvent(input: {
     ...input,
   });
 }
+
+export async function trackProductShared(input: {
+  articulo_id: number;
+  metodo: "whatsapp" | "copiar_link";
+}) {
+  await startAnalyticsSession();
+  await sendAnalytics("/api/public/analytics/compartidos", "POST", {
+    id_analytics_session: getAnalyticsSessionId(),
+    ...input,
+  });
+}

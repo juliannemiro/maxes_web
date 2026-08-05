@@ -295,3 +295,21 @@ export async function registrarEventoFavorito(input: {
     );
   });
 }
+
+export async function registrarProductoCompartido(input: {
+  idAnalyticsSession: string;
+  articuloId: number;
+  metodo: string;
+}) {
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO analytics_articulo_compartido (
+       carrito_analytics_id, articulo_id, metodo
+     )
+     SELECT id, $2, $3
+     FROM analytics_carrito
+     WHERE id_analytics_session = $1`,
+    input.idAnalyticsSession,
+    input.articuloId,
+    limitString(input.metodo, 40) || "desconocido"
+  );
+}

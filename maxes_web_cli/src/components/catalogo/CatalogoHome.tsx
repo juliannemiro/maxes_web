@@ -14,7 +14,11 @@ import { apiService } from "../../services/api";
 import { Articulo } from "../../types";
 import ProductoModal from "./ProductoModal";
 
-export default function CatalogoHome() {
+interface CatalogoHomeProps {
+  sharedArticuloCodigo?: string;
+}
+
+export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps = {}) {
   const [sharedArticulo, setSharedArticulo] = useState<Articulo | null>(null);
   const {
     rubros,
@@ -48,13 +52,12 @@ export default function CatalogoHome() {
   ];
 
   useEffect(() => {
-    const sharedId = Number.parseInt(new URLSearchParams(window.location.search).get("articulo") || "", 10);
-    if (!Number.isInteger(sharedId) || sharedId <= 0) {
+    if (!sharedArticuloCodigo) {
       return;
     }
 
     let active = true;
-    void apiService.getArticuloById(sharedId).then(({ articulo }) => {
+    void apiService.getArticuloByCodigo(sharedArticuloCodigo).then(({ articulo }) => {
       if (active) {
         setSharedArticulo(articulo);
       }
@@ -65,13 +68,13 @@ export default function CatalogoHome() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [sharedArticuloCodigo]);
 
   const closeSharedArticulo = () => {
     setSharedArticulo(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("articulo");
-    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    if (sharedArticuloCodigo) {
+      window.history.replaceState(null, "", "/");
+    }
   };
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getArticuloById } from "../../../lib/publicApi";
+import { getArticuloByCodigo } from "../../../lib/publicApi";
 
 export const alt = "Artículo del catálogo MAXES";
 export const size = { width: 1200, height: 630 };
@@ -8,8 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductOpenGraphImage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const productId = Number.parseInt(id, 10);
-  const result = Number.isInteger(productId) && productId > 0 ? await getArticuloById(productId) : null;
+  const result = await getArticuloByCodigo(id);
   const product = result?.articulo;
   const title = product?.descripcion_publica || product?.codigo || "Artículo MAXES";
   const productImage = product?.imagen_url || null;

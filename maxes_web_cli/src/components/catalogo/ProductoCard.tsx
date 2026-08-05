@@ -9,6 +9,7 @@ import ProductoModal from "./ProductoModal";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
 import OptimizedImage from "../common/OptimizedImage";
+import CompartirArticulo from "./CompartirArticulo";
 
 interface ProductoCardProps {
   articulo: Articulo;
@@ -125,7 +126,12 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
   return (
     <article className="flex h-full flex-col rounded-[18px] bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
       <div className="grid min-h-[3rem] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-1">
-        <span aria-hidden="true" />
+        <CompartirArticulo
+          articulo={articulo}
+          precio={formatPrice(precioActual)}
+          className="relative justify-self-start"
+          menuAlign="left"
+        />
         <h3 className="flex min-h-[3rem] items-end justify-center text-center text-[16px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance">
           {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
         </h3>

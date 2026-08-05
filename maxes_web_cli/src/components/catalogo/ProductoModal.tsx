@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Articulo } from "../../types";
 import { useCart } from "../../context/CartContext";
 import CantidadSelector from "../common/CantidadSelector";
 import { usePurchaseMode } from "../../context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
 import OptimizedImage from "../common/OptimizedImage";
+import CompartirArticulo from "./CompartirArticulo";
 
 interface ProductoModalProps {
   articulo: Articulo;
@@ -22,7 +23,9 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
   const [qty, setQty] = useState("1");
   const [added, setAdded] = useState(false);
   const [qtyError, setQtyError] = useState(false);
-  const [shareFeedback, setShareFeedback] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
 
   const images = useMemo(
     () =>
@@ -40,6 +43,10 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
   const precioActual = obtenerPrecio(articulo, tipoPrecio);
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
     if (!isOpen) {
       return;
     }
@@ -53,19 +60,45 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
-    const handleEscape = (event: KeyboardEvent) => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+
+    const handleKeyboard = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => !element.hasAttribute("hidden"));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
+    window.addEventListener("keydown", handleKeyboard);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", handleKeyboard);
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -84,38 +117,21 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
     setQtyError(false);
   };
 
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/articulo/${articulo.id}`;
-    const title = articulo.articulo_des || articulo.descripcion_publica || "Artículo MAXES";
-
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, text: `Mirá este artículo en MAXES: ${title}`, url: shareUrl });
-        return;
-      }
-
-      await navigator.clipboard.writeText(shareUrl);
-      setShareFeedback("Link copiado");
-      window.setTimeout(() => setShareFeedback(""), 2500);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return;
-      }
-      setShareFeedback("No se pudo compartir");
-      window.setTimeout(() => setShareFeedback(""), 2500);
-    }
-  };
-
   return (
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`producto-modal-title-${articulo.id}`}
         className="relative flex w-full max-w-6xl flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           aria-label="Cerrar producto"
@@ -127,20 +143,11 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
           </svg>
         </button>
 
-        <button
-          type="button"
-          onClick={handleShare}
-          aria-label="Compartir producto"
-          className="absolute right-16 top-4 z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:text-slate-950"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="18" cy="5" r="3" />
-            <circle cx="6" cy="12" r="3" />
-            <circle cx="18" cy="19" r="3" />
-            <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" />
-          </svg>
-          <span className="hidden sm:inline">{shareFeedback || "Compartir"}</span>
-        </button>
+        <CompartirArticulo
+          articulo={articulo}
+          precio={formatPrice(precioActual)}
+          className="absolute right-16 top-4"
+        />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <div className="flex min-h-0 flex-col bg-[linear-gradient(180deg,#fafafa_0%,#f3f3f3_100%)] p-8 sm:p-10">
@@ -217,7 +224,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                 )}
               </div>
 
-              <h2 className="mt-3 text-xl font-black leading-tight text-slate-900 sm:text-[1.65rem]">
+              <h2 id={`producto-modal-title-${articulo.id}`} className="mt-3 text-xl font-black leading-tight text-slate-900 sm:text-[1.65rem]">
                 {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
               </h2>
 

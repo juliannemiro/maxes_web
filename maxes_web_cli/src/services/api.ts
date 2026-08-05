@@ -97,6 +97,10 @@ export const apiService = {
     return fetchJson<{ articulo: Articulo }>(`/api/public/articulos/${id}`);
   },
 
+  async getArticuloByCodigo(codigo: string): Promise<{ articulo: Articulo }> {
+    return fetchJson<{ articulo: Articulo }>(`/api/public/articulos/codigo/${encodeURIComponent(codigo)}`);
+  },
+
   // Get banners
   async getCarruseles(): Promise<{ carruseles: CarruselHome[] }> {
     return fetchJson<{ carruseles: CarruselHome[] }>("/api/public/carruseles");
