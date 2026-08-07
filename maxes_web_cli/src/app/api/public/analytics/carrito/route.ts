@@ -53,14 +53,15 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const idAnalyticsSession = normalizeAnalyticsSessionId(body.id_analytics_session);
+    const idAnalyticsCart = normalizeAnalyticsSessionId(body.id_analytics_cart);
     const items = normalizeItems(body.items);
     const tipoPrecio = body.tipo_precio === "minorista" ? "minorista" : "mayorista";
 
-    if (!idAnalyticsSession || !items) {
+    if (!idAnalyticsSession || !idAnalyticsCart || !items) {
       return NextResponse.json({ error: "Los datos del carrito son inválidos." }, { status: 400 });
     }
 
-    await sincronizarCarritoAnalytics({ idAnalyticsSession, tipoPrecio, items });
+    await sincronizarCarritoAnalytics({ idAnalyticsSession, idAnalyticsCart, tipoPrecio, items });
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });

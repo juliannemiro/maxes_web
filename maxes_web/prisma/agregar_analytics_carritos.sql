@@ -171,7 +171,7 @@ BEGIN
     WHERE estado = 'activo'
       AND cantidad_productos > 0
       AND pedido_id IS NULL
-      AND fecha_hora_ultima_actividad <= CURRENT_TIMESTAMP - INTERVAL '12 hours';
+      AND fecha_hora_ultima_actividad <= CURRENT_TIMESTAMP - INTERVAL '2 hours';
 
     GET DIAGNOSTICS cantidad_marcada = ROW_COUNT;
     RETURN cantidad_marcada;

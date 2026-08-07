@@ -15,6 +15,7 @@ import OptimizedImage from "../../components/common/OptimizedImage";
 import ActionButton from "../../components/common/ActionButton";
 import {
   finishAnalyticsSession,
+  getAnalyticsCartId,
   getAnalyticsSessionId,
   trackCheckoutStarted,
   trackFavoriteEvent,
@@ -200,6 +201,7 @@ export default function CheckoutPage() {
     try {
       const pedidoData = {
         id_analytics_session: getAnalyticsSessionId(),
+        id_analytics_cart: getAnalyticsCartId(),
         cliente_nombre: `${nombre.trim()} ${apellido.trim()}`.trim(),
         nombre: nombre.trim(),
         apellido: apellido.trim(),

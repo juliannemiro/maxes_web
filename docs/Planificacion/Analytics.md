@@ -32,7 +32,8 @@ Supabase es la fuente de verdad de la actividad web. SQL Server conserva la
 réplica utilizada para informes internos.
 
 Las tablas espejo de SQL Server se crean con
-`maxes_admin_web/sqlserver/008_crear_tablas_analytics.sql`.
+`maxes_admin_web/sqlserver/008_crear_tablas_analytics.sql` y la ampliación
+`maxes_admin_web/sqlserver/009_crear_sesiones_analytics.sql`.
 
 ### Convención de nombres
 
@@ -40,6 +41,7 @@ Todas las tablas comienzan con `analytics_` para que queden agrupadas:
 
 ```text
 analytics_carrito
+analytics_sesion
 analytics_carrito_detalle
 analytics_favorito_evento
 analytics_articulo_compartido
@@ -58,25 +60,53 @@ renombran sin borrar información.
 
 ## Conceptos generales
 
-### Sesión de analytics
+### Visitante, sesión y carrito anónimos
 
-Cada navegador recibe un identificador aleatorio llamado
-`id_analytics_session`. Este valor no contiene información personal y permite
-relacionar las acciones realizadas durante una visita.
+Analytics utiliza tres identificadores aleatorios sin datos personales:
 
-La sesión se registra en el servidor cuando el catálogo termina su primera carga
-correctamente. No debe esperarse a que el visitante agregue un artículo.
+| Identificador | Persistencia | Finalidad |
+| --- | --- | --- |
+| `id_analytics_visitor` | Persiste en `localStorage` | Reconoce el mismo navegador de forma anónima. No identifica a una persona. |
+| `id_analytics_session` | Se renueva después de 30 minutos sin interacción | Representa una visita y conserva su dispositivo y origen de entrada. |
+| `id_analytics_cart` | Persiste mientras el carrito continúe abierto | Permite retomar el mismo carrito en otra sesión. Se elimina al generar el pedido. |
 
-El identificador se conserva en el almacenamiento local del navegador para que
-un carrito pueda continuar después de cerrar y volver a abrir el sitio.
+La sesión se crea al cargar el catálogo y se mantiene con interacciones reales
+como clic, teclado, desplazamiento o toque. Después de 30 minutos sin
+interacción, la próxima interacción crea una sesión nueva vinculada al mismo
+visitante y al mismo carrito.
 
-No se considera una identificación absoluta de la persona. Se creará una sesión
-diferente si el visitante:
+El carrito no vence junto con la sesión. Puede crearse en una sesión proveniente
+de Instagram y retomarse en otra proveniente de Google. Si ya fue marcado como
+abandonado, la siguiente modificación lo reactiva y registra la recuperación.
+
+No se considera una identificación absoluta de la persona. El visitante anónimo
+cambia si la persona:
 
 - borra los datos del navegador;
 - utiliza navegación privada;
 - cambia de navegador;
 - cambia de dispositivo.
+
+Una persona que use dos dispositivos cuenta como dos visitantes anónimos. Dos
+personas que compartan navegador pueden contar como un mismo visitante.
+
+### Datos de adquisición de cada sesión
+
+Al crear la sesión se congelan `utm_source`, `utm_medium`, `utm_campaign`,
+`utm_content`, `utm_term`, `gclid`, `fbclid`, la página de ingreso y
+`document.referrer`. La navegación interna no reemplaza esos valores.
+
+La clasificación del panel respeta esta prioridad:
+
+1. Campaña paga: `cpc`, `ppc`, `paid`, `paid_social`, `display`, `gclid` o `fbclid`.
+2. Red social orgánica: Facebook, Instagram, TikTok, WhatsApp, LinkedIn,
+   X/Twitter, YouTube, Pinterest o Telegram, por UTM o referente.
+3. Buscador: Google, Bing, Yahoo o DuckDuckGo.
+4. Otro sitio: existe un UTM de origen o referente sin coincidencia anterior.
+5. Directo: no existe UTM de origen ni referente disponible.
+
+`document.referrer` puede venir vacío por privacidad o por abrir el enlace desde
+una aplicación. “Directo” puede incluir casos cuyo origen no pudo conocerse.
 
 ### Carrito de analytics
 
@@ -106,6 +136,12 @@ La sincronización de las acciones que cambian el contenido del carrito debe
 enviarse inmediatamente. No debe esperar a que el navegador se cierre ni
 depender de un evento de salida de la página.
 
+Las solicitudes de analytics utilizan `keepalive` y realizan un segundo intento
+ante un fallo transitorio. Los eventos de favoritos y compartidos llevan un
+`id_evento` único; el servidor ignora una repetición del mismo evento para que
+el reintento no duplique métricas. Cada evento conserva además la sesión en la
+que ocurrió, aunque el carrito haya sido creado en una visita anterior.
+
 ## Estados y etapas del carrito
 
 ### Estado actual
@@ -114,8 +150,8 @@ El campo `estado` admite:
 
 | Estado | Condición |
 | --- | --- |
-| `activo` | El carrito contiene al menos un artículo, no generó un pedido y tuvo actividad hace menos de 12 horas. |
-| `abandonado` | El carrito contiene al menos un artículo, no generó un pedido y transcurrieron 12 horas o más desde su última actividad. |
+| `activo` | El carrito contiene al menos un artículo, no generó un pedido y tuvo actividad hace menos de 2 horas. |
+| `abandonado` | El carrito contiene al menos un artículo, no generó un pedido y transcurrieron 2 horas o más desde su última actividad. El carrito no se elimina y puede recuperarse. |
 | `pedido_generado` | El servidor creó correctamente un registro en `pedido_web` a partir del carrito. |
 
 `pedido_generado` no significa que el pedido esté pagado, aprobado o facturado.
@@ -146,7 +182,7 @@ estas condiciones:
 estado = activo
 cantidad_productos > 0
 pedido_id es nulo
-fecha_hora_ultima_actividad <= fecha/hora actual - 12 horas
+fecha_hora_ultima_actividad <= fecha/hora actual - 2 horas
 ```
 
 Para esos registros debe:
@@ -157,7 +193,7 @@ fue_abandonado = verdadero
 fecha_hora_marcado_abandonado = fecha/hora actual
 ```
 
-La regla se basa siempre en el límite exacto de 12 horas. La actualización
+La regla se basa siempre en el límite exacto de 2 horas. La actualización
 material puede suceder unos minutos después, según la frecuencia con la que se
 ejecute el proceso.
 
@@ -172,7 +208,7 @@ funcionando cada 15 minutos.
 
 ### Regreso posterior
 
-Si el visitante vuelve después de las 12 horas y modifica el mismo carrito:
+Si el visitante vuelve después de las 2 horas y modifica el mismo carrito:
 
 ```text
 estado: abandonado -> activo
@@ -204,7 +240,7 @@ Todas las fechas se guardan como fecha y hora con zona horaria.
 | --- | --- |
 | `fecha_hora_creacion` | Momento en que se crea el carrito en el servidor. |
 | `fecha_hora_inicio_catalogo` | Primera carga correcta del catálogo asociada a la sesión. No se sobrescribe. |
-| `fecha_hora_ultima_actividad` | Última acción significativa. Es la base para calcular las 12 horas. |
+| `fecha_hora_ultima_actividad` | Última acción significativa. Es la base para calcular las 2 horas. |
 | `fecha_hora_inicio_pedido` | Primera entrada a `/pedido`. No se sobrescribe en entradas posteriores. |
 | `fecha_hora_marcado_abandonado` | Primera vez que el servidor determina el abandono. |
 | `fecha_hora_ultima_reactivacion` | Último regreso posterior a un abandono. |
@@ -271,7 +307,6 @@ Para pedidos generados deben mostrarse:
 
 - mediana del tiempo total hasta el pedido;
 - mediana del tiempo activo de navegación;
-- mediana del tiempo dentro del formulario;
 - percentil 75 de cada tiempo;
 - distribución por tipo de dispositivo;
 - distribución por tipo de precio;
@@ -280,6 +315,39 @@ Para pedidos generados deben mostrarse:
 La mediana es el indicador principal porque unos pocos visitantes que regresan
 muchas horas o días después pueden distorsionar fuertemente el promedio.
 
+La tarjeta administrativa se denomina `Tiempo de actividad dentro del sitio` y
+compara pedidos realizados y no realizados con el mismo criterio activo y los
+mismos títulos:
+
+- `Catálogo`: segundos activos acumulados mientras el visitante navega por el
+  catálogo y el carrito, fuera del formulario `/pedido`.
+- `Pedido - Formulario de confirmación`: segundos activos acumulados dentro de
+  `/pedido`. Solo considera las sesiones que alcanzaron esta sección.
+- `Tiempo activo total`: suma de las medianas visibles de `Catálogo` y `Pedido -
+  Formulario de confirmación`, para que el total cierre con los dos valores
+  mostrados en la tarjeta. Para históricos sin separación por secciones, utiliza
+  la mediana del tiempo activo total que ya estaba registrado por sesión.
+
+Los tres valores solo avanzan mientras la pestaña está visible y hubo
+interacción reciente. La tarjeta no muestra tiempos calendario, por lo que una
+página que queda abierta sin uso no aumenta estas métricas.
+
+Cada concepto muestra en la misma línea su título y un ícono de información. En
+`Pedidos realizados`, la cantidad de sesiones analizadas se informa una sola vez
+en el encabezado del grupo. En `Pedidos no generados`, cada concepto muestra
+además la cantidad de sesiones utilizadas para calcular su mediana. El conteo de
+`Pedido - Formulario de confirmación` incluye solamente las sesiones que llegaron
+a abrir esa sección; así puede compararse con el total y detectar dónde se
+interrumpió el proceso. Cada sesión se clasifica según haya generado o no el
+pedido durante esa misma sesión. Cuando una sección no tiene casos, la pantalla
+muestra `Sin datos` con jerarquía visual secundaria.
+Los registros históricos anteriores a la incorporación de los contadores por
+sección solo se recuperan cuando la atribución es inequívoca: si una sesión nunca
+salió del catálogo, todo su tiempo activo corresponde a `Catálogo`. Si llegó al
+formulario, no se reparte el histórico entre secciones. En esos casos las
+secciones muestran `Sin datos`, pero se conserva el tiempo activo total que ya
+estaba registrado por sesión.
+
 También pueden utilizarse rangos:
 
 ```text
@@ -287,8 +355,7 @@ menos de 5 minutos
 de 5 a 15 minutos
 de 15 a 30 minutos
 de 30 minutos a 2 horas
-de 2 a 12 horas
-más de 12 horas
+más de 2 horas
 ```
 
 ## Medición de carritos abandonados
@@ -690,7 +757,7 @@ Implementado:
 - sincronización desde `CartContext`;
 - registro de entrada a `/pedido`;
 - vínculo entre analytics y `pedido_web`;
-- función de abandono a las 12 horas;
+- función de abandono a las 2 horas;
 - acumulación del tiempo activo;
 - medición de comentarios y favoritos;
 - medición y ranking de artículos compartidos;
@@ -720,11 +787,12 @@ las mismas conexiones y frecuencia que la descarga de pedidos.
 Reglas:
 
 - `analytics_carrito`: se actualiza si el ID existe y se inserta si no existe;
+- `analytics_sesion`: se actualiza si el ID existe y se inserta si no existe;
 - `analytics_carrito_detalle`: se actualiza si el ID existe y se inserta si no
   existe;
 - `analytics_favorito_evento`: se inserta únicamente si el ID no existe;
 - `analytics_articulo_compartido`: se inserta únicamente si el ID no existe;
-- las cuatro operaciones se ejecutan en la misma transacción de SQL Server que
+- las cinco operaciones se ejecutan en la misma transacción de SQL Server que
   los pedidos;
 - un error revierte la ejecución completa;
 - repetir la sincronización no genera duplicados.
@@ -736,24 +804,30 @@ Reglas:
 1. Iniciar PostgreSQL con `maxes_web/docker-compose.yml`.
 2. Ejecutar en PostgreSQL
    `maxes_web/prisma/agregar_analytics_carritos.sql`.
-3. Ejecutar en la base SQL Server `e59ges`
+3. Ejecutar en PostgreSQL
+   `maxes_web/prisma/agregar_sesiones_analytics.sql`.
+4. Ejecutar en la base SQL Server `e59ges`
    `maxes_admin_web/sqlserver/008_crear_tablas_analytics.sql`.
-4. Iniciar `maxes_web`.
-5. Iniciar el backend de `maxes_admin_web`.
-6. Ejecutar una sincronización manual de pedidos.
-7. Verificar las cuatro tablas de SQL Server.
+5. Ejecutar en SQL Server
+   `maxes_admin_web/sqlserver/009_crear_sesiones_analytics.sql`.
+6. Iniciar `maxes_web`.
+7. Iniciar el backend de `maxes_admin_web`.
+8. Ejecutar una sincronización manual de pedidos.
+9. Verificar las cinco tablas de SQL Server.
 
 ### Producción
 
 El orden obligatorio es:
 
 1. Ejecutar `maxes_web/prisma/agregar_analytics_carritos.sql` en Supabase.
-2. Ejecutar `maxes_admin_web/sqlserver/008_crear_tablas_analytics.sql` en
+2. Ejecutar `maxes_web/prisma/agregar_sesiones_analytics.sql` en Supabase.
+3. Ejecutar `maxes_admin_web/sqlserver/008_crear_tablas_analytics.sql` en
    `e59ges`.
-3. Publicar `maxes_web`.
-4. Publicar o reiniciar el backend de `maxes_admin_web`.
-5. Ejecutar una sincronización manual.
-6. Comprobar la réplica antes de habilitar los informes.
+4. Ejecutar `maxes_admin_web/sqlserver/009_crear_sesiones_analytics.sql`.
+5. Publicar `maxes_web`.
+6. Publicar o reiniciar el backend de `maxes_admin_web`.
+7. Ejecutar una sincronización manual.
+8. Comprobar la réplica antes de habilitar los informes.
 
 Supabase Cron puede habilitarse como respaldo opcional ejecutando
 `maxes_web/prisma/programar_abandono_analytics_supabase.sql`.
@@ -769,6 +843,11 @@ su arranque.
 ```sql
 SELECT *
 FROM analytics_carrito
+ORDER BY id DESC
+LIMIT 20;
+
+SELECT *
+FROM analytics_sesion
 ORDER BY id DESC
 LIMIT 20;
 
@@ -843,7 +922,7 @@ ORDER BY analytics.id DESC;
 
 Antes de desarrollar los informes debe comprobarse:
 
-- que el sitio publicado crea sesiones en `analytics_carrito`;
+- que el sitio publicado crea sesiones en `analytics_sesion` y las vincula con `analytics_carrito`;
 - que las modificaciones del carrito llegan a
   `analytics_carrito_detalle`;
 - que favoritos genera registros en `analytics_favorito_evento`;
@@ -909,3 +988,32 @@ actualización manual.
 
 Cuando no hay información, los componentes muestran un estado vacío y no
 intentan calcular porcentajes dividiendo por cero.
+
+### Ayuda contextual y mantenimiento de reglas
+
+Cada tarjeta y panel de la pantalla administrativa debe mostrar un ícono de
+información pequeño con la regla funcional utilizada para calcular o interpretar
+el dato. Esta ayuda es un resumen de este documento, no una definición paralela.
+
+Toda modificación de una regla en este archivo Markdown obliga a actualizar en
+la misma entrega el texto informativo correspondiente de la pantalla de
+Analytics. Del mismo modo, una modificación de la regla mostrada en pantalla
+debe reflejarse aquí. La documentación y la interfaz deben permanecer
+sincronizadas.
+
+Los textos vigentes de ayuda son:
+
+| Tarjeta o panel | Mensaje informativo |
+| --- | --- |
+| Sesiones iniciadas | Cuenta las sesiones iniciadas en el período. Una sesión nueva se crea después de 30 minutos sin interacción; el carrito puede continuar entre sesiones. |
+| Conversión | Pedidos generados dividido por sesiones iniciadas en el período seleccionado. |
+| Carritos abandonados | Cuenta carritos con productos, sin pedido y con 2 horas o más desde su última actividad significativa. El carrito se conserva y puede recuperarse. |
+| Monto de pedidos | Suma el monto estimado de los carritos que generaron un pedido durante el período. No implica que estén pagados, aprobados o facturados. |
+| Evolución de sesiones y pedidos | Agrupa las sesiones por su fecha de inicio. Una sesión que generó pedido cuenta como pedido; solo se considera abandonada si no generó pedido y su carrito continúa abandonado. Las categorías son excluyentes. Si se segmenta por 90 días, la visualización agrupa resultados por semana. |
+| Tiempo de actividad dentro del sitio | Muestra medianas de tiempo activo por sección. Solo acumula mientras la pestaña está visible y hubo interacción reciente. |
+| Artículos con comentarios | Identifica cuántas unidades de pedidos realizados contienen un comentario aclaratorio. |
+| Uso de Favoritos en pedidos | Analiza el uso de favoritos en pedidos realizados y su origen en la aplicación. |
+| Embudo de pedido | Compara cuántas sesiones alcanzan cada etapa del proceso de compra: inicio, carrito, formulario y pedido generado. |
+| Dispositivos | Determina el tipo de dispositivo utilizado al iniciar cada sesión. Los porcentajes se calculan sobre el total de sesiones del período y pueden ser aproximados. |
+| Artículos compartidos | Registra la intención de compartir y cuenta clics de cada opción. |
+| Origen de acceso | Clasifica el origen congelado al iniciar la sesión: campaña paga, red social, buscador, otro sitio o directo. Si el navegador oculta el referente, se considera como acceso directo. |

@@ -19,12 +19,16 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const idAnalyticsSession = normalizeAnalyticsSessionId(body.id_analytics_session);
+    const idAnalyticsCart = normalizeAnalyticsSessionId(body.id_analytics_cart);
+    const idEvento = normalizeAnalyticsSessionId(body.id_evento);
     const accion = typeof body.accion === "string" ? body.accion : "";
     const articuloId = body.articulo_id == null ? null : Number(body.articulo_id);
     const cantidadFavoritos = Number(body.cantidad_favoritos);
 
     if (
       !idAnalyticsSession ||
+      !idAnalyticsCart ||
+      !idEvento ||
       !VALID_ACTIONS.has(accion) ||
       (articuloId !== null && (!Number.isInteger(articuloId) || articuloId <= 0)) ||
       !Number.isInteger(cantidadFavoritos) ||
@@ -35,6 +39,8 @@ export async function POST(request: Request) {
 
     await registrarEventoFavorito({
       idAnalyticsSession,
+      idAnalyticsCart,
+      idEvento,
       articuloId,
       accion: accion as
         | "agregado"

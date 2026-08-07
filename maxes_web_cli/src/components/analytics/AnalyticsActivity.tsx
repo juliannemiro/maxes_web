@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   getStoredActiveSeconds,
+  getStoredSectionActiveSeconds,
+  markAnalyticsActivity,
   startAnalyticsSession,
   storeActiveSeconds,
   syncActiveNavigationSeconds,
@@ -18,23 +20,35 @@ export default function AnalyticsActivity() {
 
   useEffect(() => {
     let seconds = getStoredActiveSeconds();
+    let catalogSeconds = getStoredSectionActiveSeconds("catalogo");
+    let orderSeconds = getStoredSectionActiveSeconds("pedido");
     let lastInteractionAt = Date.now();
     let lastSyncedSeconds = seconds;
     let finished = false;
+    let sessionId = markAnalyticsActivity();
 
     const registerInteraction = () => {
       lastInteractionAt = Date.now();
+      const activeSessionId = markAnalyticsActivity();
+      if (activeSessionId !== sessionId) {
+        sessionId = activeSessionId;
+        seconds = 0;
+        catalogSeconds = 0;
+        orderSeconds = 0;
+        lastSyncedSeconds = 0;
+        void startAnalyticsSession().catch(() => undefined);
+      }
     };
     const sync = () => {
       if (finished) {
         return;
       }
-      storeActiveSeconds(seconds);
+      storeActiveSeconds(seconds, catalogSeconds, orderSeconds);
       if (seconds === lastSyncedSeconds) {
         return;
       }
       lastSyncedSeconds = seconds;
-      void syncActiveNavigationSeconds(seconds).catch(() => {
+      void syncActiveNavigationSeconds(seconds, catalogSeconds, orderSeconds).catch(() => {
         lastSyncedSeconds = -1;
       });
     };
@@ -51,6 +65,11 @@ export default function AnalyticsActivity() {
         Date.now() - lastInteractionAt < INACTIVITY_LIMIT_MS
       ) {
         seconds += 1;
+        if (pathname === "/pedido") {
+          orderSeconds += 1;
+        } else {
+          catalogSeconds += 1;
+        }
       }
     }, TICK_INTERVAL_MS);
     const syncId = window.setInterval(sync, SYNC_INTERVAL_MS);

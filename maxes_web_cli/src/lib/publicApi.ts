@@ -20,6 +20,7 @@ type PedidoItemInput = {
 
 type PedidoBody = Record<string, unknown> & {
   id_analytics_session?: string;
+  id_analytics_cart?: string;
   cliente_nombre?: string;
   nombre?: string;
   apellido?: string;
@@ -290,6 +291,7 @@ export async function getConfig() {
 export async function createPedido(body: PedidoBody) {
   const {
     id_analytics_session,
+    id_analytics_cart,
     cliente_nombre,
     nombre,
     apellido,
@@ -478,8 +480,12 @@ export async function createPedido(body: PedidoBody) {
       typeof id_analytics_session === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(id_analytics_session)
         ? id_analytics_session
         : null;
+    const idAnalyticsCart =
+      typeof id_analytics_cart === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(id_analytics_cart)
+        ? id_analytics_cart
+        : idAnalyticsSession;
 
-    if (idAnalyticsSession) {
+    if (idAnalyticsCart) {
       await tx.$executeRawUnsafe(
         `UPDATE analytics_carrito SET
            estado = 'pedido_generado',
@@ -489,8 +495,39 @@ export async function createPedido(body: PedidoBody) {
            fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
          WHERE id_analytics_session = $1
            AND pedido_id IS NULL`,
-        idAnalyticsSession,
+        idAnalyticsCart,
         createdPedido.id
+      );
+      if (idAnalyticsSession) {
+        await tx.$executeRawUnsafe(
+          `UPDATE analytics_sesion SET
+             pedido_generado = TRUE,
+             etapa = 'pedido_generado',
+             fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+           WHERE id_analytics_session = $1`,
+          idAnalyticsSession
+        );
+      }
+      await tx.$executeRawUnsafe(
+        `UPDATE analytics_sesion SET
+           pedido_generado = TRUE,
+           etapa = 'pedido_generado',
+           fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+         WHERE id = (
+           SELECT sesion.id
+           FROM analytics_sesion AS sesion
+           INNER JOIN analytics_carrito AS carrito
+             ON carrito.id = sesion.carrito_analytics_id
+           WHERE carrito.id_analytics_session = $1
+           ORDER BY sesion.fecha_hora_ultima_actividad DESC, sesion.id DESC
+           LIMIT 1
+         )
+           AND NOT EXISTS (
+             SELECT 1 FROM analytics_sesion
+             WHERE id_analytics_session = $2 AND pedido_generado = TRUE
+           )`,
+        idAnalyticsCart,
+        idAnalyticsSession
       );
     }
 

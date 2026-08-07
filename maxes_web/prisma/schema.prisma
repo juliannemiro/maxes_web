@@ -143,6 +143,8 @@ model CarritoAnalytics {
   fechaHoraUltimaReactivacion DateTime?                 @map("fecha_hora_ultima_reactivacion") @db.Timestamptz
   fechaHoraPedidoGenerado     DateTime?                 @map("fecha_hora_pedido_generado") @db.Timestamptz
   segundosNavegacionActiva    Int                       @default(0) @map("segundos_navegacion_activa")
+  segundosActivosCatalogo     Int?                      @map("segundos_activos_catalogo")
+  segundosActivosPedido       Int?                      @map("segundos_activos_pedido")
   pedidoId                    Int?                      @unique @map("pedido_id")
   origenCampania              String?                   @map("origen_campania") @db.VarChar(100)
   medioCampania               String?                   @map("medio_campania") @db.VarChar(100)
@@ -152,10 +154,43 @@ model CarritoAnalytics {
   pedido                      Pedido?                   @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
   detalles                    CarritoAnalyticsDetalle[]
   eventosFavoritos            FavoritoAnalyticsEvento[]
+  sesiones                    SesionAnalytics[]
 
   @@index([estado, fechaHoraUltimaActividad])
   @@index([fueAbandonado])
   @@map("analytics_carrito")
+}
+
+model SesionAnalytics {
+  id                       Int              @id @default(autoincrement())
+  idAnalyticsSession       String           @unique @map("id_analytics_session") @db.VarChar(100)
+  idAnalyticsVisitor       String           @map("id_analytics_visitor") @db.VarChar(100)
+  carritoAnalyticsId       Int              @map("carrito_analytics_id")
+  fechaHoraInicio          DateTime         @default(now()) @map("fecha_hora_inicio") @db.Timestamptz
+  fechaHoraUltimaActividad DateTime         @default(now()) @map("fecha_hora_ultima_actividad") @db.Timestamptz
+  segundosNavegacionActiva Int              @default(0) @map("segundos_navegacion_activa")
+  segundosActivosCatalogo  Int?             @map("segundos_activos_catalogo")
+  segundosActivosPedido    Int?             @map("segundos_activos_pedido")
+  etapa                    String           @default("catalogo") @db.VarChar(30)
+  pedidoGenerado           Boolean          @default(false) @map("pedido_generado")
+  tipoDispositivo          String           @default("desconocido") @map("tipo_dispositivo") @db.VarChar(30)
+  sistemaOperativo         String           @default("otro") @map("sistema_operativo") @db.VarChar(50)
+  navegador                String           @default("otro") @db.VarChar(50)
+  origenCampania           String?          @map("origen_campania") @db.VarChar(100)
+  medioCampania            String?          @map("medio_campania") @db.VarChar(100)
+  nombreCampania           String?          @map("nombre_campania") @db.VarChar(150)
+  contenidoCampania        String?          @map("contenido_campania") @db.VarChar(150)
+  terminoCampania          String?          @map("termino_campania") @db.VarChar(150)
+  idClickGoogle            String?          @map("id_click_google") @db.VarChar(200)
+  idClickMeta              String?          @map("id_click_meta") @db.VarChar(200)
+  paginaIngreso            String?          @map("pagina_ingreso") @db.VarChar(500)
+  sitioOrigen              String?          @map("sitio_origen") @db.VarChar(500)
+  carrito                  CarritoAnalytics @relation(fields: [carritoAnalyticsId], references: [id], onDelete: Cascade)
+
+  @@index([fechaHoraInicio])
+  @@index([idAnalyticsVisitor, fechaHoraInicio])
+  @@index([carritoAnalyticsId])
+  @@map("analytics_sesion")
 }
 
 model CarritoAnalyticsDetalle {
@@ -183,6 +218,8 @@ model CarritoAnalyticsDetalle {
 model FavoritoAnalyticsEvento {
   id                 Int              @id @default(autoincrement())
   carritoAnalyticsId Int              @map("carrito_analytics_id")
+  idAnalyticsSession String?          @map("id_analytics_session") @db.VarChar(100)
+  idEvento           String?          @unique @map("id_evento") @db.VarChar(100)
   articuloId         Int?             @map("articulo_id")
   accion             String           @db.VarChar(30)
   origen             String           @db.VarChar(40)

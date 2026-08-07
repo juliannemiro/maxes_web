@@ -80,40 +80,72 @@ export function detectDevice(userAgent: string | null) {
 
 export async function iniciarSesionAnalytics(input: {
   idAnalyticsSession: string;
+  idAnalyticsVisitor: string;
+  idAnalyticsCart: string;
   userAgent: string | null;
   origenCampania?: unknown;
   medioCampania?: unknown;
   nombreCampania?: unknown;
+  contenidoCampania?: unknown;
+  terminoCampania?: unknown;
+  idClickGoogle?: unknown;
+  idClickMeta?: unknown;
   paginaIngreso?: unknown;
   sitioOrigen?: unknown;
 }) {
   const device = detectDevice(input.userAgent);
-  const rows = await prisma.$queryRawUnsafe<AnalyticsCartRow[]>(
-    `INSERT INTO analytics_carrito (
-       id_analytics_session, tipo_dispositivo, sistema_operativo, navegador,
-       origen_campania, medio_campania, nombre_campania, pagina_ingreso, sitio_origen
-     )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-     ON CONFLICT (id_analytics_session) DO UPDATE
-       SET id_analytics_session = EXCLUDED.id_analytics_session
-     RETURNING id, estado, fue_abandonado, cantidad_reactivaciones,
-       fecha_hora_inicio_pedido, segundos_navegacion_activa`,
-    input.idAnalyticsSession,
-    device.tipoDispositivo,
-    device.sistemaOperativo,
-    device.navegador,
-    limitString(input.origenCampania, 100),
-    limitString(input.medioCampania, 100),
-    limitString(input.nombreCampania, 150),
-    limitString(input.paginaIngreso, 500),
-    limitString(input.sitioOrigen, 500)
-  );
-
-  return rows[0];
+  return prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRawUnsafe<AnalyticsCartRow[]>(
+      `INSERT INTO analytics_carrito (
+         id_analytics_session, tipo_dispositivo, sistema_operativo, navegador,
+         origen_campania, medio_campania, nombre_campania, pagina_ingreso, sitio_origen
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (id_analytics_session) DO UPDATE
+         SET fecha_hora_ultima_actividad = analytics_carrito.fecha_hora_ultima_actividad
+       RETURNING id, estado, fue_abandonado, cantidad_reactivaciones,
+         fecha_hora_inicio_pedido, segundos_navegacion_activa`,
+      input.idAnalyticsCart,
+      device.tipoDispositivo,
+      device.sistemaOperativo,
+      device.navegador,
+      limitString(input.origenCampania, 100),
+      limitString(input.medioCampania, 100),
+      limitString(input.nombreCampania, 150),
+      limitString(input.paginaIngreso, 500),
+      limitString(input.sitioOrigen, 500)
+    );
+    await tx.$executeRawUnsafe(
+      `INSERT INTO analytics_sesion (
+         id_analytics_session, id_analytics_visitor, carrito_analytics_id,
+         tipo_dispositivo, sistema_operativo, navegador, origen_campania,
+         medio_campania, nombre_campania, contenido_campania, termino_campania,
+         id_click_google, id_click_meta, pagina_ingreso, sitio_origen
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       ON CONFLICT (id_analytics_session) DO UPDATE SET
+         fecha_hora_ultima_actividad = CURRENT_TIMESTAMP`,
+      input.idAnalyticsSession,
+      input.idAnalyticsVisitor,
+      rows[0].id,
+      device.tipoDispositivo,
+      device.sistemaOperativo,
+      device.navegador,
+      limitString(input.origenCampania, 100),
+      limitString(input.medioCampania, 100),
+      limitString(input.nombreCampania, 150),
+      limitString(input.contenidoCampania, 150),
+      limitString(input.terminoCampania, 150),
+      limitString(input.idClickGoogle, 200),
+      limitString(input.idClickMeta, 200),
+      limitString(input.paginaIngreso, 500),
+      limitString(input.sitioOrigen, 500)
+    );
+    return rows[0];
+  });
 }
 
 export async function sincronizarCarritoAnalytics(input: {
   idAnalyticsSession: string;
+  idAnalyticsCart: string;
   tipoPrecio: "mayorista" | "minorista";
   items: AnalyticsCartItemInput[];
 }) {
@@ -126,7 +158,7 @@ export async function sincronizarCarritoAnalytics(input: {
        FROM analytics_carrito
        WHERE id_analytics_session = $1
        FOR UPDATE`,
-      input.idAnalyticsSession
+      input.idAnalyticsCart
     );
     const carrito = carts[0];
 
@@ -207,12 +239,18 @@ export async function sincronizarCarritoAnalytics(input: {
       cantidadUnidades,
       montoEstimado
     );
+    await tx.$executeRawUnsafe(
+      `UPDATE analytics_sesion SET fecha_hora_ultima_actividad = $2
+       WHERE id_analytics_session = $1`,
+      input.idAnalyticsSession,
+      now
+    );
 
     return rows[0];
   });
 }
 
-export async function registrarInicioPedido(idAnalyticsSession: string) {
+export async function registrarInicioPedido(idAnalyticsSession: string, idAnalyticsCart: string) {
   const rows = await prisma.$queryRawUnsafe<AnalyticsCartRow[]>(
     `UPDATE analytics_carrito SET
        estado = CASE WHEN estado = 'pedido_generado' THEN estado ELSE 'activo' END,
@@ -227,21 +265,52 @@ export async function registrarInicioPedido(idAnalyticsSession: string) {
      WHERE id_analytics_session = $1
      RETURNING id, estado, fue_abandonado, cantidad_reactivaciones,
        fecha_hora_inicio_pedido, segundos_navegacion_activa`,
+    idAnalyticsCart
+  );
+  await prisma.$executeRawUnsafe(
+    `UPDATE analytics_sesion SET etapa = 'formulario_pedido',
+       fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+     WHERE id_analytics_session = $1`,
     idAnalyticsSession
   );
   return rows[0] || null;
 }
 
-export async function actualizarTiempoActivo(idAnalyticsSession: string, segundosAcumulados: number) {
+export async function actualizarTiempoActivo(
+  idAnalyticsSession: string,
+  idAnalyticsCart: string,
+  segundosAcumulados: number,
+  segundosCatalogoAcumulados: number,
+  segundosPedidoAcumulados: number
+) {
   const seconds = Math.max(0, Math.min(Math.floor(segundosAcumulados), 60 * 60 * 24 * 30));
+  const catalogSeconds = Math.max(0, Math.min(Math.floor(segundosCatalogoAcumulados), 60 * 60 * 24 * 30));
+  const orderSeconds = Math.max(0, Math.min(Math.floor(segundosPedidoAcumulados), 60 * 60 * 24 * 30));
+  const cartActiveSeconds = Math.min(catalogSeconds + orderSeconds, 60 * 60 * 24 * 30);
   const rows = await prisma.$queryRawUnsafe<AnalyticsCartRow[]>(
     `UPDATE analytics_carrito
-     SET segundos_navegacion_activa = GREATEST(segundos_navegacion_activa, $2)
+     SET segundos_navegacion_activa = GREATEST(segundos_navegacion_activa, $2),
+         segundos_activos_catalogo = GREATEST(COALESCE(segundos_activos_catalogo, 0), $3),
+         segundos_activos_pedido = GREATEST(COALESCE(segundos_activos_pedido, 0), $4)
      WHERE id_analytics_session = $1
      RETURNING id, estado, fue_abandonado, cantidad_reactivaciones,
        fecha_hora_inicio_pedido, segundos_navegacion_activa`,
+    idAnalyticsCart,
+    cartActiveSeconds,
+    catalogSeconds,
+    orderSeconds
+  );
+  await prisma.$executeRawUnsafe(
+    `UPDATE analytics_sesion SET
+       segundos_navegacion_activa = GREATEST(segundos_navegacion_activa, $2),
+       segundos_activos_catalogo = GREATEST(COALESCE(segundos_activos_catalogo, 0), $3),
+       segundos_activos_pedido = GREATEST(COALESCE(segundos_activos_pedido, 0), $4),
+       fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+     WHERE id_analytics_session = $1`,
     idAnalyticsSession,
-    seconds
+    seconds,
+    catalogSeconds,
+    orderSeconds
   );
   return rows[0] || null;
 }
@@ -257,7 +326,7 @@ export async function marcarCarritosAbandonados() {
        WHERE estado = 'activo'
          AND cantidad_productos > 0
          AND pedido_id IS NULL
-         AND fecha_hora_ultima_actividad <= CURRENT_TIMESTAMP - INTERVAL '12 hours'
+         AND fecha_hora_ultima_actividad <= CURRENT_TIMESTAMP - INTERVAL '2 hours'
        RETURNING id
      )
      SELECT COUNT(*) AS count FROM marcados`
@@ -267,6 +336,8 @@ export async function marcarCarritosAbandonados() {
 
 export async function registrarEventoFavorito(input: {
   idAnalyticsSession: string;
+  idAnalyticsCart: string;
+  idEvento: string;
   articuloId: number | null;
   accion: "agregado" | "quitado" | "estado_actual" | "panel_visto" | "panel_pedido_abierto";
   origen: string;
@@ -275,41 +346,53 @@ export async function registrarEventoFavorito(input: {
   await prisma.$transaction(async (tx) => {
     await tx.$executeRawUnsafe(
       `INSERT INTO analytics_favorito_evento (
-         carrito_analytics_id, articulo_id, accion, origen, cantidad_favoritos
+         carrito_analytics_id, id_analytics_session, id_evento, articulo_id, accion, origen, cantidad_favoritos
        )
-       SELECT id, $2, $3, $4, $5
+       SELECT id, $2, $3, $4, $5, $6, $7
        FROM analytics_carrito
-       WHERE id_analytics_session = $1`,
-      input.idAnalyticsSession,
-      input.articuloId,
-      input.accion,
-      limitString(input.origen, 40) || "desconocido",
+       WHERE id_analytics_session = $1
+       ON CONFLICT (id_evento) DO NOTHING`,
+      input.idAnalyticsCart, input.idAnalyticsSession, input.idEvento, input.articuloId,
+      input.accion, limitString(input.origen, 40) || "desconocido",
       Math.max(0, input.cantidadFavoritos)
     );
     await tx.$executeRawUnsafe(
       `UPDATE analytics_carrito
        SET cantidad_favoritos = $2
        WHERE id_analytics_session = $1`,
-      input.idAnalyticsSession,
+      input.idAnalyticsCart,
       Math.max(0, input.cantidadFavoritos)
+    );
+    await tx.$executeRawUnsafe(
+      `UPDATE analytics_sesion SET fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+       WHERE id_analytics_session = $1`,
+      input.idAnalyticsSession
     );
   });
 }
 
 export async function registrarProductoCompartido(input: {
   idAnalyticsSession: string;
+  idAnalyticsCart: string;
+  idEvento: string;
   articuloId: number;
   metodo: string;
 }) {
   await prisma.$executeRawUnsafe(
     `INSERT INTO analytics_articulo_compartido (
-       carrito_analytics_id, articulo_id, metodo
+       carrito_analytics_id, id_analytics_session, id_evento, articulo_id, metodo
      )
-     SELECT id, $2, $3
+     SELECT id, $2, $3, $4, $5
      FROM analytics_carrito
-     WHERE id_analytics_session = $1`,
-    input.idAnalyticsSession,
-    input.articuloId,
+     WHERE id_analytics_session = $1
+     ON CONFLICT (id_evento) DO NOTHING`,
+    input.idAnalyticsCart,
+    input.idAnalyticsSession, input.idEvento, input.articuloId,
     limitString(input.metodo, 40) || "desconocido"
+  );
+  await prisma.$executeRawUnsafe(
+    `UPDATE analytics_sesion SET fecha_hora_ultima_actividad = CURRENT_TIMESTAMP
+     WHERE id_analytics_session = $1`,
+    input.idAnalyticsSession
   );
 }

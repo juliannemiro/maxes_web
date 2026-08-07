@@ -33,12 +33,12 @@ model Articulo {
   visible          String   @default("S") @db.Char(1)
   fechaPublicacion DateTime @default(now()) @map("fecha_publicacion") @db.Timestamptz
 
-  rubro              Rubro?                    @relation(fields: [rubroId], references: [id], onDelete: SetNull)
-  detalles           PedidoDetalle[]
-  imagenes           ArticuloImagen[]          @relation("ImagenesDeArticulo")
-  imagenPrincipal    ArticuloImagen?           @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
-  analyticsDetalles  CarritoAnalyticsDetalle[]
-  analyticsFavoritos FavoritoAnalyticsEvento[]
+  rubro                Rubro?                        @relation(fields: [rubroId], references: [id], onDelete: SetNull)
+  detalles             PedidoDetalle[]
+  imagenes             ArticuloImagen[]              @relation("ImagenesDeArticulo")
+  imagenPrincipal      ArticuloImagen?               @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
+  analyticsDetalles    CarritoAnalyticsDetalle[]
+  analyticsFavoritos   FavoritoAnalyticsEvento[]
   analyticsCompartidos ArticuloCompartidoAnalytics[]
 
   @@map("articulo_web")
@@ -122,42 +122,77 @@ model Configuracion {
 }
 
 model CarritoAnalytics {
-  id                          Int                       @id @default(autoincrement())
-  idAnalyticsSession          String                    @unique @map("id_analytics_session") @db.VarChar(100)
-  estado                      String                    @default("activo") @db.VarChar(30)
-  etapa                       String                    @default("carrito") @db.VarChar(30)
-  fueAbandonado               Boolean                   @default(false) @map("fue_abandonado")
-  cantidadReactivaciones      Int                       @default(0) @map("cantidad_reactivaciones")
-  tipoPrecio                  String?                   @map("tipo_precio") @db.VarChar(20)
-  tipoDispositivo             String                    @default("desconocido") @map("tipo_dispositivo") @db.VarChar(30)
-  sistemaOperativo            String                    @default("otro") @map("sistema_operativo") @db.VarChar(50)
-  navegador                   String                    @default("otro") @db.VarChar(50)
-  cantidadProductos           Int                       @default(0) @map("cantidad_productos")
-  cantidadUnidades            Int                       @default(0) @map("cantidad_unidades")
-  cantidadFavoritos           Int                       @default(0) @map("cantidad_favoritos")
-  montoEstimado               Decimal                   @default(0) @map("monto_estimado") @db.Decimal(18, 2)
-  fechaHoraCreacion           DateTime                  @default(now()) @map("fecha_hora_creacion") @db.Timestamptz
-  fechaHoraInicioCatalogo     DateTime                  @default(now()) @map("fecha_hora_inicio_catalogo") @db.Timestamptz
-  fechaHoraUltimaActividad    DateTime                  @default(now()) @map("fecha_hora_ultima_actividad") @db.Timestamptz
-  fechaHoraInicioPedido       DateTime?                 @map("fecha_hora_inicio_pedido") @db.Timestamptz
-  fechaHoraMarcadoAbandonado  DateTime?                 @map("fecha_hora_marcado_abandonado") @db.Timestamptz
-  fechaHoraUltimaReactivacion DateTime?                 @map("fecha_hora_ultima_reactivacion") @db.Timestamptz
-  fechaHoraPedidoGenerado     DateTime?                 @map("fecha_hora_pedido_generado") @db.Timestamptz
-  segundosNavegacionActiva    Int                       @default(0) @map("segundos_navegacion_activa")
-  pedidoId                    Int?                      @unique @map("pedido_id")
-  origenCampania              String?                   @map("origen_campania") @db.VarChar(100)
-  medioCampania               String?                   @map("medio_campania") @db.VarChar(100)
-  nombreCampania              String?                   @map("nombre_campania") @db.VarChar(150)
-  paginaIngreso               String?                   @map("pagina_ingreso") @db.VarChar(500)
-  sitioOrigen                 String?                   @map("sitio_origen") @db.VarChar(500)
-  pedido                      Pedido?                   @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
+  id                          Int                           @id @default(autoincrement())
+  idAnalyticsSession          String                        @unique @map("id_analytics_session") @db.VarChar(100)
+  estado                      String                        @default("activo") @db.VarChar(30)
+  etapa                       String                        @default("carrito") @db.VarChar(30)
+  fueAbandonado               Boolean                       @default(false) @map("fue_abandonado")
+  cantidadReactivaciones      Int                           @default(0) @map("cantidad_reactivaciones")
+  tipoPrecio                  String?                       @map("tipo_precio") @db.VarChar(20)
+  tipoDispositivo             String                        @default("desconocido") @map("tipo_dispositivo") @db.VarChar(30)
+  sistemaOperativo            String                        @default("otro") @map("sistema_operativo") @db.VarChar(50)
+  navegador                   String                        @default("otro") @db.VarChar(50)
+  cantidadProductos           Int                           @default(0) @map("cantidad_productos")
+  cantidadUnidades            Int                           @default(0) @map("cantidad_unidades")
+  cantidadFavoritos           Int                           @default(0) @map("cantidad_favoritos")
+  montoEstimado               Decimal                       @default(0) @map("monto_estimado") @db.Decimal(18, 2)
+  fechaHoraCreacion           DateTime                      @default(now()) @map("fecha_hora_creacion") @db.Timestamptz
+  fechaHoraInicioCatalogo     DateTime                      @default(now()) @map("fecha_hora_inicio_catalogo") @db.Timestamptz
+  fechaHoraUltimaActividad    DateTime                      @default(now()) @map("fecha_hora_ultima_actividad") @db.Timestamptz
+  fechaHoraInicioPedido       DateTime?                     @map("fecha_hora_inicio_pedido") @db.Timestamptz
+  fechaHoraMarcadoAbandonado  DateTime?                     @map("fecha_hora_marcado_abandonado") @db.Timestamptz
+  fechaHoraUltimaReactivacion DateTime?                     @map("fecha_hora_ultima_reactivacion") @db.Timestamptz
+  fechaHoraPedidoGenerado     DateTime?                     @map("fecha_hora_pedido_generado") @db.Timestamptz
+  segundosNavegacionActiva    Int                           @default(0) @map("segundos_navegacion_activa")
+  segundosActivosCatalogo     Int?                          @map("segundos_activos_catalogo")
+  segundosActivosPedido       Int?                          @map("segundos_activos_pedido")
+  pedidoId                    Int?                          @unique @map("pedido_id")
+  origenCampania              String?                       @map("origen_campania") @db.VarChar(100)
+  medioCampania               String?                       @map("medio_campania") @db.VarChar(100)
+  nombreCampania              String?                       @map("nombre_campania") @db.VarChar(150)
+  paginaIngreso               String?                       @map("pagina_ingreso") @db.VarChar(500)
+  sitioOrigen                 String?                       @map("sitio_origen") @db.VarChar(500)
+  pedido                      Pedido?                       @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
   detalles                    CarritoAnalyticsDetalle[]
   eventosFavoritos            FavoritoAnalyticsEvento[]
   articulosCompartidos        ArticuloCompartidoAnalytics[]
+  sesiones                    SesionAnalytics[]
 
   @@index([estado, fechaHoraUltimaActividad])
   @@index([fueAbandonado])
   @@map("analytics_carrito")
+}
+
+model SesionAnalytics {
+  id                       Int              @id @default(autoincrement())
+  idAnalyticsSession       String           @unique @map("id_analytics_session") @db.VarChar(100)
+  idAnalyticsVisitor       String           @map("id_analytics_visitor") @db.VarChar(100)
+  carritoAnalyticsId       Int              @map("carrito_analytics_id")
+  fechaHoraInicio          DateTime         @default(now()) @map("fecha_hora_inicio") @db.Timestamptz
+  fechaHoraUltimaActividad DateTime         @default(now()) @map("fecha_hora_ultima_actividad") @db.Timestamptz
+  segundosNavegacionActiva Int              @default(0) @map("segundos_navegacion_activa")
+  segundosActivosCatalogo  Int?             @map("segundos_activos_catalogo")
+  segundosActivosPedido    Int?             @map("segundos_activos_pedido")
+  etapa                    String           @default("catalogo") @db.VarChar(30)
+  pedidoGenerado           Boolean          @default(false) @map("pedido_generado")
+  tipoDispositivo          String           @default("desconocido") @map("tipo_dispositivo") @db.VarChar(30)
+  sistemaOperativo         String           @default("otro") @map("sistema_operativo") @db.VarChar(50)
+  navegador                String           @default("otro") @db.VarChar(50)
+  origenCampania           String?          @map("origen_campania") @db.VarChar(100)
+  medioCampania            String?          @map("medio_campania") @db.VarChar(100)
+  nombreCampania           String?          @map("nombre_campania") @db.VarChar(150)
+  contenidoCampania        String?          @map("contenido_campania") @db.VarChar(150)
+  terminoCampania          String?          @map("termino_campania") @db.VarChar(150)
+  idClickGoogle            String?          @map("id_click_google") @db.VarChar(200)
+  idClickMeta              String?          @map("id_click_meta") @db.VarChar(200)
+  paginaIngreso            String?          @map("pagina_ingreso") @db.VarChar(500)
+  sitioOrigen              String?          @map("sitio_origen") @db.VarChar(500)
+  carrito                  CarritoAnalytics @relation(fields: [carritoAnalyticsId], references: [id], onDelete: Cascade)
+
+  @@index([fechaHoraInicio])
+  @@index([idAnalyticsVisitor, fechaHoraInicio])
+  @@index([carritoAnalyticsId])
+  @@map("analytics_sesion")
 }
 
 model CarritoAnalyticsDetalle {
@@ -185,6 +220,8 @@ model CarritoAnalyticsDetalle {
 model FavoritoAnalyticsEvento {
   id                 Int              @id @default(autoincrement())
   carritoAnalyticsId Int              @map("carrito_analytics_id")
+  idAnalyticsSession String?          @map("id_analytics_session") @db.VarChar(100)
+  idEvento           String?          @unique @map("id_evento") @db.VarChar(100)
   articuloId         Int?             @map("articulo_id")
   accion             String           @db.VarChar(30)
   origen             String           @db.VarChar(40)
@@ -201,6 +238,8 @@ model FavoritoAnalyticsEvento {
 model ArticuloCompartidoAnalytics {
   id                 Int              @id @default(autoincrement())
   carritoAnalyticsId Int              @map("carrito_analytics_id")
+  idAnalyticsSession String?          @map("id_analytics_session") @db.VarChar(100)
+  idEvento           String?          @unique @map("id_evento") @db.VarChar(100)
   articuloId         Int?             @map("articulo_id")
   metodo             String           @db.VarChar(40)
   fechaHora          DateTime         @default(now()) @map("fecha_hora") @db.Timestamptz
