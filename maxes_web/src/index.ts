@@ -22,6 +22,7 @@ import bodyParser from "body-parser";
 import helmet from "helmet";
 import cors from "cors";
 import routes from "./routes/index";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
 const port = process.env.PORT || 4785;
@@ -38,6 +39,9 @@ app.use(helmet());
 
 // Mount API routes
 app.use("/", routes);
+
+// Manejo centralizado de errores (debe ir después de las rutas)
+app.use(errorHandler);
 
 app.listen(port, () => {
     console.log(`Server started on port ${port} in ${nodeEnv} mode!`);
