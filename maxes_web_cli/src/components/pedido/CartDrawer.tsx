@@ -1,11 +1,11 @@
 "use client";
 
-import CantidadSelector from "../common/CantidadSelector";
-import ActionButton from "../common/ActionButton";
-import { useCart } from "../../context/CartContext";
-import { usePurchaseMode } from "../../context/PurchaseModeContext";
-import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
-import OptimizedImage from "../common/OptimizedImage";
+import CantidadSelector from "@/components/common/CantidadSelector";
+import ActionButton from "@/components/common/ActionButton";
+import { useCart } from "@/context/CartContext";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
+import { formatPrice, obtenerPrecio } from "@/utils/precio";
+import OptimizedImage from "@/components/common/OptimizedImage";
 
 function getArticuloTitulo(item: (ReturnType<typeof useCart>["cart"])[number]) {
   const articuloDes = item.articulo.articulo_des?.trim();

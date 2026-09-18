@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { useCart } from "../../context/CartContext";
-import { useFavoritos } from "../../context/FavoritosContext";
-import { Rubro } from "../../types";
+import { useCart } from "@/context/CartContext";
+import { useFavoritos } from "@/context/FavoritosContext";
+import { Rubro } from "@/types";
 
 interface HeaderProps {
   search?: string;

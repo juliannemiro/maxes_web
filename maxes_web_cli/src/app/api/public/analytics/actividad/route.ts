@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getErrorMessage } from "../../../../../lib/apiError";
+import { getErrorMessage } from "@/utils/apiError";
 import {
   actualizarTiempoActivo,
   normalizeAnalyticsSessionId,
-} from "../../../../../lib/analyticsServer";
+} from "@/services/analytics/server";
 
 export const dynamic = "force-dynamic";
 

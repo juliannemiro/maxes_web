@@ -1,4 +1,4 @@
-import { Articulo } from "../types";
+import { Articulo } from "@/types";
 
 export type TipoPrecio = "mayorista" | "minorista";
 

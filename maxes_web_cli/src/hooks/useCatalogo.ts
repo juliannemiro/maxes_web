@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { apiService } from "../services/api";
-import { Articulo, CarruselHome, Configuracion, Rubro } from "../types";
-import { groupArticulosByCategoria, normalizeCatalogText } from "../lib/catalogo";
-import { obtenerPrecio } from "../lib/obtenerPrecio";
-import { usePurchaseMode } from "../context/PurchaseModeContext";
+import { apiService } from "@/services/api";
+import { Articulo, CarruselHome, Configuracion, Rubro } from "@/types";
+import { groupArticulosByCategoria, normalizeCatalogText } from "@/utils/catalogo";
+import { obtenerPrecio } from "@/utils/precio";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
 
 interface UseCatalogoResult {
   rubros: Rubro[];

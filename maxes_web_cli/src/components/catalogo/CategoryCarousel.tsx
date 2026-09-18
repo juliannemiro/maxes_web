@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Rubro } from "../../types";
-import OptimizedImage from "../common/OptimizedImage";
+import { Rubro } from "@/types";
+import OptimizedImage from "@/components/common/OptimizedImage";
 
 interface CategoryCarouselProps {
   rubros: Rubro[];

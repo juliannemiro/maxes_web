@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { CartProvider } from "../context/CartContext";
-import { FavoritosProvider } from "../context/FavoritosContext";
-import { PurchaseModeProvider } from "../context/PurchaseModeContext";
-import AnalyticsActivity from "../components/analytics/AnalyticsActivity";
+import { CartProvider } from "@/context/CartContext";
+import { FavoritosProvider } from "@/context/FavoritosContext";
+import { PurchaseModeProvider } from "@/context/PurchaseModeContext";
+import AnalyticsActivity from "@/components/analytics/AnalyticsActivity";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||

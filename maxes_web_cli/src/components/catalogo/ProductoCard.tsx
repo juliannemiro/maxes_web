@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Articulo } from "../../types";
-import { useCart } from "../../context/CartContext";
-import { useFavoritos } from "../../context/FavoritosContext";
-import CantidadSelector from "../common/CantidadSelector";
-import ProductoModal from "./ProductoModal";
-import { usePurchaseMode } from "../../context/PurchaseModeContext";
-import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
-import OptimizedImage from "../common/OptimizedImage";
-import CompartirArticulo from "./CompartirArticulo";
+import { Articulo } from "@/types";
+import { useCart } from "@/context/CartContext";
+import { useFavoritos } from "@/context/FavoritosContext";
+import CantidadSelector from "@/components/common/CantidadSelector";
+import ProductoModal from "@/components/catalogo/ProductoModal";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
+import { formatPrice, obtenerPrecio } from "@/utils/precio";
+import OptimizedImage from "@/components/common/OptimizedImage";
+import CompartirArticulo from "@/components/catalogo/CompartirArticulo";
 
 interface ProductoCardProps {
   articulo: Articulo;

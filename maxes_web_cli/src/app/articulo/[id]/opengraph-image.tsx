@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getArticuloByCodigo } from "../../../lib/publicApi";
+import { getArticuloByCodigo } from "@/services/publicApi";
 
 export const alt = "Artículo del catálogo MAXES";
 export const size = { width: 1200, height: 630 };

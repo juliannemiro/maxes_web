@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { TipoPrecio } from "../lib/obtenerPrecio";
+import { TipoPrecio } from "@/utils/precio";
 
 interface PurchaseModeContextType {
   tipoPrecio: TipoPrecio;

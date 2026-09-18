@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { Articulo } from "../types";
-import { apiService } from "../services/api";
-import { obtenerPrecio, TipoPrecio } from "../lib/obtenerPrecio";
-import { createAnalyticsIncorporationId, syncAnalyticsCart } from "../lib/analyticsClient";
-import { usePurchaseMode } from "./PurchaseModeContext";
-import { useFavoritos } from "./FavoritosContext";
+import { Articulo } from "@/types";
+import { apiService } from "@/services/api";
+import { obtenerPrecio, TipoPrecio } from "@/utils/precio";
+import { createAnalyticsIncorporationId, syncAnalyticsCart } from "@/services/analytics/client";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
+import { useFavoritos } from "@/context/FavoritosContext";
 
 export interface CartItem {
   articulo: Articulo;

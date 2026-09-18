@@ -1,4 +1,4 @@
-import { Rubro, Articulo, CarruselHome, Configuracion, Pedido } from "../types";
+import { Rubro, Articulo, CarruselHome, Configuracion, Pedido } from "@/types";
 
 export interface PedidoCreado {
   id: number;

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Articulo } from "../../types";
-import { trackProductShared } from "../../lib/analyticsClient";
+import { Articulo } from "@/types";
+import { trackProductShared } from "@/services/analytics/client";
 
 interface CompartirArticuloProps {
   articulo: Articulo;

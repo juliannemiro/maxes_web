@@ -1,4 +1,4 @@
-import CatalogoHome from "../components/catalogo/CatalogoHome";
+import CatalogoHome from "@/components/catalogo/CatalogoHome";
 
 export default function Home() {
   return <CatalogoHome />;

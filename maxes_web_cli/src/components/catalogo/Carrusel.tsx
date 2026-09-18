@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CarruselHome } from "../../types";
-import OptimizedImage from "../common/OptimizedImage";
+import { CarruselHome } from "@/types";
+import OptimizedImage from "@/components/common/OptimizedImage";
 
 interface CarruselProps {
   carruseles: CarruselHome[];

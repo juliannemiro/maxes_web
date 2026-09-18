@@ -1,4 +1,4 @@
-import prisma from "./prisma";
+import prisma from "@/config/prisma";
 
 const MAX_SESSION_ID_LENGTH = 100;
 

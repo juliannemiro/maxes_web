@@ -9,7 +9,7 @@ import {
   startAnalyticsSession,
   storeActiveSeconds,
   syncActiveNavigationSeconds,
-} from "../../lib/analyticsClient";
+} from "@/services/analytics/client";
 
 const SYNC_INTERVAL_MS = 30_000;
 const TICK_INTERVAL_MS = 1_000;

@@ -1,25 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import CantidadSelector from "../../components/common/CantidadSelector";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
-import { useCart } from "../../context/CartContext";
-import { useFavoritos } from "../../context/FavoritosContext";
-import { apiService, PedidoCreado } from "../../services/api";
-import { Articulo, Configuracion } from "../../types";
+import CantidadSelector from "@/components/common/CantidadSelector";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { useCart } from "@/context/CartContext";
+import { useFavoritos } from "@/context/FavoritosContext";
+import { apiService, PedidoCreado } from "@/services/api";
+import { Articulo, Configuracion } from "@/types";
 import Link from "next/link";
-import { usePurchaseMode } from "../../context/PurchaseModeContext";
-import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
-import OptimizedImage from "../../components/common/OptimizedImage";
-import ActionButton from "../../components/common/ActionButton";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
+import { formatPrice, obtenerPrecio } from "@/utils/precio";
+import OptimizedImage from "@/components/common/OptimizedImage";
+import ActionButton from "@/components/common/ActionButton";
 import {
   finishAnalyticsSession,
   getAnalyticsCartId,
   getAnalyticsSessionId,
   trackCheckoutStarted,
   trackFavoriteEvent,
-} from "../../lib/analyticsClient";
+} from "@/services/analytics/client";
 
 const checkoutActionClass =
   "inline-flex min-h-14 items-center justify-center rounded-xl px-5 py-3.5 text-center text-lg leading-tight [font-family:inherit] [font-weight:700]";

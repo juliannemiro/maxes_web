@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Carrusel from "./Carrusel";
-import CategoryCarousel from "./CategoryCarousel";
-import ProductoCard from "./ProductoCard";
-import CartDrawer from "../pedido/CartDrawer";
-import TopBar from "../layout/TopBar";
-import Header from "../layout/Header";
-import FloatingActions from "../layout/FloatingActions";
-import Footer from "../layout/Footer";
-import { useCatalogo } from "../../hooks/useCatalogo";
-import { apiService } from "../../services/api";
-import { Articulo } from "../../types";
-import ProductoModal from "./ProductoModal";
+import Carrusel from "@/components/catalogo/Carrusel";
+import CategoryCarousel from "@/components/catalogo/CategoryCarousel";
+import ProductoCard from "@/components/catalogo/ProductoCard";
+import CartDrawer from "@/components/pedido/CartDrawer";
+import TopBar from "@/components/layout/TopBar";
+import Header from "@/components/layout/Header";
+import FloatingActions from "@/components/layout/FloatingActions";
+import Footer from "@/components/layout/Footer";
+import { useCatalogo } from "@/hooks/useCatalogo";
+import { apiService } from "@/services/api";
+import { Articulo } from "@/types";
+import ProductoModal from "@/components/catalogo/ProductoModal";
 
 interface CatalogoHomeProps {
   sharedArticuloCodigo?: string;

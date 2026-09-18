@@ -1,6 +1,6 @@
 "use client";
 
-import { usePurchaseMode } from "../../context/PurchaseModeContext";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
 
 interface TopBarProps {
   direccionLocal?: string;

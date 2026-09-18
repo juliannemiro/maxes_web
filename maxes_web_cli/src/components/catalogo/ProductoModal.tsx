@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Articulo } from "../../types";
-import { useCart } from "../../context/CartContext";
-import CantidadSelector from "../common/CantidadSelector";
-import { usePurchaseMode } from "../../context/PurchaseModeContext";
-import { formatPrice, obtenerPrecio } from "../../lib/obtenerPrecio";
-import OptimizedImage from "../common/OptimizedImage";
-import CompartirArticulo from "./CompartirArticulo";
+import { Articulo } from "@/types";
+import { useCart } from "@/context/CartContext";
+import CantidadSelector from "@/components/common/CantidadSelector";
+import { usePurchaseMode } from "@/context/PurchaseModeContext";
+import { formatPrice, obtenerPrecio } from "@/utils/precio";
+import OptimizedImage from "@/components/common/OptimizedImage";
+import CompartirArticulo from "@/components/catalogo/CompartirArticulo";
 
 interface ProductoModalProps {
   articulo: Articulo;

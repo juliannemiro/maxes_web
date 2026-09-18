@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { marcarCarritosAbandonados } from "../../../../lib/analyticsServer";
-import { getErrorMessage } from "../../../../lib/apiError";
+import { marcarCarritosAbandonados } from "@/services/analytics/server";
+import { getErrorMessage } from "@/utils/apiError";
 
 export const dynamic = "force-dynamic";
 

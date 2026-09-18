@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { trackFavoriteEvent } from "../lib/analyticsClient";
+import { trackFavoriteEvent } from "@/services/analytics/client";
 
 interface FavoritosContextType {
   favoritos: number[];

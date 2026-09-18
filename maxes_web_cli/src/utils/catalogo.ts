@@ -1,4 +1,4 @@
-import { Articulo } from "../types";
+import { Articulo } from "@/types";
 
 export function normalizeCatalogText(text: string) {
   return text

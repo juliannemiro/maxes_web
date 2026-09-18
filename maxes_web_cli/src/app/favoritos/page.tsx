@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import CartDrawer from "../../components/pedido/CartDrawer";
-import FloatingActions from "../../components/layout/FloatingActions";
-import Footer from "../../components/layout/Footer";
-import Header from "../../components/layout/Header";
-import TopBar from "../../components/layout/TopBar";
-import ProductoCard from "../../components/catalogo/ProductoCard";
-import { useFavoritos } from "../../context/FavoritosContext";
-import { useCatalogo } from "../../hooks/useCatalogo";
+import CartDrawer from "@/components/pedido/CartDrawer";
+import FloatingActions from "@/components/layout/FloatingActions";
+import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
+import TopBar from "@/components/layout/TopBar";
+import ProductoCard from "@/components/catalogo/ProductoCard";
+import { useFavoritos } from "@/context/FavoritosContext";
+import { useCatalogo } from "@/hooks/useCatalogo";
 import { useEffect, useRef } from "react";
-import { trackFavoriteEvent } from "../../lib/analyticsClient";
+import { trackFavoriteEvent } from "@/services/analytics/client";
 
 export default function FavoritosPage() {
   const panelViewTracked = useRef(false);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getErrorMessage } from "../../../../lib/apiError";
-import { createPedido } from "../../../../lib/publicApi";
+import { getErrorMessage } from "@/utils/apiError";
+import { createPedido } from "@/services/publicApi";
 
 export const dynamic = "force-dynamic";
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getArticuloByCodigo } from "../../../lib/publicApi";
+import { getArticuloByCodigo } from "@/services/publicApi";
 
 interface ProductLayoutProps {
   children: React.ReactNode;

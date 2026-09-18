@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import prisma from "./prisma";
+import prisma from "@/config/prisma";
 
 type ArticuloWithRelations = Prisma.ArticuloGetPayload<{
   include: {
