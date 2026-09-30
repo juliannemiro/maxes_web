@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { getErrorMessage } from "@/utils/apiError";
-import { getArticulos, getCarruseles, getConfig, getRubros } from "@/services/publicApi";
+import { getArticulos, getCarruseles, getCategoriaDetalles, getConfig, getCategorias } from "@/services/publicApi";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const rubrosData = await getRubros();
+    const categoriasData = await getCategorias();
+    const detallesData = await getCategoriaDetalles();
     const carruselesData = await getCarruseles();
     const configData = await getConfig();
     const articulosData = await getArticulos(
@@ -15,7 +16,8 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      rubros: rubrosData.rubros,
+      categorias: categoriasData.categorias,
+      categoria_detalles: detallesData.detalles,
       carruseles: carruselesData.carruseles,
       config: configData?.config ?? null,
       articulos: articulosData.articulos,

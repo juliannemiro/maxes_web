@@ -3,8 +3,8 @@ import { PublicoController } from "../controllers/PublicoController";
 
 const router = Router();
 
-// Rubros
-router.get("/rubros", PublicoController.getRubros);
+// Categorias
+router.get("/categorias", PublicoController.getCategorias);
 
 // Articulos (Catalog)
 router.get("/articulos", PublicoController.getArticulos);

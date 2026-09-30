@@ -72,7 +72,7 @@ function main() {
   const clientesPayload = buildClientesPayload(clientesRows);
 
   const catalogoSyncPayload = {
-    rubros: productosPayload.rubros,
+    categorias: productosPayload.categorias,
     articulos: productosPayload.articulos.map(({ metadata_origen, ...articulo }) => articulo),
   };
 
@@ -84,14 +84,14 @@ function main() {
     },
     productos: {
       filas: productosPayload.articulos.length,
-      rubros_unicos: productosPayload.rubros.length,
+      categorias_unicos: productosPayload.categorias.length,
       columnas_origen: productosPayload.headers,
       mapeo_principal: {
         CODIGO: "articulo.codigo",
         DETALLE: "articulo.descripcion_publica",
         "Precio #1": "articulo.precio_mayorista",
         "Precio #2": "articulo.precio_minorista",
-        Rubro: "rubro.nombre + articulo.rubro_id (via rubro.codigo)",
+        Categoria: "categoria.nombre + articulo.categoria_id (via categoria.codigo)",
       },
       columnas_sin_destino_directo: [
         "QxB",
@@ -114,14 +114,14 @@ function main() {
     },
   };
 
-  writeJson(path.join(outputDir, "rubros.json"), productosPayload.rubros);
+  writeJson(path.join(outputDir, "categorias.json"), productosPayload.categorias);
   writeJson(path.join(outputDir, "articulos.json"), productosPayload.articulos);
   writeJson(path.join(outputDir, "catalogo-sync.json"), catalogoSyncPayload);
   writeJson(path.join(outputDir, "clientes-sin-tabla.json"), clientesPayload);
   writeJson(path.join(outputDir, "resumen-precarga.json"), resumen);
 
   console.log(`Archivos generados en ${outputDir}`);
-  console.log(`Rubros: ${productosPayload.rubros.length}`);
+  console.log(`Categorias: ${productosPayload.categorias.length}`);
   console.log(`Articulos: ${productosPayload.articulos.length}`);
   console.log(`Clientes sin tabla destino: ${clientesPayload.clientes.length}`);
 }

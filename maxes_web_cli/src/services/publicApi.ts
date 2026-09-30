@@ -3,11 +3,28 @@ import prisma from "@/config/prisma";
 
 type ArticuloWithRelations = Prisma.ArticuloGetPayload<{
   include: {
-    rubro: true;
     imagenes: true;
     imagenPrincipal: true;
   };
 }>;
+
+type CategoriaPublica = { id: number; codigo: string; nombre: string | null; activo: boolean };
+type CategoriaDetallePublico = {
+  id: number;
+  categoriaDetalleOrigenId: number;
+  categoriaOrigenId: number;
+  codigo: string;
+  nombre: string | null;
+  activo: boolean;
+};
+
+function isMissingTableError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    (error.code === "P2021" ||
+      (error.code === "P2010" && error.meta?.code === "42P01"))
+  );
+}
 
 type PedidoItemInput = {
   articulo_id?: unknown;
@@ -108,7 +125,11 @@ function toNumber(value: unknown) {
   return Number.isFinite(numericValue) ? numericValue : null;
 }
 
-export function serializeArticulo(articulo: ArticuloWithRelations) {
+export function serializeArticulo(
+  articulo: ArticuloWithRelations,
+  categoria: CategoriaPublica | null = null,
+  categoriaDetalle: CategoriaDetallePublico | null = null
+) {
   return {
     id: articulo.id,
     articulo_id_origen: articulo.articuloOrigenId,
@@ -119,27 +140,86 @@ export function serializeArticulo(articulo: ArticuloWithRelations) {
     descripcion_detallada: articulo.articuloTextoWeb || articulo.articuloDes,
     precio_mayorista: toNumber(articulo.precioMayorista),
     precio_minorista: toNumber(articulo.precioMinorista),
-    rubro_id: articulo.rubroId,
+    categoria_id: categoria?.id ?? null,
+    categoria_detalle_id: categoriaDetalle?.categoriaDetalleOrigenId ?? null,
     imagen_url: articulo.imagenPrincipal?.imagen_url || articulo.imagenes?.[0]?.imagen_url || null,
     destacado: articulo.destacado === "S",
     visible: articulo.visible === "S",
     fecha_publicacion: articulo.fechaPublicacion,
-    rubro: articulo.rubro,
+    categoria: categoria,
+    categoria_detalle: categoriaDetalle,
     imagenes: articulo.imagenes,
   };
 }
 
-export async function getRubros() {
-  const rubros = await prisma.rubro.findMany({
-    where: { activo: true },
-    orderBy: { nombre: "asc" },
-  });
+export async function getCategorias() {
+  const categorias = await prisma.$queryRawUnsafe<CategoriaPublica[]>(`
+    SELECT DISTINCT c.categoria_origen_id AS id,c.codigo,c.nombre,c.activo
+    FROM categoria_web c
+    INNER JOIN articulo_web a ON a.categoria_id=c.categoria_origen_id
+    WHERE c.activo=true
+      AND a.visible='S'
+      AND a.precio_mayorista>0
+      AND a.precio_minorista>0
+    ORDER BY nombre,codigo
+  `);
 
-  return { success: true, rubros };
+  return { success: true, categorias };
+}
+
+export async function getCategoriaDetalles() {
+  try {
+    const detalles = await prisma.$queryRawUnsafe<CategoriaDetallePublico[]>(`
+      SELECT DISTINCT d.id,d.categoria_detalle_origen_id AS "categoriaDetalleOrigenId",
+             d.categoria_origen_id AS "categoriaOrigenId",d.codigo,d.nombre,d.activo
+      FROM categoria_detalle_web d
+      INNER JOIN articulo_web a ON a.categoria_detalle_id=d.categoria_detalle_origen_id
+      WHERE d.activo=true
+        AND a.visible='S'
+        AND a.precio_mayorista>0
+        AND a.precio_minorista>0
+      ORDER BY "categoriaOrigenId",nombre,codigo
+    `);
+    return { success: true, detalles };
+  } catch (error) {
+    // La categoría principal debe continuar disponible mientras se despliega
+    // la migración opcional de detalles en ambientes que todavía no la tienen.
+    if (isMissingTableError(error)) {
+      return { success: true, detalles: [] };
+    }
+    throw error;
+  }
+}
+
+async function metadataArticulos(articulos: Array<{ id: number; categoriaId: number | null }>) {
+  if (!articulos.length) return { categorias: new Map<number, CategoriaPublica>(), detalles: new Map<number, CategoriaDetallePublico>() };
+  const ids = articulos.map((articulo) => articulo.id);
+  const categorias = await prisma.$queryRawUnsafe<Array<CategoriaPublica & { articuloId: number }>>(`
+      SELECT a.id AS "articuloId",c.categoria_origen_id AS id,c.codigo,c.nombre,c.activo
+      FROM articulo_web a LEFT JOIN categoria_web c ON c.categoria_origen_id=a.categoria_id
+      WHERE a.id=ANY($1::int[])
+    `, ids);
+  let detalles: Array<CategoriaDetallePublico & { articuloId: number }> = [];
+  try {
+    detalles = await prisma.$queryRawUnsafe<Array<CategoriaDetallePublico & { articuloId: number }>>(`
+      SELECT a.id AS "articuloId",d.id,d.categoria_detalle_origen_id AS "categoriaDetalleOrigenId",
+             d.categoria_origen_id AS "categoriaOrigenId",d.codigo,d.nombre,d.activo
+      FROM articulo_web a LEFT JOIN categoria_detalle_web d
+        ON d.categoria_detalle_origen_id=a.categoria_detalle_id
+      WHERE a.id=ANY($1::int[]) AND d.categoria_detalle_origen_id IS NOT NULL
+    `, ids);
+  } catch (error) {
+    if (!isMissingTableError(error)) throw error;
+  }
+  return {
+    categorias: new Map(categorias.map((item) => [item.articuloId, item])),
+    detalles: new Map(detalles.map((item) => [item.articuloId, item]))
+  };
 }
 
 export async function getArticulos(params: URLSearchParams) {
-  const rubroId = params.get("rubro_id");
+  const categoriaId = params.get("categoria_id");
+  const categoriaDetalleId = params.get("categoria_detalle_id");
   const search = params.get("search");
   const destacado = params.get("destacado");
   const sortBy = params.get("sort_by") || "relevance";
@@ -159,12 +239,28 @@ export async function getArticulos(params: URLSearchParams) {
     precioMinorista: { gt: 0 },
   };
 
-  if (rubroId) {
-    whereClause.rubroId = Number.parseInt(rubroId, 10);
+  let idsCategoria: number[] | null = null;
+  if (categoriaId) {
+    const rows = await prisma.$queryRawUnsafe<Array<{ id: number }>>(
+      "SELECT id FROM articulo_web WHERE categoria_id=$1", Number.parseInt(categoriaId, 10)
+    );
+    idsCategoria = rows.map((row) => row.id);
   }
 
-  if (ids.length > 0) {
-    whereClause.id = { in: ids };
+  let idsDetalle: number[] | null = null;
+  if (categoriaDetalleId) {
+    const rows = await prisma.$queryRawUnsafe<Array<{ id: number }>>(
+      "SELECT id FROM articulo_web WHERE categoria_detalle_id=$1", Number.parseInt(categoriaDetalleId, 10)
+    );
+    idsDetalle = rows.map((row) => row.id);
+  }
+
+  let idsFiltrados = ids;
+  for (const filtro of [idsCategoria, idsDetalle]) {
+    if (filtro !== null) idsFiltrados = idsFiltrados.length ? idsFiltrados.filter((id) => filtro.includes(id)) : filtro;
+  }
+  if (ids.length > 0 || idsCategoria !== null || idsDetalle !== null) {
+    whereClause.id = { in: idsFiltrados };
   }
 
   if (destacado) {
@@ -195,7 +291,6 @@ export async function getArticulos(params: URLSearchParams) {
     prisma.articulo.findMany({
       where: whereClause,
       include: {
-        rubro: true,
         imagenes: {
           orderBy: { orden: "asc" },
         },
@@ -207,10 +302,15 @@ export async function getArticulos(params: URLSearchParams) {
     }),
     prisma.articulo.count({ where: whereClause }),
   ]);
+  const metadata = await metadataArticulos(articulos);
 
   return {
     success: true,
-    articulos: articulos.map(serializeArticulo),
+    articulos: articulos.map((articulo) => serializeArticulo(
+      articulo,
+      metadata.categorias.get(articulo.id) ?? null,
+      metadata.detalles.get(articulo.id) ?? null
+    )),
     pagination: {
       totalCount,
       totalPages: Math.ceil(totalCount / limitNumber),
@@ -229,7 +329,6 @@ export async function getArticuloById(id: number) {
       precioMinorista: { gt: 0 },
     },
     include: {
-      rubro: true,
       imagenes: {
         orderBy: { orden: "asc" },
       },
@@ -241,7 +340,8 @@ export async function getArticuloById(id: number) {
     return null;
   }
 
-  return { success: true, articulo: serializeArticulo(articulo) };
+  const metadata = await metadataArticulos([articulo]);
+  return { success: true, articulo: serializeArticulo(articulo, metadata.categorias.get(articulo.id) ?? null, metadata.detalles.get(articulo.id) ?? null) };
 }
 
 export async function getArticuloByCodigo(codigo: string) {
@@ -260,13 +360,14 @@ export async function getArticuloByCodigo(codigo: string) {
       precioMinorista: { gt: 0 },
     },
     include: {
-      rubro: true,
       imagenes: { orderBy: { orden: "asc" } },
       imagenPrincipal: true,
     },
   });
 
-  return articulo ? { success: true, articulo: serializeArticulo(articulo) } : null;
+  if (!articulo) return null;
+  const metadata = await metadataArticulos([articulo]);
+  return { success: true, articulo: serializeArticulo(articulo, metadata.categorias.get(articulo.id) ?? null, metadata.detalles.get(articulo.id) ?? null) };
 }
 
 export async function getCarruseles() {

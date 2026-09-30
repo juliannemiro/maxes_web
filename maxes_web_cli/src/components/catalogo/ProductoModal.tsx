@@ -8,6 +8,7 @@ import { usePurchaseMode } from "@/context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "@/utils/precio";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import CompartirArticulo from "@/components/catalogo/CompartirArticulo";
+import { altImagenArticulo } from "@/utils/articuloImagen";
 
 interface ProductoModalProps {
   articulo: Articulo;
@@ -41,6 +42,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
 
   const gallery = images.length > 0 ? images : ["/placeholder.svg"];
   const precioActual = obtenerPrecio(articulo, tipoPrecio);
+  const imagenAlt = altImagenArticulo(articulo);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -156,7 +158,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                 <OptimizedImage
                   key={`${articulo.id}-modal-${image}-${index}`}
                   src={image}
-                  alt={articulo.descripcion_publica || "Producto"}
+                  alt={imagenAlt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 58vw"
                   className={`absolute inset-0 h-full w-full object-contain p-6 transition-all duration-700 ease-out ${
@@ -204,7 +206,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                         : "border-slate-200"
                     }`}
                   >
-                    <OptimizedImage src={image} alt={`Vista ${index + 1}`} fill sizes="80px" className="object-cover" />
+                    <OptimizedImage src={image} alt={`${imagenAlt} — Vista ${index + 1}`} fill sizes="80px" className="object-cover" />
                   </button>
                 ))}
               </div>
@@ -217,9 +219,9 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
                   Cod: {articulo.codigo || "N/D"}
                 </span>
-                {articulo.rubro?.nombre && (
+                {articulo.categoria?.nombre && (
                   <span className="rounded-full bg-[var(--color-primary)]/20 px-3 py-1 text-xs font-bold text-slate-700">
-                    {articulo.rubro.nombre}
+                    {articulo.categoria.nombre}
                   </span>
                 )}
               </div>

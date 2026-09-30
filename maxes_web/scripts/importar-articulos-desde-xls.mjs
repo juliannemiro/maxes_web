@@ -21,45 +21,45 @@ async function main() {
   const rows = parseHtmlTableRowsFromFile(productosPath);
   const payload = buildProductosPayload(rows);
 
-  let rubrosCreados = 0;
-  let rubrosActualizados = 0;
+  let categoriasCreados = 0;
+  let categoriasActualizados = 0;
   let articulosCreados = 0;
   let articulosActualizados = 0;
 
-  for (const rubro of payload.rubros) {
-    const existing = await prisma.rubro.findFirst({
-      where: { codigo: rubro.codigo },
+  for (const categoria of payload.categorias) {
+    const existing = await prisma.categoria.findFirst({
+      where: { codigo: categoria.codigo },
     });
 
     if (existing) {
-      await prisma.rubro.update({
+      await prisma.categoria.update({
         where: { id: existing.id },
         data: {
-          nombre: rubro.nombre,
-          activo: rubro.activo,
+          nombre: categoria.nombre,
+          activo: categoria.activo,
         },
       });
-      rubrosActualizados += 1;
+      categoriasActualizados += 1;
       continue;
     }
 
-    await prisma.rubro.create({
-      data: rubro,
+    await prisma.categoria.create({
+      data: categoria,
     });
-    rubrosCreados += 1;
+    categoriasCreados += 1;
   }
 
-  const rubrosDb = await prisma.rubro.findMany({
+  const categoriasDb = await prisma.categoria.findMany({
     select: { id: true, codigo: true },
   });
-  const rubroIdByCode = new Map(rubrosDb.map((item) => [item.codigo, item.id]));
+  const categoriaIdByCode = new Map(categoriasDb.map((item) => [item.codigo, item.id]));
 
   for (const item of payload.articulos) {
     if (!item.codigo) {
       continue;
     }
 
-    const rubroId = rubroIdByCode.get(item.rubro_codigo) ?? null;
+    const categoriaId = categoriaIdByCode.get(item.categoria_codigo) ?? null;
     const existing = await prisma.articulo.findUnique({
       where: { articuloCod: item.codigo },
     });
@@ -71,7 +71,7 @@ async function main() {
       articuloTextoWeb: item.descripcion_publica ? String(item.descripcion_publica).slice(0, 50) : null,
       precioMayorista: item.precio_mayorista != null ? Number(item.precio_mayorista) : null,
       precioMinorista: item.precio_minorista != null ? Number(item.precio_minorista) : null,
-      rubroId,
+      categoriaId,
       proveedorDes: item.proveedor_des ? String(item.proveedor_des).slice(0, 20) : null,
       stockWeb: item.stock_web != null ? Number(item.stock_web) : null,
       destacado: item.destacado ? "S" : "N",
@@ -91,8 +91,8 @@ async function main() {
     articulosCreados += 1;
   }
 
-  console.log(`Rubros creados: ${rubrosCreados}`);
-  console.log(`Rubros actualizados: ${rubrosActualizados}`);
+  console.log(`Categorias creados: ${categoriasCreados}`);
+  console.log(`Categorias actualizados: ${categoriasActualizados}`);
   console.log(`Articulos creados: ${articulosCreados}`);
   console.log(`Articulos actualizados: ${articulosActualizados}`);
 }

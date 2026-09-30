@@ -36,10 +36,12 @@ export class PedidoService {
 
     const orderIds = orders.map((order) => Number(order.id)).filter(Boolean);
     const detalles = orderIds.length
-      ? await prisma.pedidoDetalle.findMany({
-          where: { pedido_id: { in: orderIds } },
-          include: { articulo: true },
-        })
+      ? await prisma.$queryRawUnsafe<any[]>(
+          `SELECT * FROM "pedido_detalle_web"
+           WHERE "pedido_id" = ANY($1::int[])
+           ORDER BY "pedido_id", "id"`,
+          orderIds
+        )
       : [];
 
     const detallesPorPedido = new Map<number, typeof detalles>();
@@ -70,7 +72,10 @@ export class PedidoService {
     const sanitizedIds = ids.map((id) => Number(id)).filter(Number.isInteger);
     const count = sanitizedIds.length
       ? await prisma.$executeRawUnsafe(
-          `UPDATE "pedido_web" SET "estado" = 'importado' WHERE "id" = ANY($1::int[])`,
+          `UPDATE "pedido_web"
+           SET "estado" = 'importado'
+           WHERE "id" = ANY($1::int[])
+             AND COALESCE("estado", 'nuevo') = 'nuevo'`,
           sanitizedIds
         )
       : 0;

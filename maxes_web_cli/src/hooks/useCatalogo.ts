@@ -2,20 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiService } from "@/services/api";
-import { Articulo, CarruselHome, Configuracion, Rubro } from "@/types";
+import { Articulo, CarruselHome, CategoriaDetalle, Configuracion, Categoria } from "@/types";
 import { groupArticulosByCategoria, normalizeCatalogText } from "@/utils/catalogo";
 import { obtenerPrecio } from "@/utils/precio";
 import { usePurchaseMode } from "@/context/PurchaseModeContext";
 
 interface UseCatalogoResult {
-  rubros: Rubro[];
+  categorias: Categoria[];
+  categoriaDetalles: CategoriaDetalle[];
   articulos: Articulo[];
   carruseles: CarruselHome[];
   config: Configuracion | null;
   search: string;
   setSearch: (value: string) => void;
-  selectedRubro: number | undefined;
-  setSelectedRubro: (value: number | undefined) => void;
+  selectedCategoria: number | undefined;
+  setSelectedCategoria: (value: number | undefined) => void;
+  selectedCategoriaDetalle: number | undefined;
+  setSelectedCategoriaDetalle: (value: number | undefined) => void;
   sortBy: string;
   setSortBy: (value: string) => void;
   isLoading: boolean;
@@ -23,7 +26,7 @@ interface UseCatalogoResult {
   totalCount: number;
   hasMore: boolean;
   loadMore: () => void;
-  shouldGroupByRubro: boolean;
+  shouldGroupByCategoria: boolean;
   groupedArticulos: Array<[string, Articulo[]]>;
   tipoPrecio: "mayorista" | "minorista";
 }
@@ -34,6 +37,24 @@ interface UseCatalogoOptions {
 
 const PAGE_SIZE = 50;
 const ALL_ARTICLES_LIMIT = 5000;
+const CATALOG_FILTERS_STORAGE_KEY = "maxes_catalog_filters_v1";
+
+type StoredCatalogFilters = { search?: string; selectedCategoria?: number; selectedCategoriaDetalle?: number; sortBy?: string };
+
+function storedCatalogFilters(): StoredCatalogFilters {
+  if (typeof window === "undefined") return {};
+  try {
+    const value = JSON.parse(window.localStorage.getItem(CATALOG_FILTERS_STORAGE_KEY) || "{}") as StoredCatalogFilters;
+    return {
+      search: typeof value.search === "string" ? value.search : "",
+      selectedCategoria: Number.isInteger(value.selectedCategoria) && Number(value.selectedCategoria) > 0 ? Number(value.selectedCategoria) : undefined,
+      selectedCategoriaDetalle: Number.isInteger(value.selectedCategoriaDetalle) && Number(value.selectedCategoriaDetalle) > 0 ? Number(value.selectedCategoriaDetalle) : undefined,
+      sortBy: typeof value.sortBy === "string" ? value.sortBy : "description",
+    };
+  } catch {
+    return {};
+  }
+}
 
 function getArticuloTimestamp(articulo: Articulo) {
   const time = new Date(articulo.fecha_publicacion).getTime();
@@ -50,14 +71,17 @@ function compareByRelevancia(a: Articulo, b: Articulo) {
 
 export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCatalogoResult {
   const { tipoPrecio } = usePurchaseMode();
-  const [rubros, setRubros] = useState<Rubro[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriaDetalles, setCategoriaDetalles] = useState<CategoriaDetalle[]>([]);
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [articulosIniciales, setArticulosIniciales] = useState<Articulo[]>([]);
   const [carruseles, setCarruseles] = useState<CarruselHome[]>([]);
   const [config, setConfig] = useState<Configuracion | null>(null);
   const [search, setSearch] = useState("");
-  const [selectedRubro, setSelectedRubro] = useState<number | undefined>(undefined);
+  const [selectedCategoria, setSelectedCategoria] = useState<number | undefined>(undefined);
+  const [selectedCategoriaDetalle, setSelectedCategoriaDetalle] = useState<number | undefined>(undefined);
   const [sortBy, setSortBy] = useState("description");
+  const [filtersRestored, setFiltersRestored] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
@@ -66,15 +90,49 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
   const activeQueryRef = useRef("");
 
   useEffect(() => {
+    const filters = storedCatalogFilters();
+    setSearch(filters.search || "");
+    setSelectedCategoria(filters.selectedCategoria);
+    setSelectedCategoriaDetalle(filters.selectedCategoriaDetalle);
+    setSortBy(filters.sortBy || "description");
+    setFiltersRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersRestored) return;
+    window.localStorage.setItem(CATALOG_FILTERS_STORAGE_KEY, JSON.stringify({ search, selectedCategoria, selectedCategoriaDetalle, sortBy }));
+  }, [filtersRestored, search, selectedCategoria, selectedCategoriaDetalle, sortBy]);
+
+  useEffect(() => {
     async function loadCatalogo() {
       setIsLoading(true);
 
       try {
         const catalogoRes = await apiService.getCatalogoInicial();
 
-        setRubros(catalogoRes.rubros);
+        setCategorias(catalogoRes.categorias);
+        setCategoriaDetalles(catalogoRes.categoria_detalles);
         setCarruseles(catalogoRes.carruseles);
         setConfig(catalogoRes.config);
+        // Los filtros se conservan entre visitas, pero un catálogo puede
+        // cambiar de ambiente o despublicar una categoría/detalle. No dejar
+        // que un ID obsoleto o incompatible oculte todos los artículos.
+        setSelectedCategoria((actual) => {
+          if (actual === undefined || catalogoRes.categorias.some((categoria) => categoria.id === actual)) {
+            return actual;
+          }
+          return undefined;
+        });
+        setSelectedCategoriaDetalle((actual) => {
+          if (actual === undefined) return actual;
+          const detalle = catalogoRes.categoria_detalles.find(
+            (item) => item.categoriaDetalleOrigenId === actual
+          );
+          if (!detalle) return undefined;
+          return selectedCategoria === undefined || detalle.categoriaOrigenId === selectedCategoria
+            ? actual
+            : undefined;
+        });
         const articulosData = loadAll
           ? await apiService.getArticulos({ page: 1, limit: ALL_ARTICLES_LIMIT })
           : catalogoRes;
@@ -95,10 +153,10 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
 
   useEffect(() => {
     const searchTerm = search.trim();
-    const queryKey = `${selectedRubro ?? "all"}:${searchTerm}:${sortBy}:${tipoPrecio}`;
+    const queryKey = `${selectedCategoria ?? "all"}:${selectedCategoriaDetalle ?? "all"}:${searchTerm}:${sortBy}:${tipoPrecio}`;
     activeQueryRef.current = queryKey;
 
-    if (!searchTerm && selectedRubro === undefined && sortBy === "description") {
+    if (!searchTerm && selectedCategoria === undefined && selectedCategoriaDetalle === undefined && sortBy === "description") {
       const resetTimeoutId = window.setTimeout(() => {
         setArticulos(articulosIniciales);
         setTotalCount(initialTotalCount);
@@ -112,7 +170,8 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     const timeoutId = window.setTimeout(async () => {
       try {
         const response = await apiService.getArticulos({
-          rubro_id: selectedRubro,
+          categoria_id: selectedCategoria,
+          categoria_detalle_id: selectedCategoriaDetalle,
           search: searchTerm || undefined,
           page: 1,
           limit: loadAll ? ALL_ARTICLES_LIMIT : PAGE_SIZE,
@@ -136,7 +195,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [articulosIniciales, initialTotalCount, loadAll, search, selectedRubro, sortBy, tipoPrecio]);
+  }, [articulosIniciales, initialTotalCount, loadAll, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
 
   const hasMore = articulos.length < totalCount;
   const loadMore = useCallback(() => {
@@ -149,7 +208,8 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     setIsLoadingMore(true);
 
     void apiService.getArticulos({
-      rubro_id: selectedRubro,
+      categoria_id: selectedCategoria,
+      categoria_detalle_id: selectedCategoriaDetalle,
       search: search.trim() || undefined,
       page: nextPage,
       limit: PAGE_SIZE,
@@ -176,7 +236,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
         setIsLoadingMore(false);
       }
     });
-  }, [currentPage, hasMore, isLoading, isLoadingMore, loadAll, search, selectedRubro, sortBy, tipoPrecio]);
+  }, [currentPage, hasMore, isLoading, isLoadingMore, loadAll, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
 
   const filteredArticulos = useMemo(() => {
     const searchTerms = normalizeCatalogText(search.trim()).split(/\s+/).filter(Boolean);
@@ -189,9 +249,10 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
       ].filter(Boolean).join(" "));
       const matchesSearch = searchTerms.every((term) => searchableText.includes(term));
 
-      const matchesCategory = !selectedRubro || articulo.rubro_id === selectedRubro;
+      const matchesCategory = !selectedCategoria || articulo.categoria_id === selectedCategoria;
+      const matchesDetail = !selectedCategoriaDetalle || articulo.categoria_detalle_id === selectedCategoriaDetalle;
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesDetail;
     });
 
     const sorted = [...filtered];
@@ -212,23 +273,26 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     }
 
     return sorted;
-  }, [articulos, search, selectedRubro, sortBy, tipoPrecio]);
+  }, [articulos, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
 
-  const shouldGroupByRubro = Boolean(selectedRubro);
+  const shouldGroupByCategoria = Boolean(selectedCategoria);
   const groupedArticulos = useMemo(
-    () => (shouldGroupByRubro ? groupArticulosByCategoria(filteredArticulos) : []),
-    [filteredArticulos, shouldGroupByRubro]
+    () => (shouldGroupByCategoria ? groupArticulosByCategoria(filteredArticulos) : []),
+    [filteredArticulos, shouldGroupByCategoria]
   );
 
   return {
-    rubros,
+    categorias,
+    categoriaDetalles,
     articulos: filteredArticulos,
     carruseles,
     config,
     search,
     setSearch,
-    selectedRubro,
-    setSelectedRubro,
+    selectedCategoria,
+    setSelectedCategoria,
+    selectedCategoriaDetalle,
+    setSelectedCategoriaDetalle,
     sortBy,
     setSortBy,
     isLoading,
@@ -236,7 +300,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     totalCount,
     hasMore,
     loadMore,
-    shouldGroupByRubro,
+    shouldGroupByCategoria,
     groupedArticulos,
     tipoPrecio,
   };

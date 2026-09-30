@@ -53,9 +53,9 @@ export default async function ProductOpenGraphImage({ params }: { params: Promis
           M<span style={{ color: "#dcae23" }}>@</span>XES
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 52 }}>
-          {product?.rubro?.nombre && (
+          {product?.categoria?.nombre && (
             <div style={{ background: "#f3c544", padding: "9px 16px", borderRadius: 999, fontSize: 18, fontWeight: 700 }}>
-              {product.rubro.nombre}
+              {product.categoria.nombre}
             </div>
           )}
           {product?.codigo && (

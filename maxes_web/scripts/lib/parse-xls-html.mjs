@@ -81,7 +81,7 @@ export function normalizeString(value) {
   return value == null ? null : value.trim();
 }
 
-export function slugifyRubroCode(value) {
+export function slugifyCategoriaCode(value) {
   return (
     value
       .normalize("NFD")
@@ -89,25 +89,25 @@ export function slugifyRubroCode(value) {
       .replace(/[^a-zA-Z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .toUpperCase()
-      .slice(0, 20) || "SIN-RUBRO"
+      .slice(0, 20) || "SIN-CATEGORIA"
   );
 }
 
 export function buildProductosPayload(rows) {
   const headers = rows[0];
   const dataRows = rows.slice(1).filter((row) => row.some((cell) => cell != null));
-  const rubroMap = new Map();
+  const categoriaMap = new Map();
   const articulos = [];
 
   for (const row of dataRows) {
     const record = Object.fromEntries(headers.map((header, index) => [header, row[index] ?? null]));
-    const rubroNombre = normalizeString(record.Rubro) || "Sin rubro";
-    const rubroCodigo = slugifyRubroCode(rubroNombre);
+    const categoriaNombre = normalizeString(record.Categoria) || "Sin categoria";
+    const categoriaCodigo = slugifyCategoriaCode(categoriaNombre);
 
-    if (!rubroMap.has(rubroCodigo)) {
-      rubroMap.set(rubroCodigo, {
-        codigo: rubroCodigo,
-        nombre: rubroNombre,
+    if (!categoriaMap.has(categoriaCodigo)) {
+      categoriaMap.set(categoriaCodigo, {
+        codigo: categoriaCodigo,
+        nombre: categoriaNombre,
         activo: true,
       });
     }
@@ -118,7 +118,7 @@ export function buildProductosPayload(rows) {
       descripcion_publica: normalizeString(record.DETALLE),
       precio_mayorista: toDecimal(record["Precio #1"]),
       precio_minorista: toDecimal(record["Precio #2"]),
-      rubro_codigo: rubroCodigo,
+      categoria_codigo: categoriaCodigo,
       proveedor_des: normalizeString(record.Proveedor),
       stock_web: toInteger(record["Stock Deposito 1"]),
       imagen_url: null,
@@ -134,14 +134,14 @@ export function buildProductosPayload(rows) {
         despacho: normalizeString(record.Despacho),
         punto_pedido: toInteger(record["Pto Pedido"]),
         proveedor: normalizeString(record.Proveedor),
-        rubro_original: normalizeString(record.Rubro),
+        categoria_original: normalizeString(record.Categoria),
       },
     });
   }
 
   return {
     headers,
-    rubros: [...rubroMap.values()],
+    categorias: [...categoriaMap.values()],
     articulos,
   };
 }

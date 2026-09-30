@@ -24,7 +24,7 @@ La solución se compone de dos proyectos dentro de este repositorio y dos entorn
 2. **`maxes_web_cli` (Cliente / Frontend)**:
    * **Tecnología**: Next.js + React + TypeScript.
    * **Hosting**: **Vercel** (despliegue del cliente y API routes públicas).
-   * **API pública web**: rutas internas `/api/public/*` para rubros, artículos, carruseles, configuración y pedidos.
+   * **API pública web**: rutas internas `/api/public/*` para categorias, artículos, carruseles, configuración y pedidos.
 3. **Base de Datos Web**:
    * **Tecnología**: PostgreSQL.
    * **Desarrollo local**: contenedor Docker `db-maxes-web`.
@@ -98,7 +98,7 @@ graph TD
 
 La base de datos web es independiente de Keytron. El esquema Prisma operativo actual usa tablas físicas con sufijo `_web`.
 
-* **`rubro_web`**: Categorías visibles en la web.
+* **`categoria_web`**: Categorías visibles en la web.
 * **`articulo_web`**: Catálogo de productos publicados.
 * **`pedido_web`**: Cabecera de los pedidos de clientes.
 * **`pedido_detalle_web`**: Detalle de artículos de cada pedido.
@@ -123,16 +123,21 @@ No se usa `NEXT_PUBLIC_API_URL` para el catálogo. Las variables `NEXT_PUBLIC_*`
 La sincronización entre el sistema local Keytron y la base de datos web se realiza exclusivamente mediante **dos APIs** provistas por `maxes_web`:
 
 ### A. API de Novedades (Keytron $\rightarrow$ Web)
-* **Propósito**: Publicar artículos nuevos, modificaciones de precios, actualizaciones de stock y rubros del catálogo.
+* **Propósito**: Publicar artículos nuevos, modificaciones de precios, actualizaciones de stock y categorias del catálogo.
 * **Funcionamiento**: Keytron realiza peticiones `POST` o `PUT` hacia `maxes_web` enviando los lotes de novedades. El servidor actualiza la base de datos PostgreSQL correspondiente al entorno activo utilizando Prisma ORM.
 * **Endpoint Sugerido**: `POST /api/catalog/sync`
 
-### B. API de Pedidos (Web $\rightarrow$ Keytron)
-* **Propósito**: Permitir que el sistema Keytron descargue los pedidos nuevos registrados en la web para procesarlos internamente.
-* **Funcionamiento**: Keytron consulta periódicamente los pedidos pendientes en la web y los descarga. Una vez procesados, envía una confirmación para marcar los pedidos como importados.
-* **Endpoints Sugeridos**:
-  * `GET /api/orders/pending` (Keytron baja los pedidos con estado `nuevo`).
-  * `PUT /api/orders/confirm-import` (Keytron confirma la recepción exitosa para cambiar el estado a `importado`).
+### B. API interna de pedidos (Web $\rightarrow$ Admin)
+* **Propósito**: Permitir que el backend de Admin descargue los pedidos nuevos registrados en la web para procesarlos internamente.
+* **Funcionamiento**: Admin consulta periódicamente los pedidos pendientes y, después de confirmar su escritura durable en SQL Server, informa los IDs importados. Las llamadas se autentican entre servicios mediante `authKeytron`.
+* **Endpoints implementados**:
+  * `GET /api/integracion/pedidos/pendientes`.
+  * `POST /api/integracion/pedidos/confirmar-importacion`.
+  * `PUT /api/integracion/pedidos/:id/estado`.
+
+### C. API interna de analytics (Web $\rightarrow$ Admin)
+* **Propósito**: Entregar a Admin la actividad nativa de Web sin exponer PostgreSQL/Supabase al panel administrativo.
+* **Endpoint implementado**: `GET /api/integracion/analytics`.
 
 ---
 

@@ -21,14 +21,17 @@ interface CatalogoHomeProps {
 export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps = {}) {
   const [sharedArticulo, setSharedArticulo] = useState<Articulo | null>(null);
   const {
-    rubros,
+    categorias,
+    categoriaDetalles,
     articulos,
     carruseles,
     config,
     search,
     setSearch,
-    selectedRubro,
-    setSelectedRubro,
+    selectedCategoria,
+    setSelectedCategoria,
+    selectedCategoriaDetalle,
+    setSelectedCategoriaDetalle,
     sortBy,
     setSortBy,
     isLoading,
@@ -38,11 +41,17 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
     loadMore,
   } = useCatalogo();
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const selectedRubroName =
-    rubros.find((rubro) => rubro.id === selectedRubro)?.nombre ||
-    rubros.find((rubro) => rubro.id === selectedRubro)?.codigo ||
+  const selectedCategoriaName =
+    categorias.find((categoria) => categoria.id === selectedCategoria)?.nombre ||
+    categorias.find((categoria) => categoria.id === selectedCategoria)?.codigo ||
     "";
-  const activeFilterLabel = [selectedRubroName.toUpperCase(), search.trim()]
+  const detallesDisponibles = categoriaDetalles.filter(
+    (detalle) => selectedCategoria === undefined || detalle.categoriaOrigenId === selectedCategoria
+  );
+  const selectedDetalleName = detallesDisponibles.find(
+    (detalle) => detalle.categoriaDetalleOrigenId === selectedCategoriaDetalle
+  )?.nombre || "";
+  const activeFilterLabel = [selectedCategoriaName.toUpperCase(), selectedDetalleName.toUpperCase(), search.trim()]
     .filter(Boolean)
     .join(" · ") || "TODOS LOS ARTICULOS";
   const sortOptions = [
@@ -96,8 +105,9 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
-  const handleSelectRubro = (rubroId: number | undefined) => {
-    setSelectedRubro(rubroId);
+  const handleSelectCategoria = (categoriaId: number | undefined) => {
+    setSelectedCategoria(categoriaId);
+    setSelectedCategoriaDetalle(undefined);
 
     window.setTimeout(() => {
       document.getElementById("catalogo-productos")?.scrollIntoView({
@@ -130,9 +140,9 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
       <Header
         search={search}
         onSearch={setSearch}
-        rubros={rubros}
-        selectedRubro={selectedRubro}
-        onSelectRubro={handleSelectRubro}
+        categorias={categorias}
+        selectedCategoria={selectedCategoria}
+        onSelectCategoria={handleSelectCategoria}
         showCart
       />
 
@@ -142,11 +152,34 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
 
       <section className="mt-6">
         <CategoryCarousel
-          rubros={rubros}
-          selectedRubro={selectedRubro}
-          onSelect={handleSelectRubro}
+          categorias={categorias}
+          selectedCategoria={selectedCategoria}
+          onSelect={handleSelectCategoria}
         />
       </section>
+
+      {selectedCategoria !== undefined && detallesDisponibles.length > 0 && (
+        <section className="mx-auto mt-4 w-full px-4 xl:px-6" aria-label="Filtros de categoría">
+          <div className="flex flex-col gap-2 rounded-lg border border-[var(--color-border)] bg-white p-3 sm:flex-row sm:items-center">
+            <label htmlFor="categoria-detalle" className="text-sm font-bold text-[var(--color-foreground)]">
+              Filtrar {selectedCategoriaName || "categoría"}
+            </label>
+            <select
+              id="categoria-detalle"
+              value={selectedCategoriaDetalle ?? ""}
+              onChange={(event) => setSelectedCategoriaDetalle(event.target.value ? Number(event.target.value) : undefined)}
+              className="h-11 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-3 text-sm sm:max-w-sm"
+            >
+              <option value="">Todos</option>
+              {detallesDisponibles.map((detalle) => (
+                <option key={detalle.categoriaDetalleOrigenId} value={detalle.categoriaDetalleOrigenId}>
+                  {detalle.nombre || detalle.codigo}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
+      )}
 
       <main id="catalogo-productos" className="w-full scroll-mt-36 px-4 pb-16 pt-8 xl:px-6">
         <div className="mb-6 border-y border-black/10 bg-[var(--color-primary)] px-4 py-3 text-[var(--color-primary-foreground)] shadow-sm">

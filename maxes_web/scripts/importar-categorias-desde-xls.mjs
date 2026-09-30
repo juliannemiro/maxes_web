@@ -15,7 +15,7 @@ async function main() {
   const productosPath = args.productos;
 
   if (!productosPath) {
-    throw new Error("Uso: node ./scripts/importar-rubros-desde-xls.mjs --productos /ruta/productos.xls");
+    throw new Error("Uso: node ./scripts/importar-categorias-desde-xls.mjs --productos /ruta/productos.xls");
   }
 
   const rows = parseHtmlTableRowsFromFile(productosPath);
@@ -24,32 +24,32 @@ async function main() {
   let creados = 0;
   let actualizados = 0;
 
-  for (const rubro of payload.rubros) {
-    const existing = await prisma.rubro.findFirst({
-      where: { codigo: rubro.codigo },
+  for (const categoria of payload.categorias) {
+    const existing = await prisma.categoria.findFirst({
+      where: { codigo: categoria.codigo },
     });
 
     if (existing) {
-      await prisma.rubro.update({
+      await prisma.categoria.update({
         where: { id: existing.id },
         data: {
-          nombre: rubro.nombre,
-          activo: rubro.activo,
+          nombre: categoria.nombre,
+          activo: categoria.activo,
         },
       });
       actualizados += 1;
       continue;
     }
 
-    await prisma.rubro.create({
-      data: rubro,
+    await prisma.categoria.create({
+      data: categoria,
     });
     creados += 1;
   }
 
-  console.log(`Rubros distintos detectados: ${payload.rubros.length}`);
-  console.log(`Rubros creados: ${creados}`);
-  console.log(`Rubros actualizados: ${actualizados}`);
+  console.log(`Categorias distintos detectados: ${payload.categorias.length}`);
+  console.log(`Categorias creados: ${creados}`);
+  console.log(`Categorias actualizados: ${actualizados}`);
 }
 
 main()

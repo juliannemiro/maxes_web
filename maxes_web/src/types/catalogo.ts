@@ -1,7 +1,7 @@
 /** DTOs de la sincronización de catálogo (los envía el sistema interno). */
 
-/** Rubro recibido en el sync. */
-export interface RubroSyncInput {
+/** Categoria recibido en el sync. */
+export interface CategoriaSyncInput {
   id?: number;
   codigo: string;
   nombre?: string | null;
@@ -33,6 +33,6 @@ export interface ArticuloSyncInput {
 
 /** Cuerpo del sync completo de catálogo. */
 export interface SyncCatalogPayload {
-  rubros?: RubroSyncInput[];
+  categorias?: CategoriaSyncInput[];
   articulos?: ArticuloSyncInput[];
 }

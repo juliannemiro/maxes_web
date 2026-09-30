@@ -7,33 +7,37 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Rubro {
-  id        Int        @id @default(autoincrement())
-  codigo    String     @db.VarChar(20)
-  nombre    String?    @db.VarChar(100)
-  activo    Boolean    @default(true)
-  articulos Articulo[]
+model Categoria {
+  id                Int                @id @default(autoincrement())
+  categoriaOrigenId Int                @unique @map("categoria_origen_id")
+  codigo            String             @db.VarChar(20)
+  nombre            String?            @db.VarChar(100)
+  activo            Boolean            @default(true)
+  articulos         Articulo[]
+  detalles          CategoriaDetalle[]
 
-  @@map("rubro_web")
+  @@map("categoria_web")
 }
 
 model Articulo {
-  id               Int      @id @default(autoincrement())
-  articuloOrigenId Int      @map("articulo_origen_id")
-  articuloCod      String   @unique @map("articulo_cod") @db.VarChar(20)
-  articuloDes      String?  @map("articulo_des") @db.VarChar(30)
-  articuloTextoWeb String?  @map("articulo_texto_web") @db.Text
-  articuloImagenId Int?     @map("articulo_imagen_id")
-  precioMayorista  Decimal? @map("precio_mayorista") @db.Decimal(18, 2)
-  precioMinorista  Decimal? @map("precio_minorista") @db.Decimal(18, 2)
-  rubroId          Int?     @map("rubro_id")
-  proveedorDes     String?  @map("proveedor_des") @db.VarChar(20)
-  stockWeb         Int?     @map("stock_web")
-  destacado        String   @default("N") @db.Char(1)
-  visible          String   @default("S") @db.Char(1)
-  fechaPublicacion DateTime @default(now()) @map("fecha_publicacion") @db.Timestamptz
+  id                 Int      @id @default(autoincrement())
+  articuloOrigenId   Int      @map("articulo_origen_id")
+  articuloCod        String   @unique @map("articulo_cod") @db.VarChar(20)
+  articuloDes        String?  @map("articulo_des") @db.VarChar(30)
+  articuloTextoWeb   String?  @map("articulo_texto_web") @db.Text
+  articuloImagenId   Int?     @map("articulo_imagen_id")
+  precioMayorista    Decimal? @map("precio_mayorista") @db.Decimal(18, 2)
+  precioMinorista    Decimal? @map("precio_minorista") @db.Decimal(18, 2)
+  categoriaId        Int?     @map("categoria_id")
+  categoriaDetalleId Int?     @map("categoria_detalle_id")
+  proveedorDes       String?  @map("proveedor_des") @db.VarChar(20)
+  stockWeb           Int?     @map("stock_web")
+  destacado          String   @default("N") @db.Char(1)
+  visible            String   @default("S") @db.Char(1)
+  fechaPublicacion   DateTime @default(now()) @map("fecha_publicacion") @db.Timestamptz
 
-  rubro              Rubro?                    @relation(fields: [rubroId], references: [id], onDelete: SetNull)
+  categoria          Categoria?                @relation(fields: [categoriaId], references: [categoriaOrigenId], onDelete: SetNull)
+  categoriaDetalle   CategoriaDetalle?         @relation(fields: [categoriaDetalleId], references: [categoriaDetalleOrigenId], onDelete: SetNull)
   detalles           PedidoDetalle[]
   imagenes           ArticuloImagen[]          @relation("ImagenesDeArticulo")
   imagenPrincipal    ArticuloImagen?           @relation("ImagenPrincipalArticulo", fields: [articuloImagenId], references: [id], onDelete: SetNull)
@@ -41,6 +45,20 @@ model Articulo {
   analyticsFavoritos FavoritoAnalyticsEvento[]
 
   @@map("articulo_web")
+}
+
+model CategoriaDetalle {
+  id                       Int        @id @default(autoincrement())
+  categoriaDetalleOrigenId Int        @unique @map("categoria_detalle_origen_id")
+  categoriaOrigenId        Int        @map("categoria_origen_id")
+  codigo                   String     @db.VarChar(20)
+  nombre                   String?    @db.VarChar(100)
+  activo                   Boolean    @default(true)
+  categoria                Categoria  @relation(fields: [categoriaOrigenId], references: [categoriaOrigenId], onDelete: Restrict)
+  articulos                Articulo[]
+
+  @@unique([categoriaOrigenId, codigo])
+  @@map("categoria_detalle_web")
 }
 
 model Pedido {
@@ -100,12 +118,13 @@ model ArticuloImagen {
 }
 
 model CarruselHome {
-  id           Int     @id @default(autoincrement())
-  titulo       String? @db.VarChar(150)
-  link_destino String? @db.VarChar(250)
-  imagen_url   String  @db.VarChar(500)
-  activo       Boolean @default(true)
-  orden        Int     @default(0)
+  id               Int     @id @default(autoincrement())
+  carruselOrigenId Int     @unique @map("carrusel_origen_id")
+  titulo           String? @db.VarChar(150)
+  link_destino     String? @db.VarChar(250)
+  imagen_url       String  @db.VarChar(500)
+  activo           Boolean @default(true)
+  orden            Int     @default(0)
 
   @@map("carrusel_home_web")
 }
@@ -231,4 +250,47 @@ model FavoritoAnalyticsEvento {
   @@index([accion, origen])
   @@index([articuloId])
   @@map("analytics_favorito_evento")
+}
+
+model IntegracionNovedad {
+  id                 Int                         @id @default(autoincrement())
+  origen             String                      @db.VarChar(30)
+  destino            String                      @db.VarChar(30)
+  entidad            String                      @db.VarChar(50)
+  entidadId          String                      @map("entidad_id") @db.VarChar(200)
+  tipo               String                      @db.VarChar(20)
+  estado             String                      @default("PENDIENTE") @db.VarChar(20)
+  finalizada         Boolean                     @default(false)
+  fechaCreacion      DateTime                    @default(now()) @map("fecha_creacion") @db.Timestamptz
+  fechaActualizacion DateTime                    @default(now()) @map("fecha_actualizacion") @db.Timestamptz
+  fechaProcesado     DateTime?                   @map("fecha_procesado") @db.Timestamptz
+  intentos           Int                         @default(0)
+  ultimoError        String?                     @map("ultimo_error") @db.Text
+  version            Int                         @default(1)
+  correlationId      String                      @unique @default(dbgenerated("gen_random_uuid()")) @map("correlation_id") @db.Uuid
+  detalles           IntegracionNovedadDetalle[]
+
+  @@index([destino, estado, fechaCreacion])
+  @@map("integracion_novedad")
+}
+
+model IntegracionNovedadDetalle {
+  id                   Int                @id @default(autoincrement())
+  integracionNovedadId Int                @map("integracion_novedad_id")
+  campo                String             @db.VarChar(100)
+  campoLabel           String             @map("campo_label") @db.VarChar(150)
+  tipoDato             String             @map("tipo_dato") @db.VarChar(30)
+  valorAnteriorJson    Json?              @map("valor_anterior_json")
+  valorNuevoJson       Json?              @map("valor_nuevo_json")
+  estadoRevision       String             @default("PENDIENTE") @map("estado_revision") @db.VarChar(20)
+  estadoAplicacion     String             @default("PENDIENTE") @map("estado_aplicacion") @db.VarChar(20)
+  fechaRevision        DateTime?          @map("fecha_revision") @db.Timestamptz
+  revisadoPor          String?            @map("revisado_por") @db.VarChar(100)
+  fechaAplicacion      DateTime?          @map("fecha_aplicacion") @db.Timestamptz
+  ultimoError          String?            @map("ultimo_error") @db.Text
+  novedad              IntegracionNovedad @relation(fields: [integracionNovedadId], references: [id], onDelete: Cascade)
+
+  @@unique([integracionNovedadId, campo])
+  @@index([integracionNovedadId, estadoRevision, estadoAplicacion])
+  @@map("integracion_novedad_detalle")
 }

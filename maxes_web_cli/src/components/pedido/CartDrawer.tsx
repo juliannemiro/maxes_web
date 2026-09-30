@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { usePurchaseMode } from "@/context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "@/utils/precio";
 import OptimizedImage from "@/components/common/OptimizedImage";
+import { altImagenArticulo } from "@/utils/articuloImagen";
 
 function getArticuloTitulo(item: (ReturnType<typeof useCart>["cart"])[number]) {
   const articuloDes = item.articulo.articulo_des?.trim();
@@ -76,7 +77,7 @@ export default function CartDrawer() {
                   >
                     <OptimizedImage
                       src={item.articulo.imagen_url || "/placeholder.svg"}
-                      alt={item.articulo.descripcion_publica || "Producto"}
+                      alt={altImagenArticulo(item.articulo)}
                       width={80}
                       height={80}
                       sizes="80px"

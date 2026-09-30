@@ -1,11 +1,11 @@
-import type { Articulo, ArticuloImagen, Rubro } from "@prisma/client";
+import type { Articulo, ArticuloImagen, Categoria } from "@prisma/client";
 
 /** Artículo publicado en la web (tabla `articulo_web`). */
 export type ArticuloEntity = Articulo;
 
 /** Artículo con las relaciones que expone la API pública. */
 export type ArticuloConRelaciones = Articulo & {
-  rubro: Rubro | null;
+  categoria: Categoria | null;
   imagenes: ArticuloImagen[];
   imagenPrincipal: ArticuloImagen | null;
 };
@@ -21,11 +21,11 @@ export interface ArticuloPublico {
   descripcion_detallada: string | null;
   precio_mayorista: unknown;
   precio_minorista: unknown;
-  rubro_id: number | null;
+  categoria_id: number | null;
   imagen_url: string | null;
   destacado: boolean;
   visible: boolean;
   fecha_publicacion: Date;
-  rubro: Rubro | null;
+  categoria: Categoria | null;
   imagenes: ArticuloImagen[];
 }

@@ -1,11 +1,11 @@
 -- CreateTable
-CREATE TABLE "rubro_web" (
+CREATE TABLE "categoria_web" (
     "id" SERIAL NOT NULL,
     "codigo" VARCHAR(20) NOT NULL,
     "nombre" VARCHAR(100),
     "activo" BOOLEAN NOT NULL DEFAULT true,
 
-    CONSTRAINT "rubro_web_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "categoria_web_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -18,7 +18,7 @@ CREATE TABLE "articulo_web" (
     "articulo_imagen_id" INTEGER,
     "precio_mayorista" DECIMAL(18,2),
     "precio_minorista" DECIMAL(18,2),
-    "rubro_id" INTEGER,
+    "categoria_id" INTEGER,
     "proveedor_des" VARCHAR(20),
     "stock_web" INTEGER,
     "destacado" CHAR(1) NOT NULL DEFAULT 'N',
@@ -92,7 +92,7 @@ CREATE TABLE "configuracion_web" (
 CREATE UNIQUE INDEX "articulo_web_articulo_cod_key" ON "articulo_web"("articulo_cod");
 
 -- AddForeignKey
-ALTER TABLE "articulo_web" ADD CONSTRAINT "articulo_web_rubro_id_fkey" FOREIGN KEY ("rubro_id") REFERENCES "rubro_web"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "articulo_web" ADD CONSTRAINT "articulo_web_categoria_id_fkey" FOREIGN KEY ("categoria_id") REFERENCES "categoria_web"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "articulo_web" ADD CONSTRAINT "articulo_web_articulo_imagen_id_fkey" FOREIGN KEY ("articulo_imagen_id") REFERENCES "articulo_imagen_web"("id") ON DELETE SET NULL ON UPDATE CASCADE;

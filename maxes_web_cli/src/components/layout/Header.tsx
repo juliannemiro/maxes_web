@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { useFavoritos } from "@/context/FavoritosContext";
-import { Rubro } from "@/types";
+import { Categoria } from "@/types";
 
 interface HeaderProps {
   search?: string;
   onSearch?: (term: string) => void;
-  rubros?: Rubro[];
-  selectedRubro?: number;
-  onSelectRubro?: (id: number | undefined) => void;
+  categorias?: Categoria[];
+  selectedCategoria?: number;
+  onSelectCategoria?: (id: number | undefined) => void;
   whatsappContact?: string;
   direccionLocal?: string;
   showCart?: boolean;
@@ -20,9 +20,9 @@ interface HeaderProps {
 export default function Header({
   search = "",
   onSearch,
-  rubros = [],
-  selectedRubro,
-  onSelectRubro,
+  categorias = [],
+  selectedCategoria,
+  onSelectCategoria,
   showCart = false,
 }: HeaderProps) {
   const { getItemCount, isHydrated, setOpen } = useCart();
@@ -30,14 +30,14 @@ export default function Header({
     getFavoritosCount,
     isHydrated: favoritosHydrated,
   } = useFavoritos();
-  const sortedRubros = useMemo(
+  const sortedCategorias = useMemo(
     () =>
-      [...rubros].sort((a, b) =>
+      [...categorias].sort((a, b) =>
         (a.nombre || a.codigo || "").localeCompare(b.nombre || b.codigo || "", "es", {
           sensitivity: "base",
         })
       ),
-    [rubros]
+    [categorias]
   );
   const cartCount = isHydrated ? getItemCount() : 0;
   const favoritosCount = favoritosHydrated ? getFavoritosCount() : 0;
@@ -61,33 +61,33 @@ export default function Header({
         </Link>
 
         <div className={controlsGridClass}>
-          {onSelectRubro && (
+          {onSelectCategoria && (
             <div className="min-w-0 md:order-2 md:col-auto col-span-full">
               <label
-                htmlFor="header-rubro"
+                htmlFor="header-categoria"
                 className="sr-only md:not-sr-only md:mb-1.5 md:block md:text-[0.65rem] md:font-semibold md:uppercase md:tracking-[0.22em] md:text-[var(--color-muted-foreground)]"
               >
                 Buscar por categoría
               </label>
               <div className="relative flex h-11 w-full items-center overflow-hidden rounded-md border border-transparent bg-white">
                 <select
-                  id="header-rubro"
-                  value={selectedRubro ?? "__all__"}
-                  onChange={(e) => onSelectRubro(e.target.value === "__all__" ? undefined : Number(e.target.value))}
+                  id="header-categoria"
+                  value={selectedCategoria ?? "__all__"}
+                  onChange={(e) => onSelectCategoria(e.target.value === "__all__" ? undefined : Number(e.target.value))}
                   aria-label="Buscar por categoría"
                   className="h-full w-full appearance-none bg-transparent px-4 pr-20 text-sm font-medium text-[var(--color-foreground)] outline-none"
                 >
                   <option value="__all__">Todas las categorías</option>
-                  {sortedRubros.map((rubro) => (
-                    <option key={rubro.id} value={rubro.id}>
-                      {rubro.nombre || rubro.codigo}
+                  {sortedCategorias.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nombre || categoria.codigo}
                     </option>
                   ))}
                 </select>
-                {selectedRubro !== undefined && (
+                {selectedCategoria !== undefined && (
                   <button
                     type="button"
-                    onClick={() => onSelectRubro(undefined)}
+                    onClick={() => onSelectCategoria(undefined)}
                     aria-label="Mostrar todas las categorías"
                     title="Mostrar todas las categorías"
                     className="absolute right-10 flex h-full w-10 items-center justify-center text-[var(--color-muted-foreground)] transition hover:text-[var(--color-foreground)]"

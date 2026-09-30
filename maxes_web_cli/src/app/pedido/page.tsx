@@ -12,6 +12,7 @@ import Link from "next/link";
 import { usePurchaseMode } from "@/context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "@/utils/precio";
 import OptimizedImage from "@/components/common/OptimizedImage";
+import { altImagenArticulo } from "@/utils/articuloImagen";
 import ActionButton from "@/components/common/ActionButton";
 import {
   finishAnalyticsSession,
@@ -446,7 +447,7 @@ export default function CheckoutPage() {
                           >
                             <OptimizedImage
                               src={articulo.imagen_url || "/placeholder.svg"}
-                              alt={articulo.descripcion_publica || "Producto favorito"}
+                              alt={altImagenArticulo(articulo, "Producto favorito")}
                               width={72}
                               height={72}
                               sizes="72px"
@@ -523,7 +524,7 @@ export default function CheckoutPage() {
                   >
                     <OptimizedImage
                       src={item.articulo.imagen_url || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=60"}
-                      alt={item.articulo.descripcion_publica || ""}
+                      alt={altImagenArticulo(item.articulo, "Producto")}
                       width={72}
                       height={72}
                       sizes="72px"

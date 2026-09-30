@@ -1,4 +1,4 @@
-export type { RubroEntity } from "./rubro.entity";
+export type { CategoriaEntity } from "./categoria.entity";
 export type { ArticuloImagenEntity } from "./articuloImagen.entity";
 export type { ArticuloEntity, ArticuloConRelaciones, ArticuloPublico } from "./articulo.entity";
 export type { PedidoDetalleEntity } from "./pedidoDetalle.entity";

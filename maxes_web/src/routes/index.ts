@@ -1,13 +1,14 @@
 import { Router } from "express";
-import catalogoRoutes from "./catalogoRoutes";
 import pedidoRoutes from "./pedidoRoutes";
+import analyticsRoutes from "./analyticsRoutes";
+import seoRoutes from "./seoRoutes";
 import publicRoutes from "./publicRoutes";
 
 const routes = Router();
 
-// Mount integration/sync routes (used by Keytron ERP)
-routes.use("/api/catalog", catalogoRoutes);
-routes.use("/api/orders", pedidoRoutes);
+routes.use("/api/integracion/pedidos", pedidoRoutes);
+routes.use("/api/integracion/analytics", analyticsRoutes);
+routes.use("/api/integracion/seo", seoRoutes);
 
 // Mount public catalog routes (used by Web Frontend maxes_web_cli)
 routes.use("/api/public", publicRoutes);

@@ -5,21 +5,21 @@ import type { ArticuloConRelaciones, ArticuloPublico, PedidoPublico } from "../e
 
 /**
  * API pública que consume el cliente de la web (`maxes_api/public`):
- * rubros, artículos, carrusel, configuración y alta de pedidos.
+ * categorias, artículos, carrusel, configuración y alta de pedidos.
  */
 export class PublicoService {
-  /** Rubros activos, ordenados por nombre. */
-  async getRubros() {
-    const rubros = await prisma.rubro.findMany({
+  /** Categorias activos, ordenados por nombre. */
+  async getCategorias() {
+    const categorias = await prisma.categoria.findMany({
       where: { activo: true },
       orderBy: { nombre: "asc" },
     });
-    return { success: true, rubros };
+    return { success: true, categorias };
   }
 
   /** Artículos visibles y con precio, con filtros y paginación. */
   async getArticulos(query: Record<string, unknown>) {
-    const { rubro_id, search, destacado, page = 1, limit = 20 } = query;
+    const { categoria_id, search, destacado, page = 1, limit = 20 } = query;
 
     const pageNumber = parseInt(page as string);
     const limitNumber = parseInt(limit as string);
@@ -30,8 +30,8 @@ export class PublicoService {
     whereClause.precioMayorista = { gt: 0 };
     whereClause.precioMinorista = { gt: 0 };
 
-    if (rubro_id) {
-      whereClause.rubroId = parseInt(rubro_id as string);
+    if (categoria_id) {
+      whereClause.categoriaId = parseInt(categoria_id as string);
     }
 
     if (destacado) {
@@ -53,7 +53,7 @@ export class PublicoService {
       prisma.articulo.findMany({
         where: whereClause,
         include: {
-          rubro: true,
+          categoria: true,
           imagenes: { orderBy: { orden: "asc" } },
           imagenPrincipal: true,
         },
@@ -88,7 +88,7 @@ export class PublicoService {
         precioMinorista: { gt: 0 },
       },
       include: {
-        rubro: true,
+        categoria: true,
         imagenes: { orderBy: { orden: "asc" } },
         imagenPrincipal: true,
       },
@@ -325,12 +325,12 @@ export class PublicoService {
       descripcion_detallada: articulo.articuloTextoWeb || articulo.articuloDes,
       precio_mayorista: articulo.precioMayorista,
       precio_minorista: articulo.precioMinorista,
-      rubro_id: articulo.rubroId,
+      categoria_id: articulo.categoriaId,
       imagen_url: articulo.imagenPrincipal?.imagen_url || articulo.imagenes?.[0]?.imagen_url || null,
       destacado: articulo.destacado === "S",
       visible: articulo.visible === "S",
       fecha_publicacion: articulo.fechaPublicacion,
-      rubro: articulo.rubro,
+      categoria: articulo.categoria,
       imagenes: articulo.imagenes,
     };
   }

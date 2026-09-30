@@ -2,10 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "../generated/prisma-client/index.js";
 import { loadProjectEnv } from "./lib/load-env.mjs";
+import { confirmarEliminacion } from "./lib/confirmar-eliminacion.mjs";
 import {
   parseArgs,
   parseHtmlTableRowsFromFile,
-  slugifyRubroCode,
+  slugifyCategoriaCode,
   toInteger,
   normalizeString,
 } from "./lib/parse-xls-html.mjs";
@@ -84,7 +85,7 @@ function parseScrapeFile(filePath) {
       continue;
     }
 
-    const [titulo, imagen1, href, rubro, scrapedCode, precio, imagen2 = ""] = cols;
+    const [titulo, imagen1, href, categoria, scrapedCode, precio, imagen2 = ""] = cols;
     const imageUrls = [imagen1, imagen2].map(normalizeNullableString).filter(Boolean);
 
     if (!titulo || imageUrls.length === 0) {
@@ -95,8 +96,8 @@ function parseScrapeFile(filePath) {
       titulo: titulo.trim(),
       tituloNorm: normalizeText(titulo),
       href: normalizeNullableString(href),
-      rubro: normalizeNullableString(rubro),
-      rubroNorm: normalizeText(rubro),
+      categoria: normalizeNullableString(categoria),
+      categoriaNorm: normalizeText(categoria),
       scrapedCode: normalizeNullableString(scrapedCode),
       scrapedCodeNorm: normalizeText(scrapedCode),
       precioMayorista: parseScrapePrice(precio),
@@ -122,7 +123,7 @@ function parseExcelProducts(filePath) {
         return null;
       }
 
-      const rubroNombre = normalizeString(record.Rubro) || "Sin rubro";
+      const categoriaNombre = normalizeString(record.Categoria) || "Sin categoria";
       return {
         articuloOrigenId: index + 1,
         codigo,
@@ -134,9 +135,9 @@ function parseExcelProducts(filePath) {
         proveedor: normalizeString(record.Proveedor),
         proveedorNorm: normalizeText(record.Proveedor),
         stockWeb: toInteger(record["Stock Deposito 1"]),
-        rubroNombre,
-        rubroCodigo: slugifyRubroCode(rubroNombre),
-        rubroNorm: normalizeText(rubroNombre),
+        categoriaNombre,
+        categoriaCodigo: slugifyCategoriaCode(categoriaNombre),
+        categoriaNorm: normalizeText(categoriaNombre),
       };
     })
     .filter(Boolean);
@@ -173,9 +174,9 @@ function scoreCandidate(producto, record) {
     reasons.push("proveedor");
   }
 
-  if (producto.rubroNorm && record.rubroNorm.includes(producto.rubroNorm)) {
+  if (producto.categoriaNorm && record.categoriaNorm.includes(producto.categoriaNorm)) {
     score += 10;
-    reasons.push("rubro");
+    reasons.push("categoria");
   }
 
   const roundedMayorista = producto.precioMayorista == null ? null : Math.round(producto.precioMayorista);
@@ -223,7 +224,7 @@ function deterministicStock(codigo) {
 }
 
 function buildProveedorFallback(producto) {
-  const base = producto.rubroNombre || "General";
+  const base = producto.categoriaNombre || "General";
   return `Distribuidora ${base}`.slice(0, 20);
 }
 
@@ -234,17 +235,17 @@ function buildTextoWeb(detalle) {
   return sentence.slice(0, 30);
 }
 
-async function ensureRubro(producto) {
-  const existing = await prisma.rubro.findFirst({
-    where: { codigo: producto.rubroCodigo },
+async function ensureCategoria(producto) {
+  const existing = await prisma.categoria.findFirst({
+    where: { codigo: producto.categoriaCodigo },
   });
 
   if (existing) {
-    if (existing.nombre !== producto.rubroNombre || existing.activo !== true) {
-      await prisma.rubro.update({
+    if (existing.nombre !== producto.categoriaNombre || existing.activo !== true) {
+      await prisma.categoria.update({
         where: { id: existing.id },
         data: {
-          nombre: producto.rubroNombre,
+          nombre: producto.categoriaNombre,
           activo: true,
         },
       });
@@ -253,10 +254,10 @@ async function ensureRubro(producto) {
     return existing.id;
   }
 
-  const created = await prisma.rubro.create({
+  const created = await prisma.categoria.create({
     data: {
-      codigo: producto.rubroCodigo,
-      nombre: producto.rubroNombre,
+      codigo: producto.categoriaCodigo,
+      nombre: producto.categoriaNombre,
       activo: true,
     },
   });
@@ -329,15 +330,23 @@ async function main() {
 
   matched.sort((a, b) => b.score - a.score);
 
-  let rubrosCreadosOActualizados = 0;
+  let categoriasCreadosOActualizados = 0;
   let articulosCreados = 0;
   let articulosActualizados = 0;
   let imagenesSincronizadas = 0;
 
   if (apply) {
+    const imagenesAReemplazar = await prisma.articuloImagen.count({
+      where: { articulo: { articuloCod: { in: matched.map((item) => item.producto.codigo) } } },
+    });
+    await confirmarEliminacion({
+      cantidad: imagenesAReemplazar,
+      descripcion: "imágenes existentes que serán reemplazadas por la importación",
+      args,
+    });
     for (const item of matched) {
-      const rubroId = await ensureRubro(item.producto);
-      rubrosCreadosOActualizados += 1;
+      const categoriaId = await ensureCategoria(item.producto);
+      categoriasCreadosOActualizados += 1;
 
       const precioMayorista = item.producto.precioMayorista ?? item.scrape.precioMayorista ?? 0;
       const precioMinorista = Number((precioMayorista * 1.2).toFixed(2));
@@ -355,7 +364,7 @@ async function main() {
         articuloTextoWeb,
         precioMayorista,
         precioMinorista,
-        rubroId,
+        categoriaId,
         proveedorDes,
         stockWeb,
         destacado: "N",

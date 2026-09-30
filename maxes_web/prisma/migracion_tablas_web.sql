@@ -1,6 +1,6 @@
 BEGIN;
 
-ALTER TABLE IF EXISTS "rubro" RENAME TO "rubro_web";
+ALTER TABLE IF EXISTS "categoria" RENAME TO "categoria_web";
 ALTER TABLE IF EXISTS "articulo" RENAME TO "articulo_web";
 ALTER TABLE IF EXISTS "pedido" RENAME TO "pedido_web";
 ALTER TABLE IF EXISTS "pedido_detalle" RENAME TO "pedido_detalle_web";

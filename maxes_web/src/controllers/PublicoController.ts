@@ -5,10 +5,10 @@ const service = new PublicoService();
 
 /** Endpoints públicos que consume el cliente de la web. */
 export class PublicoController {
-  /** Rubros activos. */
-  static async getRubros(_req: Request, res: Response, next: NextFunction) {
+  /** Categorias activos. */
+  static async getCategorias(_req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(await service.getRubros());
+      res.json(await service.getCategorias());
     } catch (error) {
       next(error);
     }

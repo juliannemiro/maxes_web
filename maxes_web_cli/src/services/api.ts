@@ -1,4 +1,4 @@
-import { Rubro, Articulo, CarruselHome, Configuracion, Pedido } from "@/types";
+import { Categoria, Articulo, CarruselHome, Configuracion, Pedido, CategoriaDetalle } from "@/types";
 
 export interface PedidoCreado {
   id: number;
@@ -9,7 +9,8 @@ export interface PedidoCreado {
 }
 
 export interface CatalogoInicial {
-  rubros: Rubro[];
+  categorias: Categoria[];
+  categoria_detalles: CategoriaDetalle[];
   carruseles: CarruselHome[];
   config: Configuracion | null;
   articulos: Articulo[];
@@ -44,14 +45,15 @@ export const apiService = {
     return fetchJson<CatalogoInicial>("/api/public/catalogo");
   },
 
-  // Get active rubros
-  async getRubros(): Promise<{ rubros: Rubro[] }> {
-    return fetchJson<{ rubros: Rubro[] }>("/api/public/rubros");
+  // Get active categorias
+  async getCategorias(): Promise<{ categorias: Categoria[] }> {
+    return fetchJson<{ categorias: Categoria[] }>("/api/public/categorias");
   },
 
   // Get articles catalog
   async getArticulos(params?: {
-    rubro_id?: number;
+    categoria_id?: number;
+    categoria_detalle_id?: number;
     search?: string;
     destacado?: boolean;
     page?: number;
@@ -70,7 +72,8 @@ export const apiService = {
   }> {
     const query = new URLSearchParams();
     if (params) {
-      if (params.rubro_id !== undefined) query.append("rubro_id", params.rubro_id.toString());
+      if (params.categoria_id !== undefined) query.append("categoria_id", params.categoria_id.toString());
+      if (params.categoria_detalle_id !== undefined) query.append("categoria_detalle_id", params.categoria_detalle_id.toString());
       if (params.search) query.append("search", params.search);
       if (params.destacado !== undefined) query.append("destacado", params.destacado.toString());
       if (params.page !== undefined) query.append("page", params.page.toString());

@@ -20,8 +20,8 @@ export function toIndicadorSN(value: unknown, defaultValue: "S" | "N" = "N"): "S
   return defaultValue;
 }
 
-/** Genera un código de rubro a partir de un nombre. */
-export function slugifyRubroCode(value: string): string {
+/** Genera un código de categoria a partir de un nombre. */
+export function slugifyCategoriaCode(value: string): string {
   return (
     value
       .normalize("NFD")
@@ -29,18 +29,18 @@ export function slugifyRubroCode(value: string): string {
       .replace(/[^a-zA-Z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .toUpperCase()
-      .slice(0, 20) || "SIN-RUBRO"
+      .slice(0, 20) || "SIN-CATEGORIA"
   );
 }
 
-/** Resuelve código y nombre de rubro a partir de los alias que envía el origen. */
-export function resolveRubro(item: any): { rubroCodigo: string | null; rubroNombre: string } {
-  const rubroNombre = normalizeNullableString(item.rubro) || normalizeNullableString(item.rubro_nombre);
-  const rubroCodigo = normalizeNullableString(item.rubro_codigo) || (rubroNombre ? slugifyRubroCode(rubroNombre) : null);
+/** Resuelve código y nombre de categoria a partir de los alias que envía el origen. */
+export function resolveCategoria(item: any): { categoriaCodigo: string | null; categoriaNombre: string } {
+  const categoriaNombre = normalizeNullableString(item.categoria) || normalizeNullableString(item.categoria_nombre);
+  const categoriaCodigo = normalizeNullableString(item.categoria_codigo) || (categoriaNombre ? slugifyCategoriaCode(categoriaNombre) : null);
 
   return {
-    rubroCodigo,
-    rubroNombre: rubroNombre || rubroCodigo || "Sin rubro",
+    categoriaCodigo,
+    categoriaNombre: categoriaNombre || categoriaCodigo || "Sin categoria",
   };
 }
 

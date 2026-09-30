@@ -98,7 +98,7 @@ Cambios pendientes de revisión:
 | Actual | Propuesto |
 | --- | --- |
 | `authKeytron` | `autenticarKeytron` |
-| `RubroWeb` | `Rubro` |
+| `CategoriaWeb` | `Categoria` |
 | `ArticuloWeb` | `Articulo` |
 | `PedidoWeb` | `Pedido` |
 | `PedidoDetalleWeb` | `PedidoDetalle` |
@@ -110,7 +110,7 @@ Tablas físicas usadas actualmente por Prisma:
 
 | Tabla |
 | --- |
-| `rubro_web` |
+| `categoria_web` |
 | `pedido_web` |
 | `articulo_web` |
 | `pedido_detalle_web` |

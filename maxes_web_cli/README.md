@@ -7,7 +7,7 @@ Frontend público de Maxes Insumos construido con Next.js App Router.
 El navegador consulta rutas internas del mismo proyecto:
 
 ```text
-/api/public/rubros
+/api/public/categorias
 /api/public/articulos
 /api/public/carruseles
 /api/public/config

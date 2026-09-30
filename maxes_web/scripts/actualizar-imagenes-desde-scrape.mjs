@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "../generated/prisma-client/index.js";
 import { loadProjectEnv } from "./lib/load-env.mjs";
+import { confirmarEliminacion } from "./lib/confirmar-eliminacion.mjs";
 import { parseArgs } from "./lib/parse-xls-html.mjs";
 
 loadProjectEnv();
@@ -68,7 +69,7 @@ function parseScrapeFile(filePath) {
       titulo,
       imagen1,
       href,
-      rubro,
+      categoria,
       scrapedCode,
       precio,
       imagen2 = "",
@@ -84,7 +85,7 @@ function parseScrapeFile(filePath) {
       titulo,
       tituloNorm: normalizeText(titulo),
       href: normalizeNullableString(href),
-      rubro: normalizeNullableString(rubro),
+      categoria: normalizeNullableString(categoria),
       scrapedCode: normalizeNullableString(scrapedCode),
       scrapedCodeNorm: normalizeText(scrapedCode),
       precioMayorista: parsePrecioMayorista(precio),
@@ -101,7 +102,7 @@ function scoreCandidate(articulo, record) {
   const articuloCodNorm = normalizeText(articulo.articuloCod);
   const articuloDesNorm = normalizeText(articulo.articuloDes || articulo.articuloTextoWeb || "");
   const proveedorNorm = normalizeText(articulo.proveedorDes || "");
-  const rubroNorm = normalizeText(articulo.rubro?.nombre || "");
+  const categoriaNorm = normalizeText(articulo.categoria?.nombre || "");
 
   if (articuloCodNorm && articuloCodNorm === record.scrapedCodeNorm) {
     score += 120;
@@ -130,9 +131,9 @@ function scoreCandidate(articulo, record) {
     reasons.push("proveedor");
   }
 
-  if (rubroNorm && normalizeText(record.rubro || "").includes(rubroNorm)) {
+  if (categoriaNorm && normalizeText(record.categoria || "").includes(categoriaNorm)) {
     score += 10;
-    reasons.push("rubro");
+    reasons.push("categoria");
   }
 
   const precioArticulo =
@@ -218,7 +219,7 @@ async function main() {
 
   const articulos = await prisma.articulo.findMany({
     include: {
-      rubro: true,
+      categoria: true,
       imagenes: {
         orderBy: { orden: "asc" },
       },
@@ -254,6 +255,14 @@ async function main() {
   matched.sort((a, b) => b.score - a.score);
 
   if (apply) {
+    const imagenesAReemplazar = await prisma.articuloImagen.count({
+      where: { articuloId: { in: matched.map((item) => item.articulo.id) } },
+    });
+    await confirmarEliminacion({
+      cantidad: imagenesAReemplazar,
+      descripcion: "imágenes existentes que serán reemplazadas por el scrape",
+      args,
+    });
     for (const item of matched) {
       await syncArticuloImagenes(item.articulo.id, item.record.imageUrls);
     }
@@ -265,6 +274,11 @@ async function main() {
       .filter((id) => typeof id === "number");
 
     if (unmatchedIds.length > 0) {
+      await confirmarEliminacion({
+        cantidad: unmatchedIds.length,
+        descripcion: "artículos sin coincidencia en el scrape",
+        args,
+      });
       await prisma.articuloImagen.deleteMany({
         where: {
           articuloId: {

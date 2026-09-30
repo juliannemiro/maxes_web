@@ -6,7 +6,7 @@
   },
   "productos": {
     "filas": 4686,
-    "rubros_unicos": 43,
+    "categorias_unicos": 43,
     "columnas_origen": [
       "CODIGO",
       "DETALLE",
@@ -21,13 +21,13 @@
       "Despacho",
       "Pto Pedido",
       "Proveedor",
-      "Rubro"
+      "Categoria"
     ],
     "mapeo_principal": {
       "CODIGO": "articulo.codigo",
       "DETALLE": "articulo.descripcion_publica",
       "Precio #1": "articulo.precio_publicado",
-      "Rubro": "rubro.nombre + articulo.rubro_id (via rubro.codigo)"
+      "Categoria": "categoria.nombre + articulo.categoria_id (via categoria.codigo)"
     },
     "columnas_sin_destino_directo": [
       "QxB",

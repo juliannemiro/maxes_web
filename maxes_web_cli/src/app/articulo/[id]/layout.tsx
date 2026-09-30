@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductLayoutProps): Promise<
 
   const product = result.articulo;
   const title = product.descripcion_publica || product.codigo || "Artículo MAXES";
-  const category = product.rubro?.nombre ? ` en ${product.rubro.nombre}` : "";
+  const category = product.categoria?.nombre ? ` en ${product.categoria.nombre}` : "";
   const description = `Encontrá ${title}${category} en el catálogo online de MAXES.`;
 
   return {

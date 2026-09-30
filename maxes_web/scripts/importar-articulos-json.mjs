@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "../generated/prisma-client/index.js";
 import { loadProjectEnv } from "./lib/load-env.mjs";
-import { parseArgs, slugifyRubroCode } from "./lib/parse-xls-html.mjs";
+import { confirmarEliminacion } from "./lib/confirmar-eliminacion.mjs";
+import { parseArgs, slugifyCategoriaCode } from "./lib/parse-xls-html.mjs";
 
 loadProjectEnv();
 
@@ -44,8 +45,8 @@ function extractImageUrls(item) {
 }
 
 function normalizeArticulo(item, index) {
-  const rubroNombre = normalizeNullableString(item.rubro) || "Sin rubro";
-  const rubroCodigo = slugifyRubroCode(rubroNombre);
+  const categoriaNombre = normalizeNullableString(item.categoria) || "Sin categoria";
+  const categoriaCodigo = slugifyCategoriaCode(categoriaNombre);
   const articuloDes = normalizeNullableString(item.articulo_des) || normalizeNullableString(item.articulo_texto_web);
   const articuloTextoWeb = normalizeNullableString(item.articulo_texto_web) || articuloDes;
   const codigo = normalizeNullableString(item.articulo_cod);
@@ -56,9 +57,9 @@ function normalizeArticulo(item, index) {
   }
 
   return {
-    rubro: {
-      codigo: rubroCodigo,
-      nombre: rubroNombre,
+    categoria: {
+      codigo: categoriaCodigo,
+      nombre: categoriaNombre,
       activo: true,
     },
     articulo: {
@@ -121,8 +122,23 @@ async function main() {
     throw new Error("El archivo JSON debe contener un array de articulos.");
   }
 
-  let rubrosCreados = 0;
-  let rubrosActualizados = 0;
+  const codigosConImagenes = data
+    .map((item) => normalizeArticulo(item, 0))
+    .filter((item) => item.imageUrls.length > 0)
+    .map((item) => item.articulo.articuloCod);
+  if (codigosConImagenes.length > 0) {
+    const imagenesAReemplazar = await prisma.articuloImagen.count({
+      where: { articulo: { articuloCod: { in: codigosConImagenes } } },
+    });
+    await confirmarEliminacion({
+      cantidad: imagenesAReemplazar,
+      descripcion: "imágenes existentes que serán reemplazadas por la importación",
+      args,
+    });
+  }
+
+  let categoriasCreados = 0;
+  let categoriasActualizados = 0;
   let articulosCreados = 0;
   let articulosActualizados = 0;
   let imagenesSincronizadas = 0;
@@ -130,26 +146,26 @@ async function main() {
   for (const [index, item] of data.entries()) {
     const normalized = normalizeArticulo(item, index);
 
-    const existingRubro = await prisma.rubro.findFirst({
-      where: { codigo: normalized.rubro.codigo },
+    const existingCategoria = await prisma.categoria.findFirst({
+      where: { codigo: normalized.categoria.codigo },
     });
 
-    let rubroId;
-    if (existingRubro) {
-      rubroId = existingRubro.id;
-      if (existingRubro.nombre !== normalized.rubro.nombre || existingRubro.activo !== normalized.rubro.activo) {
-        await prisma.rubro.update({
-          where: { id: existingRubro.id },
-          data: normalized.rubro,
+    let categoriaId;
+    if (existingCategoria) {
+      categoriaId = existingCategoria.id;
+      if (existingCategoria.nombre !== normalized.categoria.nombre || existingCategoria.activo !== normalized.categoria.activo) {
+        await prisma.categoria.update({
+          where: { id: existingCategoria.id },
+          data: normalized.categoria,
         });
-        rubrosActualizados += 1;
+        categoriasActualizados += 1;
       }
     } else {
-      const createdRubro = await prisma.rubro.create({
-        data: normalized.rubro,
+      const createdCategoria = await prisma.categoria.create({
+        data: normalized.categoria,
       });
-      rubroId = createdRubro.id;
-      rubrosCreados += 1;
+      categoriaId = createdCategoria.id;
+      categoriasCreados += 1;
     }
 
     const existingArticulo = await prisma.articulo.findUnique({
@@ -158,7 +174,7 @@ async function main() {
 
     const articuloData = {
       ...normalized.articulo,
-      rubroId,
+      categoriaId,
     };
 
     let articulo;
@@ -181,8 +197,8 @@ async function main() {
     }
   }
 
-  console.log(`Rubros creados: ${rubrosCreados}`);
-  console.log(`Rubros actualizados: ${rubrosActualizados}`);
+  console.log(`Categorias creados: ${categoriasCreados}`);
+  console.log(`Categorias actualizados: ${categoriasActualizados}`);
   console.log(`Articulos creados: ${articulosCreados}`);
   console.log(`Articulos actualizados: ${articulosActualizados}`);
   console.log(`Imagenes sincronizadas: ${imagenesSincronizadas}`);

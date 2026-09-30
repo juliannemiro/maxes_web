@@ -29,7 +29,7 @@ Levantar el proyecto en desarrollo con:
 El frontend consulta siempre sus propias rutas internas de Next:
 
 ```text
-/api/public/rubros
+/api/public/categorias
 /api/public/articulos
 /api/public/carruseles
 /api/public/config
@@ -153,7 +153,7 @@ docker compose up -d db-maxes-web
 
 ## Notas
 
-* El esquema Prisma actual usa tablas fisicas con sufijo `_web`: `rubro_web`, `articulo_web`, `pedido_web`, `pedido_detalle_web`, `articulo_imagen_web`, `carrusel_home_web`, `configuracion_web`.
+* El esquema Prisma actual usa tablas fisicas con sufijo `_web`: `categoria_web`, `articulo_web`, `pedido_web`, `pedido_detalle_web`, `articulo_imagen_web`, `carrusel_home_web`, `configuracion_web`.
 * Supabase queda reservado para produccion.
 * Primero conviene validar migraciones y datos sobre `db-maxes-web` antes de conectar produccion.
 * En desarrollo, `npm run dev` en ambos proyectos intenta cerrar el proceso que ya este escuchando en su puerto antes de iniciar de nuevo.

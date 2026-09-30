@@ -23,7 +23,7 @@
       "dev": "node ../scripts/iniciar-dev.mjs 4785 ts-node-dev --respawn --transpile-only ./src/index.ts",
       "build": "tsc",
       "start": "node ./build/index.js",
-      "seed:importar-rubros": "node ./scripts/importar-rubros-desde-xls.mjs",
+      "seed:importar-categorias": "node ./scripts/importar-categorias-desde-xls.mjs",
       "seed:importar-articulos": "node ./scripts/importar-articulos-desde-xls.mjs",
       "seed:importar-articulos-json": "node ./scripts/importar-articulos-json.mjs",
       "seed:importar-articulos-excel-scrape": "node ./scripts/importar-articulos-excel-scrape.mjs",

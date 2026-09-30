@@ -1,30 +1,30 @@
 import prisma from "../config/prisma";
 import { AppError } from "../utils/appError";
-import { extractImageUrls, resolveRubro, toIndicadorSN } from "../utils/catalogo";
+import { extractImageUrls, resolveCategoria, toIndicadorSN } from "../utils/catalogo";
 import { normalizeNullableString } from "../utils/strings";
-import type { ArticuloSyncInput, RubroSyncInput, SyncCatalogPayload } from "../types";
+import type { ArticuloSyncInput, CategoriaSyncInput, SyncCatalogPayload } from "../types";
 
 /**
  * Sincronización del catálogo publicado en la web.
- * Recibe rubros y artículos desde el sistema interno y los persiste en
- * PostgreSQL/Supabase (`rubro_web`, `articulo_web`, `articulo_imagen_web`).
+ * Recibe categorias y artículos desde el sistema interno y los persiste en
+ * PostgreSQL/Supabase (`categoria_web`, `articulo_web`, `articulo_imagen_web`).
  */
 export class CatalogoService {
-  /** Sincroniza rubros por id (o los crea si no existe el id). */
-  async syncRubros(rubros: unknown) {
-    if (!Array.isArray(rubros)) {
-      throw new AppError(400, "rubros must be an array");
+  /** Sincroniza categorias por id (o los crea si no existe el id). */
+  async syncCategorias(categorias: unknown) {
+    if (!Array.isArray(categorias)) {
+      throw new AppError(400, "categorias must be an array");
     }
 
     const results = [];
-    for (const item of rubros as RubroSyncInput[]) {
+    for (const item of categorias as CategoriaSyncInput[]) {
       const { codigo, nombre, activo } = item;
-      const rubro = await prisma.rubro.upsert({
+      const categoria = await prisma.categoria.upsert({
         where: { id: item.id || -1 },
         create: { codigo, nombre, activo: activo !== undefined ? activo : true },
         update: { codigo, nombre, activo: activo !== undefined ? activo : true },
       });
-      results.push(rubro);
+      results.push(categoria);
     }
 
     return { success: true, count: results.length };
@@ -38,14 +38,14 @@ export class CatalogoService {
 
     const results = [];
     for (const item of articulos as ArticuloSyncInput[]) {
-      const rubroId = await this.ensureRubro(item);
+      const categoriaId = await this.ensureCategoria(item);
       const imageUrls = extractImageUrls(item);
       const codigo = normalizeNullableString(item.codigo) || normalizeNullableString(item.articulo_cod) || "";
 
       const articulo = await prisma.articulo.upsert({
         where: { articuloCod: codigo },
-        create: this.buildArticuloData(item, rubroId),
-        update: this.buildArticuloData(item, rubroId),
+        create: this.buildArticuloData(item, categoriaId),
+        update: this.buildArticuloData(item, categoriaId),
       });
 
       await this.syncArticuloImagenes(articulo.id, imageUrls);
@@ -55,22 +55,22 @@ export class CatalogoService {
     return { success: true, count: results.length };
   }
 
-  /** Sincroniza rubros y artículos en una sola llamada. */
+  /** Sincroniza categorias y artículos en una sola llamada. */
   async syncCatalog(payload: SyncCatalogPayload) {
-    const { rubros, articulos } = payload ?? {};
+    const { categorias, articulos } = payload ?? {};
 
-    if (rubros && Array.isArray(rubros)) {
-      for (const item of rubros) {
+    if (categorias && Array.isArray(categorias)) {
+      for (const item of categorias) {
         const { codigo, nombre, activo } = item;
-        const existing = await prisma.rubro.findFirst({ where: { codigo } });
+        const existing = await prisma.categoria.findFirst({ where: { codigo } });
 
         if (existing) {
-          await prisma.rubro.update({
+          await prisma.categoria.update({
             where: { id: existing.id },
             data: { nombre, activo: activo !== undefined ? activo : true },
           });
         } else {
-          await prisma.rubro.create({
+          await prisma.categoria.create({
             data: { codigo, nombre, activo: activo !== undefined ? activo : true },
           });
         }
@@ -79,7 +79,7 @@ export class CatalogoService {
 
     if (articulos && Array.isArray(articulos)) {
       for (const item of articulos) {
-        const rubroId = await this.ensureRubro(item);
+        const categoriaId = await this.ensureCategoria(item);
         const imageUrls = extractImageUrls(item);
         const codigo = normalizeNullableString(item.codigo) || normalizeNullableString(item.articulo_cod) || "";
         const existingArt = await prisma.articulo.findUnique({ where: { articuloCod: codigo } });
@@ -87,12 +87,12 @@ export class CatalogoService {
         if (existingArt) {
           const articulo = await prisma.articulo.update({
             where: { id: existingArt.id },
-            data: this.buildArticuloData(item, rubroId),
+            data: this.buildArticuloData(item, categoriaId),
           });
           await this.syncArticuloImagenes(articulo.id, imageUrls);
         } else {
           const articulo = await prisma.articulo.create({
-            data: this.buildArticuloData(item, rubroId),
+            data: this.buildArticuloData(item, categoriaId),
           });
           await this.syncArticuloImagenes(articulo.id, imageUrls);
         }
@@ -102,28 +102,28 @@ export class CatalogoService {
     return { success: true, message: "Catalog synced successfully" };
   }
 
-  /** Resuelve (y crea/actualiza) el rubro de un artículo entrante. */
-  private async ensureRubro(item: ArticuloSyncInput): Promise<number | null> {
-    const { rubroCodigo, rubroNombre } = resolveRubro(item);
-    if (!rubroCodigo) {
+  /** Resuelve (y crea/actualiza) el categoria de un artículo entrante. */
+  private async ensureCategoria(item: ArticuloSyncInput): Promise<number | null> {
+    const { categoriaCodigo, categoriaNombre } = resolveCategoria(item);
+    if (!categoriaCodigo) {
       return null;
     }
 
-    const existing = await prisma.rubro.findFirst({ where: { codigo: rubroCodigo } });
+    const existing = await prisma.categoria.findFirst({ where: { codigo: categoriaCodigo } });
 
     if (existing) {
-      if (existing.nombre !== rubroNombre || existing.activo !== true) {
-        await prisma.rubro.update({
+      if (existing.nombre !== categoriaNombre || existing.activo !== true) {
+        await prisma.categoria.update({
           where: { id: existing.id },
-          data: { nombre: rubroNombre, activo: true },
+          data: { nombre: categoriaNombre, activo: true },
         });
       }
 
       return existing.id;
     }
 
-    const created = await prisma.rubro.create({
-      data: { codigo: rubroCodigo, nombre: rubroNombre, activo: true },
+    const created = await prisma.categoria.create({
+      data: { codigo: categoriaCodigo, nombre: categoriaNombre, activo: true },
     });
 
     return created.id;
@@ -157,7 +157,7 @@ export class CatalogoService {
   }
 
   /** Normaliza el payload de un artículo entrante al formato de `articulo_web`. */
-  private buildArticuloData(item: ArticuloSyncInput, rubroId: number | null) {
+  private buildArticuloData(item: ArticuloSyncInput, categoriaId: number | null) {
     const articuloDes =
       normalizeNullableString(item.articulo_des) ||
       normalizeNullableString(item.descripcion_publica) ||
@@ -176,7 +176,7 @@ export class CatalogoService {
       articuloTextoWeb: articuloTextoWeb ? articuloTextoWeb.slice(0, 50) : null,
       precioMayorista: item.precio_mayorista != null ? Number(item.precio_mayorista) : null,
       precioMinorista: item.precio_minorista != null ? Number(item.precio_minorista) : null,
-      rubroId,
+      categoriaId,
       proveedorDes: proveedor ? proveedor.slice(0, 20) : null,
       stockWeb: item.stock_web != null ? Number(item.stock_web) : null,
       destacado: toIndicadorSN(item.destacado, "N"),

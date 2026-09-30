@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Rubro } from "@/types";
+import { Categoria } from "@/types";
 import OptimizedImage from "@/components/common/OptimizedImage";
 
 interface CategoryCarouselProps {
-  rubros: Rubro[];
-  selectedRubro?: number;
+  categorias: Categoria[];
+  selectedCategoria?: number;
   onSelect: (categoryId: number | undefined) => void;
 }
 
@@ -37,8 +37,8 @@ function normalizeText(value: string | null | undefined) {
     .toLowerCase();
 }
 
-function getCategoryImage(rubro: Rubro, index: number) {
-  const haystack = `${normalizeText(rubro.codigo)} ${normalizeText(rubro.nombre)}`;
+function getCategoryImage(categoria: Categoria, index: number) {
+  const haystack = `${normalizeText(categoria.codigo)} ${normalizeText(categoria.nombre)}`;
   const mapped = categoryKeywordImageMap.find(({ keywords }) =>
     keywords.some((keyword) => haystack.includes(normalizeText(keyword)))
   );
@@ -46,7 +46,7 @@ function getCategoryImage(rubro: Rubro, index: number) {
   return mapped?.image || categoryImages[index % categoryImages.length];
 }
 
-export default function CategoryCarousel({ rubros, selectedRubro, onSelect }: CategoryCarouselProps) {
+export default function CategoryCarousel({ categorias, selectedCategoria, onSelect }: CategoryCarouselProps) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const scrollByAmount = (direction: number) => {
     const scroller = scrollerRef.current;
@@ -54,7 +54,7 @@ export default function CategoryCarousel({ rubros, selectedRubro, onSelect }: Ca
       return;
     }
 
-    const firstCard = scroller.querySelector<HTMLElement>("[data-rubro-card='true']");
+    const firstCard = scroller.querySelector<HTMLElement>("[data-categoria-card='true']");
     const gap = window.innerWidth < 640 ? 12 : 16;
     const cardWidth = firstCard?.offsetWidth || (window.innerWidth < 640 ? 144 : 160);
     const visibleCards = window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 3 : 5;
@@ -75,7 +75,7 @@ export default function CategoryCarousel({ rubros, selectedRubro, onSelect }: Ca
     scroller.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
-  const featured = rubros.filter((rubro) => rubro.activo);
+  const featured = categorias.filter((categoria) => categoria.activo);
 
   useEffect(() => {
     if (featured.length <= 1) {
@@ -111,30 +111,30 @@ export default function CategoryCarousel({ rubros, selectedRubro, onSelect }: Ca
         ref={scrollerRef}
         className="flex snap-x justify-start gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden"
       >
-        {featured.map((rubro, index) => (
+        {featured.map((categoria, index) => (
           <button
-            key={rubro.id}
+            key={categoria.id}
             type="button"
-            onClick={() => onSelect(rubro.id)}
-            data-rubro-card="true"
-            aria-pressed={selectedRubro === rubro.id}
+            onClick={() => onSelect(categoria.id)}
+            data-categoria-card="true"
+            aria-pressed={selectedCategoria === categoria.id}
             className={`group flex w-36 shrink-0 snap-start flex-col items-center overflow-hidden rounded-2xl border bg-white text-center shadow-sm transition ${
-              selectedRubro === rubro.id
+              selectedCategoria === categoria.id
                 ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]"
                 : "border-[var(--color-border)] hover:border-[var(--color-primary)]"
             } sm:w-40`}
           >
             <span className="relative mt-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--color-primary)] bg-[linear-gradient(180deg,#ffffff_0%,#fff7d6_100%)] sm:h-28 sm:w-28">
               <OptimizedImage
-                src={getCategoryImage(rubro, index)}
-                alt={rubro.nombre || "Categoría"}
+                src={getCategoryImage(categoria, index)}
+                alt={categoria.nombre || "Categoría"}
                 fill
                 sizes="(max-width: 640px) 96px, 112px"
                 className="object-contain p-2"
               />
             </span>
             <span className="mt-3 flex min-h-[3.25rem] w-full items-center justify-center bg-[var(--color-primary)] px-3 py-2 text-xs font-semibold leading-tight text-[var(--color-primary-foreground)] sm:text-sm">
-              {rubro.nombre || "Sin nombre"}
+              {categoria.nombre || "Sin nombre"}
             </span>
           </button>
         ))}

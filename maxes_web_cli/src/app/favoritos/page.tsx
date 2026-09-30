@@ -15,13 +15,13 @@ import { trackFavoriteEvent } from "@/services/analytics/client";
 export default function FavoritosPage() {
   const panelViewTracked = useRef(false);
   const {
-    rubros,
+    categorias,
     articulos,
     config,
     search,
     setSearch,
-    selectedRubro,
-    setSelectedRubro,
+    selectedCategoria,
+    setSelectedCategoria,
     sortBy,
     setSortBy,
     isLoading,
@@ -51,7 +51,7 @@ export default function FavoritosPage() {
 
   const clearFilters = () => {
     setSearch("");
-    setSelectedRubro(undefined);
+    setSelectedCategoria(undefined);
   };
 
   if (config?.mantenimiento) {
@@ -77,9 +77,9 @@ export default function FavoritosPage() {
       <Header
         search={search}
         onSearch={setSearch}
-        rubros={rubros}
-        selectedRubro={selectedRubro}
-        onSelectRubro={setSelectedRubro}
+        categorias={categorias}
+        selectedCategoria={selectedCategoria}
+        onSelectCategoria={setSelectedCategoria}
         showCart
       />
 

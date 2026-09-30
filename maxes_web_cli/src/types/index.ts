@@ -1,5 +1,14 @@
-export interface Rubro {
+export interface Categoria {
   id: number;
+  codigo: string;
+  nombre: string | null;
+  activo: boolean;
+}
+
+export interface CategoriaDetalle {
+  id: number;
+  categoriaDetalleOrigenId: number;
+  categoriaOrigenId: number;
   codigo: string;
   nombre: string | null;
   activo: boolean;
@@ -22,11 +31,13 @@ export interface Articulo {
   descripcion_detallada?: string | null;
   precio_mayorista?: number | string | null;
   precio_minorista?: number | string | null;
-  rubro_id: number | null;
+  categoria_id: number | null;
+  categoria_detalle_id?: number | null;
   imagen_url: string | null;
   destacado: boolean;
   fecha_publicacion: string;
-  rubro?: Rubro | null;
+  categoria?: Categoria | null;
+  categoria_detalle?: CategoriaDetalle | null;
   imagenes?: ImagenArticulo[];
 }
 

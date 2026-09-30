@@ -481,7 +481,7 @@ Debe mostrarse:
 
 - total general;
 - porcentaje por artículo;
-- porcentaje por rubro;
+- porcentaje por categoria;
 - porcentaje por tipo de precio;
 - porcentaje por dispositivo.
 
@@ -503,7 +503,7 @@ Debe mostrarse:
 
 - total general;
 - porcentaje por artículo;
-- porcentaje por rubro;
+- porcentaje por categoria;
 - porcentaje por tipo de precio;
 - cantidad de pedidos con al menos un comentario.
 

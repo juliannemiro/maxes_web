@@ -10,6 +10,7 @@ import { usePurchaseMode } from "@/context/PurchaseModeContext";
 import { formatPrice, obtenerPrecio } from "@/utils/precio";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import CompartirArticulo from "@/components/catalogo/CompartirArticulo";
+import { altImagenArticulo } from "@/utils/articuloImagen";
 
 interface ProductoCardProps {
   articulo: Articulo;
@@ -122,6 +123,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
   const actionLabel = submittedStateChanged ? "Actualizar" : added ? "✓" : "Agregar";
   const precioActual = obtenerPrecio(articulo, tipoPrecio);
   const favorito = favoritosHydrated && isFavorito(articulo.id);
+  const imagenAlt = altImagenArticulo(articulo);
 
   return (
     <article className="flex h-full flex-col rounded-[18px] bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
@@ -167,7 +169,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
           <OptimizedImage
             key={`${articulo.id}-${image}-${index}`}
             src={image || "/placeholder.svg"}
-            alt={articulo.descripcion_publica || "Producto"}
+            alt={imagenAlt}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className={`absolute inset-0 h-full w-full object-contain p-2 transition-all duration-700 ease-out ${
