@@ -354,7 +354,7 @@ async function main() {
         item.producto.stockWeb != null && item.producto.stockWeb > 0
           ? item.producto.stockWeb
           : deterministicStock(item.producto.codigo);
-      const proveedorDes = (item.producto.proveedor || buildProveedorFallback(item.producto)).slice(0, 20);
+      const marcaDes = item.producto.marca ? String(item.producto.marca).slice(0, 20) : null;
       const articuloTextoWeb = buildTextoWeb(item.producto.detalle);
 
       const data = {
@@ -365,7 +365,7 @@ async function main() {
         precioMayorista,
         precioMinorista,
         categoriaId,
-        proveedorDes,
+        marcaDes,
         stockWeb,
         destacado: "N",
         visible: "S",

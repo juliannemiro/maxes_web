@@ -101,7 +101,7 @@ function scoreCandidate(articulo, record) {
   const reasons = [];
   const articuloCodNorm = normalizeText(articulo.articuloCod);
   const articuloDesNorm = normalizeText(articulo.articuloDes || articulo.articuloTextoWeb || "");
-  const proveedorNorm = normalizeText(articulo.proveedorDes || "");
+  const marcaNorm = normalizeText(articulo.marcaDes || "");
   const categoriaNorm = normalizeText(articulo.categoria?.nombre || "");
 
   if (articuloCodNorm && articuloCodNorm === record.scrapedCodeNorm) {
@@ -126,9 +126,9 @@ function scoreCandidate(articulo, record) {
     }
   }
 
-  if (proveedorNorm && record.tituloNorm.includes(proveedorNorm)) {
+  if (marcaNorm && record.tituloNorm.includes(marcaNorm)) {
     score += 20;
-    reasons.push("proveedor");
+    reasons.push("marca");
   }
 
   if (categoriaNorm && normalizeText(record.categoria || "").includes(categoriaNorm)) {

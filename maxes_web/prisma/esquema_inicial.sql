@@ -19,7 +19,7 @@ CREATE TABLE "articulo_web" (
     "precio_mayorista" DECIMAL(18,2),
     "precio_minorista" DECIMAL(18,2),
     "categoria_id" INTEGER,
-    "proveedor_des" VARCHAR(20),
+    "marca_des" VARCHAR(20),
     "stock_web" INTEGER,
     "destacado" CHAR(1) NOT NULL DEFAULT 'N',
     "visible" CHAR(1) NOT NULL DEFAULT 'S',

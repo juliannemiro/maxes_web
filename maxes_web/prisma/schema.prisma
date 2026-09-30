@@ -30,7 +30,7 @@ model Articulo {
   precioMinorista    Decimal? @map("precio_minorista") @db.Decimal(18, 2)
   categoriaId        Int?     @map("categoria_id")
   categoriaDetalleId Int?     @map("categoria_detalle_id")
-  proveedorDes       String?  @map("proveedor_des") @db.VarChar(20)
+  marcaDes           String?  @map("marca_des") @db.VarChar(20)
   stockWeb           Int?     @map("stock_web")
   destacado          String   @default("N") @db.Char(1)
   visible            String   @default("S") @db.Char(1)

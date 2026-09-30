@@ -21,8 +21,7 @@ export interface ArticuloSyncInput {
   articulo_id_origen?: number;
   precio_mayorista?: number;
   precio_minorista?: number;
-  proveedor_des?: string;
-  proveedor?: string;
+  marca_des?: string;
   stock_web?: number;
   destacado?: unknown;
   visible?: unknown;

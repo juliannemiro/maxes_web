@@ -9,7 +9,7 @@ function texto(value: string | null | undefined) {
 export function altImagenArticulo(articulo: Articulo, fallback = "Producto MAXES") {
   const nombre = texto(articulo.articulo_des);
   const descripcion = texto(articulo.descripcion_detallada) || texto(articulo.descripcion_publica);
-  const marca = texto(articulo.proveedor_des);
+  const marca = texto(articulo.marca_des);
   const partes = [nombre];
 
   if (descripcion && descripcion.localeCompare(nombre || "", "es", { sensitivity: "base" }) !== 0) {

@@ -16,7 +16,7 @@ export interface ArticuloPublico {
   articulo_id_origen: number;
   codigo: string;
   articulo_des: string | null;
-  proveedor_des: string | null;
+  marca_des: string | null;
   descripcion_publica: string | null;
   descripcion_detallada: string | null;
   precio_mayorista: unknown;

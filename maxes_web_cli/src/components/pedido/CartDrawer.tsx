@@ -87,9 +87,9 @@ export default function CartDrawer() {
                     <div className="flex min-h-20 min-w-0 flex-col justify-center">
                       <p className="line-clamp-2 text-base font-black leading-tight text-[var(--color-card-foreground)] sm:text-sm">
                         {getArticuloTitulo(item)}
-                        {item.articulo.proveedor_des && (
+                        {item.articulo.marca_des && (
                           <span className="font-medium text-[var(--color-muted-foreground)]">
-                            {` - ${item.articulo.proveedor_des}`}
+                            {` - ${item.articulo.marca_des}`}
                           </span>
                         )}
                       </p>

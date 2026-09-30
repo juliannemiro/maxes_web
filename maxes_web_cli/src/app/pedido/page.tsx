@@ -457,9 +457,9 @@ export default function CheckoutPage() {
                               <p className="line-clamp-2 text-base font-semibold leading-snug text-slate-800 sm:text-lg">
                                 {titulo}
                               </p>
-                              {articulo.proveedor_des && (
+                              {articulo.marca_des && (
                                 <p className="mt-1 hidden truncate text-sm font-semibold text-slate-600 sm:block">
-                                  {articulo.proveedor_des}
+                                  {articulo.marca_des}
                                 </p>
                               )}
                               <p className="mt-1 text-sm font-black text-slate-800 sm:hidden">
@@ -533,9 +533,9 @@ export default function CheckoutPage() {
                     <div className="flex min-h-[72px] min-w-0 flex-col justify-between text-left sm:block">
                       <h4 className="text-base font-semibold leading-snug text-slate-800 sm:text-lg">
                         {getArticuloTitulo(item)}
-                        {item.articulo.proveedor_des && (
+                        {item.articulo.marca_des && (
                           <span className="font-medium text-slate-500">
-                            {` - ${item.articulo.proveedor_des}`}
+                            {` - ${item.articulo.marca_des}`}
                           </span>
                         )}
                       </h4>

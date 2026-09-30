@@ -72,7 +72,7 @@ async function main() {
       precioMayorista: item.precio_mayorista != null ? Number(item.precio_mayorista) : null,
       precioMinorista: item.precio_minorista != null ? Number(item.precio_minorista) : null,
       categoriaId,
-      proveedorDes: item.proveedor_des ? String(item.proveedor_des).slice(0, 20) : null,
+      marcaDes: item.marca_des ? String(item.marca_des).slice(0, 20) : null,
       stockWeb: item.stock_web != null ? Number(item.stock_web) : null,
       destacado: item.destacado ? "S" : "N",
       visible: "S",

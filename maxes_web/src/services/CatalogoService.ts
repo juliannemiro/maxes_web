@@ -167,7 +167,7 @@ export class CatalogoService {
       normalizeNullableString(item.descripcion_detallada) ||
       articuloDes;
     const codigo = normalizeNullableString(item.codigo) || normalizeNullableString(item.articulo_cod) || "";
-    const proveedor = normalizeNullableString(item.proveedor_des) || normalizeNullableString(item.proveedor);
+    const marca = normalizeNullableString(item.marca_des);
 
     return {
       articuloOrigenId: Number(item.articulo_id_origen || 0),
@@ -177,7 +177,7 @@ export class CatalogoService {
       precioMayorista: item.precio_mayorista != null ? Number(item.precio_mayorista) : null,
       precioMinorista: item.precio_minorista != null ? Number(item.precio_minorista) : null,
       categoriaId,
-      proveedorDes: proveedor ? proveedor.slice(0, 20) : null,
+      marcaDes: marca ? marca.slice(0, 20) : null,
       stockWeb: item.stock_web != null ? Number(item.stock_web) : null,
       destacado: toIndicadorSN(item.destacado, "N"),
       visible: toIndicadorSN(item.visible, "S"),

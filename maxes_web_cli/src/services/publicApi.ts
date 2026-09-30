@@ -135,7 +135,7 @@ export function serializeArticulo(
     articulo_id_origen: articulo.articuloOrigenId,
     codigo: articulo.articuloCod,
     articulo_des: articulo.articuloDes,
-    proveedor_des: articulo.proveedorDes,
+    marca_des: articulo.marcaDes,
     descripcion_publica: articulo.articuloTextoWeb || articulo.articuloDes,
     descripcion_detallada: articulo.articuloTextoWeb || articulo.articuloDes,
     precio_mayorista: toNumber(articulo.precioMayorista),

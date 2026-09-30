@@ -230,9 +230,9 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                 {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
               </h2>
 
-              {articulo.proveedor_des && (
+              {articulo.marca_des && (
                 <p className="mt-1.5 text-sm font-medium text-slate-500">
-                  {articulo.proveedor_des}
+                  {articulo.marca_des}
                 </p>
               )}
 

@@ -69,7 +69,7 @@ function normalizeArticulo(item, index) {
       articuloTextoWeb: articuloTextoWeb ? articuloTextoWeb.slice(0, 50) : null,
       precioMayorista: toNumber(item.precio_mayorista),
       precioMinorista: toNumber(item.precio_minorista),
-      proveedorDes: normalizeNullableString(item.proveedor)?.slice(0, 20) || null,
+      marcaDes: normalizeNullableString(item.marca_des)?.slice(0, 20) || null,
       stockWeb: stockValue == null ? null : Math.trunc(stockValue),
       destacado: "N",
       visible: "S",

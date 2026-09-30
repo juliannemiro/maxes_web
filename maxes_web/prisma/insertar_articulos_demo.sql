@@ -9,7 +9,7 @@ WITH nuevos_articulos AS (
     precio_mayorista,
     precio_minorista,
     categoria_id,
-    proveedor_des,
+    marca_des,
     stock_web,
     destacado,
     visible,
@@ -79,7 +79,7 @@ WITH nuevos_articulos AS (
     precio_mayorista = EXCLUDED.precio_mayorista,
     precio_minorista = EXCLUDED.precio_minorista,
     categoria_id = EXCLUDED.categoria_id,
-    proveedor_des = EXCLUDED.proveedor_des,
+    marca_des = EXCLUDED.marca_des,
     stock_web = EXCLUDED.stock_web,
     destacado = EXCLUDED.destacado,
     visible = EXCLUDED.visible

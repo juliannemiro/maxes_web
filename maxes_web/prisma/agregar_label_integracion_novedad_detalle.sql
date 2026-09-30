@@ -12,7 +12,7 @@ SET campo_label = CASE campo
     WHEN 'precioMayorista' THEN 'Precio mayorista'
     WHEN 'precioMinorista' THEN 'Precio minorista'
     WHEN 'categoriaId' THEN 'Categoria'
-    WHEN 'proveedorDes' THEN 'Proveedor'
+    WHEN 'marcaDes' THEN 'Marca'
     WHEN 'stockWeb' THEN 'Stock web'
     WHEN 'destacado' THEN 'Destacado'
     WHEN 'publicado' THEN 'Publicado'
