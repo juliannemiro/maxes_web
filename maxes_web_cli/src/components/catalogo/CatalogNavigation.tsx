@@ -56,7 +56,7 @@ export default function CatalogNavigation({
   const selectCategoria = (id: number | undefined) => {
     setMenuCategoria(id);
     onSelectCategoria(id);
-    setIsOpen(false);
+    if (id === undefined) setIsOpen(false);
   };
 
   return (

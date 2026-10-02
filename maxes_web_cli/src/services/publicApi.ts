@@ -174,14 +174,10 @@ export async function getCategorias() {
 export async function getCategoriaDetalles() {
   try {
     const detalles = await prisma.$queryRawUnsafe<CategoriaDetallePublico[]>(`
-      SELECT DISTINCT d.id,d.categoria_detalle_origen_id AS "categoriaDetalleOrigenId",
+      SELECT d.id,d.categoria_detalle_origen_id AS "categoriaDetalleOrigenId",
              d.categoria_origen_id AS "categoriaOrigenId",d.codigo,d.nombre,d.activo
       FROM categoria_detalle_web d
-      INNER JOIN articulo_web a ON a.categoria_detalle_id=d.categoria_detalle_origen_id
       WHERE d.activo=true
-        AND a.visible='S'
-        AND a.precio_mayorista>0
-        AND a.precio_minorista>0
       ORDER BY "categoriaOrigenId",nombre,codigo
     `);
     return { success: true, detalles };
