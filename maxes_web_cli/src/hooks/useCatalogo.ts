@@ -19,6 +19,8 @@ interface UseCatalogoResult {
   setSelectedCategoria: (value: number | undefined) => void;
   selectedCategoriaDetalle: number | undefined;
   setSelectedCategoriaDetalle: (value: number | undefined) => void;
+  featuredOnly: boolean;
+  setFeaturedOnly: (value: boolean) => void;
   sortBy: string;
   setSortBy: (value: string) => void;
   isLoading: boolean;
@@ -33,20 +35,21 @@ interface UseCatalogoResult {
 
 interface UseCatalogoOptions {
   loadAll?: boolean;
+  restoreFilters?: boolean;
 }
 
 const PAGE_SIZE = 50;
 const ALL_ARTICLES_LIMIT = 5000;
 const CATALOG_FILTERS_STORAGE_KEY = "maxes_catalog_filters_v1";
+const PENDING_CATALOG_SEARCH_STORAGE_KEY = "maxes_pending_catalog_search";
 
-type StoredCatalogFilters = { search?: string; selectedCategoria?: number; selectedCategoriaDetalle?: number; sortBy?: string };
+type StoredCatalogFilters = { selectedCategoria?: number; selectedCategoriaDetalle?: number; sortBy?: string };
 
 function storedCatalogFilters(): StoredCatalogFilters {
   if (typeof window === "undefined") return {};
   try {
     const value = JSON.parse(window.localStorage.getItem(CATALOG_FILTERS_STORAGE_KEY) || "{}") as StoredCatalogFilters;
     return {
-      search: typeof value.search === "string" ? value.search : "",
       selectedCategoria: Number.isInteger(value.selectedCategoria) && Number(value.selectedCategoria) > 0 ? Number(value.selectedCategoria) : undefined,
       selectedCategoriaDetalle: Number.isInteger(value.selectedCategoriaDetalle) && Number(value.selectedCategoriaDetalle) > 0 ? Number(value.selectedCategoriaDetalle) : undefined,
       sortBy: typeof value.sortBy === "string" ? value.sortBy : "description",
@@ -69,7 +72,24 @@ function compareByRelevancia(a: Articulo, b: Articulo) {
   return getArticuloTimestamp(b) - getArticuloTimestamp(a);
 }
 
-export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCatalogoResult {
+export function setPendingCatalogSearch(search: string) {
+  if (typeof window === "undefined") return;
+  const normalizedSearch = search.trim();
+  if (!normalizedSearch) {
+    window.sessionStorage.removeItem(PENDING_CATALOG_SEARCH_STORAGE_KEY);
+    return;
+  }
+  window.sessionStorage.setItem(PENDING_CATALOG_SEARCH_STORAGE_KEY, normalizedSearch);
+}
+
+function consumePendingCatalogSearch() {
+  if (typeof window === "undefined") return "";
+  const search = window.sessionStorage.getItem(PENDING_CATALOG_SEARCH_STORAGE_KEY) || "";
+  window.sessionStorage.removeItem(PENDING_CATALOG_SEARCH_STORAGE_KEY);
+  return search;
+}
+
+export function useCatalogo({ loadAll = false, restoreFilters = true }: UseCatalogoOptions = {}): UseCatalogoResult {
   const { tipoPrecio } = usePurchaseMode();
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaDetalles, setCategoriaDetalles] = useState<CategoriaDetalle[]>([]);
@@ -80,8 +100,9 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
   const [search, setSearch] = useState("");
   const [selectedCategoria, setSelectedCategoria] = useState<number | undefined>(undefined);
   const [selectedCategoriaDetalle, setSelectedCategoriaDetalle] = useState<number | undefined>(undefined);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
   const [sortBy, setSortBy] = useState("description");
-  const [filtersRestored, setFiltersRestored] = useState(false);
+  const [filtersRestored, setFiltersRestored] = useState(!restoreFilters);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
@@ -90,18 +111,24 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
   const activeQueryRef = useRef("");
 
   useEffect(() => {
+    if (!restoreFilters) {
+      return;
+    }
     const filters = storedCatalogFilters();
-    setSearch(filters.search || "");
-    setSelectedCategoria(filters.selectedCategoria);
-    setSelectedCategoriaDetalle(filters.selectedCategoriaDetalle);
-    setSortBy(filters.sortBy || "description");
-    setFiltersRestored(true);
-  }, []);
+    const pendingSearch = consumePendingCatalogSearch();
+    queueMicrotask(() => {
+      setSearch(pendingSearch);
+      setSelectedCategoria(filters.selectedCategoria);
+      setSelectedCategoriaDetalle(filters.selectedCategoriaDetalle);
+      setSortBy(filters.sortBy || "description");
+      setFiltersRestored(true);
+    });
+  }, [restoreFilters]);
 
   useEffect(() => {
-    if (!filtersRestored) return;
-    window.localStorage.setItem(CATALOG_FILTERS_STORAGE_KEY, JSON.stringify({ search, selectedCategoria, selectedCategoriaDetalle, sortBy }));
-  }, [filtersRestored, search, selectedCategoria, selectedCategoriaDetalle, sortBy]);
+    if (!filtersRestored || !restoreFilters) return;
+    window.localStorage.setItem(CATALOG_FILTERS_STORAGE_KEY, JSON.stringify({ selectedCategoria, selectedCategoriaDetalle, sortBy }));
+  }, [filtersRestored, restoreFilters, selectedCategoria, selectedCategoriaDetalle, sortBy]);
 
   useEffect(() => {
     async function loadCatalogo() {
@@ -153,10 +180,10 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
 
   useEffect(() => {
     const searchTerm = search.trim();
-    const queryKey = `${selectedCategoria ?? "all"}:${selectedCategoriaDetalle ?? "all"}:${searchTerm}:${sortBy}:${tipoPrecio}`;
+    const queryKey = `${selectedCategoria ?? "all"}:${selectedCategoriaDetalle ?? "all"}:${featuredOnly}:${searchTerm}:${sortBy}:${tipoPrecio}`;
     activeQueryRef.current = queryKey;
 
-    if (!searchTerm && selectedCategoria === undefined && selectedCategoriaDetalle === undefined && sortBy === "description") {
+    if (!searchTerm && selectedCategoria === undefined && selectedCategoriaDetalle === undefined && !featuredOnly && sortBy === "description") {
       const resetTimeoutId = window.setTimeout(() => {
         setArticulos(articulosIniciales);
         setTotalCount(initialTotalCount);
@@ -173,6 +200,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
           categoria_id: selectedCategoria,
           categoria_detalle_id: selectedCategoriaDetalle,
           search: searchTerm || undefined,
+          destacado: featuredOnly || undefined,
           page: 1,
           limit: loadAll ? ALL_ARTICLES_LIMIT : PAGE_SIZE,
           sort_by: sortBy,
@@ -195,7 +223,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [articulosIniciales, initialTotalCount, loadAll, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
+  }, [articulosIniciales, featuredOnly, initialTotalCount, loadAll, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
 
   const hasMore = articulos.length < totalCount;
   const loadMore = useCallback(() => {
@@ -211,6 +239,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
       categoria_id: selectedCategoria,
       categoria_detalle_id: selectedCategoriaDetalle,
       search: search.trim() || undefined,
+      destacado: featuredOnly || undefined,
       page: nextPage,
       limit: PAGE_SIZE,
       sort_by: sortBy,
@@ -236,7 +265,7 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
         setIsLoadingMore(false);
       }
     });
-  }, [currentPage, hasMore, isLoading, isLoadingMore, loadAll, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
+  }, [currentPage, featuredOnly, hasMore, isLoading, isLoadingMore, loadAll, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
 
   const filteredArticulos = useMemo(() => {
     const searchTerms = normalizeCatalogText(search.trim()).split(/\s+/).filter(Boolean);
@@ -246,13 +275,18 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
         articulo.articulo_des,
         articulo.descripcion_publica,
         articulo.codigo,
+        articulo.marca_des,
+        articulo.categoria?.codigo,
+        articulo.categoria?.nombre,
+        articulo.categoria_detalle?.codigo,
+        articulo.categoria_detalle?.nombre,
       ].filter(Boolean).join(" "));
       const matchesSearch = searchTerms.every((term) => searchableText.includes(term));
 
       const matchesCategory = !selectedCategoria || articulo.categoria_id === selectedCategoria;
       const matchesDetail = !selectedCategoriaDetalle || articulo.categoria_detalle_id === selectedCategoriaDetalle;
 
-      return matchesSearch && matchesCategory && matchesDetail;
+      return matchesSearch && matchesCategory && matchesDetail && (!featuredOnly || articulo.destacado);
     });
 
     const sorted = [...filtered];
@@ -268,12 +302,14 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
           { sensitivity: "base" }
         )
       );
+    } else if (sortBy === "newest") {
+      sorted.sort((a, b) => getArticuloTimestamp(b) - getArticuloTimestamp(a));
     } else {
       sorted.sort(compareByRelevancia);
     }
 
     return sorted;
-  }, [articulos, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
+  }, [articulos, featuredOnly, search, selectedCategoria, selectedCategoriaDetalle, sortBy, tipoPrecio]);
 
   const shouldGroupByCategoria = Boolean(selectedCategoria);
   const groupedArticulos = useMemo(
@@ -293,6 +329,8 @@ export function useCatalogo({ loadAll = false }: UseCatalogoOptions = {}): UseCa
     setSelectedCategoria,
     selectedCategoriaDetalle,
     setSelectedCategoriaDetalle,
+    featuredOnly,
+    setFeaturedOnly,
     sortBy,
     setSortBy,
     isLoading,

@@ -160,9 +160,11 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
         </button>
       </div>
 
-      <p className="mt-1.5 text-center text-[14px] font-medium leading-none text-[var(--color-muted-foreground)]">
-        {articulo.marca_des || "Sin marca"}
-      </p>
+      {articulo.marca_des && (
+        <p className="mt-1.5 text-center text-[14px] font-medium leading-none text-[var(--color-muted-foreground)]">
+          {articulo.marca_des}
+        </p>
+      )}
 
       <div className="relative mt-1.5 aspect-[1/0.84] w-full overflow-hidden rounded-lg bg-white">
         {images.map((image, index) => (

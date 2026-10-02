@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Carrusel from "@/components/catalogo/Carrusel";
-import CategoryCarousel from "@/components/catalogo/CategoryCarousel";
+import CatalogNavigation from "@/components/catalogo/CatalogNavigation";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import CartDrawer from "@/components/pedido/CartDrawer";
 import TopBar from "@/components/layout/TopBar";
@@ -20,6 +20,7 @@ interface CatalogoHomeProps {
 
 export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps = {}) {
   const [sharedArticulo, setSharedArticulo] = useState<Articulo | null>(null);
+  const [novedadesActive, setNovedadesActive] = useState(false);
   const {
     categorias,
     categoriaDetalles,
@@ -32,6 +33,8 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
     setSelectedCategoria,
     selectedCategoriaDetalle,
     setSelectedCategoriaDetalle,
+    featuredOnly,
+    setFeaturedOnly,
     sortBy,
     setSortBy,
     isLoading,
@@ -51,9 +54,6 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
   const selectedDetalleName = detallesDisponibles.find(
     (detalle) => detalle.categoriaDetalleOrigenId === selectedCategoriaDetalle
   )?.nombre || "";
-  const activeFilterLabel = [selectedCategoriaName.toUpperCase(), selectedDetalleName.toUpperCase(), search.trim()]
-    .filter(Boolean)
-    .join(" · ") || "TODOS LOS ARTICULOS";
   const sortOptions = [
     { value: "price_asc", label: "Menor precio" },
     { value: "price_desc", label: "Mayor precio" },
@@ -108,14 +108,64 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
   const handleSelectCategoria = (categoriaId: number | undefined) => {
     setSelectedCategoria(categoriaId);
     setSelectedCategoriaDetalle(undefined);
-
-    window.setTimeout(() => {
-      document.getElementById("catalogo-productos")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 0);
   };
+
+  const handleSelectCategoriaDetalle = (categoriaDetalleId: number | undefined) => {
+    setSelectedCategoriaDetalle(categoriaDetalleId);
+  };
+
+  const handleToggleNovedades = () => {
+    const nextNovedadesActive = !novedadesActive;
+    setNovedadesActive(nextNovedadesActive);
+    setSortBy(nextNovedadesActive ? "newest" : featuredOnly ? "relevance" : "description");
+  };
+
+  const handleToggleDestacados = () => {
+    const nextFeaturedOnly = !featuredOnly;
+    setFeaturedOnly(nextFeaturedOnly);
+    setSortBy(novedadesActive ? "newest" : nextFeaturedOnly ? "relevance" : "description");
+  };
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setSelectedCategoria(undefined);
+    setSelectedCategoriaDetalle(undefined);
+    setFeaturedOnly(false);
+    setNovedadesActive(false);
+    setSortBy("description");
+  };
+
+  const handleRemoveNovedades = () => {
+    setNovedadesActive(false);
+    setSortBy(featuredOnly ? "relevance" : "description");
+  };
+
+  const handleRemoveDestacados = () => {
+    setFeaturedOnly(false);
+    setSortBy(novedadesActive ? "newest" : "description");
+  };
+
+  const activeFilters = [
+    novedadesActive ? { id: "novedades", label: "Novedades", onRemove: handleRemoveNovedades } : null,
+    featuredOnly ? { id: "destacados", label: "Destacados", onRemove: handleRemoveDestacados } : null,
+    selectedCategoriaName ? { id: "categoria", label: selectedCategoriaName, onRemove: () => handleSelectCategoria(undefined) } : null,
+    selectedDetalleName ? { id: "subcategoria", label: selectedDetalleName, onRemove: () => handleSelectCategoriaDetalle(undefined) } : null,
+    search.trim() ? { id: "busqueda", label: search.trim(), onRemove: () => setSearch("") } : null,
+  ].filter((filter): filter is { id: string; label: string; onRemove: () => void } => filter !== null);
+  const primaryFilterId = search.trim()
+    ? "busqueda"
+    : selectedDetalleName
+      ? "subcategoria"
+      : selectedCategoriaName
+        ? "categoria"
+        : novedadesActive
+          ? "novedades"
+          : featuredOnly
+            ? "destacados"
+            : undefined;
+  const primaryFilter = activeFilters.find((filter) => filter.id === primaryFilterId);
+  const secondaryFilters = activeFilters.filter((filter) => filter.id !== primaryFilterId);
+  const activeFilterLabel = primaryFilter?.label || "TODOS LOS ARTICULOS";
 
   if (config?.mantenimiento) {
     return (
@@ -137,63 +187,57 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
         whatsappContact={config?.whatsapp_contacto}
       />
 
-      <Header
-        search={search}
-        onSearch={setSearch}
+      <Header search={search} onSearch={setSearch} onSearchSubmit={setSearch} showCart />
+
+      <CatalogNavigation
         categorias={categorias}
+        categoriaDetalles={categoriaDetalles}
         selectedCategoria={selectedCategoria}
+        selectedCategoriaDetalle={selectedCategoriaDetalle}
+        novedadesActive={novedadesActive}
+        destacadosActive={featuredOnly}
         onSelectCategoria={handleSelectCategoria}
-        showCart
+        onSelectCategoriaDetalle={handleSelectCategoriaDetalle}
+        onToggleNovedades={handleToggleNovedades}
+        onToggleDestacados={handleToggleDestacados}
+        onReset={handleResetFilters}
       />
 
       <section className="px-4 pt-6">
         <Carrusel carruseles={carruseles} />
       </section>
 
-      <section className="mt-6">
-        <CategoryCarousel
-          categorias={categorias}
-          selectedCategoria={selectedCategoria}
-          onSelect={handleSelectCategoria}
-        />
-      </section>
-
-      {selectedCategoria !== undefined && detallesDisponibles.length > 0 && (
-        <section className="mx-auto mt-4 w-full px-4 xl:px-6" aria-label="Filtros de categoría">
-          <div className="flex flex-col gap-2 rounded-lg border border-[var(--color-border)] bg-white p-3 sm:flex-row sm:items-center">
-            <label htmlFor="categoria-detalle" className="text-sm font-bold text-[var(--color-foreground)]">
-              Filtrar {selectedCategoriaName || "categoría"}
-            </label>
-            <select
-              id="categoria-detalle"
-              value={selectedCategoriaDetalle ?? ""}
-              onChange={(event) => setSelectedCategoriaDetalle(event.target.value ? Number(event.target.value) : undefined)}
-              className="h-11 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-3 text-sm sm:max-w-sm"
-            >
-              <option value="">Todos</option>
-              {detallesDisponibles.map((detalle) => (
-                <option key={detalle.categoriaDetalleOrigenId} value={detalle.categoriaDetalleOrigenId}>
-                  {detalle.nombre || detalle.codigo}
-                </option>
-              ))}
-            </select>
-          </div>
-        </section>
-      )}
-
       <main id="catalogo-productos" className="w-full scroll-mt-36 px-4 pb-16 pt-8 xl:px-6">
-        <div className="mb-6 border-y border-black/10 bg-[var(--color-primary)] px-4 py-3 text-[var(--color-primary-foreground)] shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-xl lg:text-2xl">
+        <div className="mb-6 border-y border-black/10 bg-[var(--color-primary)] px-3 py-2 text-[var(--color-primary-foreground)] shadow-sm sm:px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <h1 className="shrink-0 whitespace-nowrap text-sm font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-base lg:text-lg">
                 {activeFilterLabel}
                 <span className="ml-1 whitespace-nowrap text-xs font-bold text-black/65 sm:hidden">
                   ({totalCount} Art.)
                 </span>
-                <span className="ml-2 hidden whitespace-nowrap text-base font-bold text-black/65 sm:inline">
+                <span className="ml-2 hidden whitespace-nowrap text-sm font-bold text-black/65 sm:inline">
                   ({totalCount} artículos)
                 </span>
               </h1>
+
+              {secondaryFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={filter.onRemove}
+                  className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-black/15 bg-white/80 px-2.5 text-xs font-bold text-[var(--color-foreground)] transition hover:bg-white"
+                >
+                  <span>{filter.label}</span>
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+                </button>
+              ))}
+
+              {activeFilters.length > 0 && (
+                <button type="button" onClick={handleResetFilters} className="h-7 shrink-0 whitespace-nowrap rounded-full px-2 text-xs font-bold text-[var(--color-foreground)] underline decoration-2 underline-offset-2 transition hover:no-underline">
+                  Borrar filtros
+                </button>
+              )}
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

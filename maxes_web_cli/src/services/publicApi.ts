@@ -18,6 +18,14 @@ type CategoriaDetallePublico = {
   activo: boolean;
 };
 
+// Todo endpoint público de artículos parte de estas condiciones: sólo se
+// exponen artículos activos/publicados y con ambos precios configurados.
+const articuloPublicadoWhere = {
+  visible: "S",
+  precioMayorista: { gt: 0 },
+  precioMinorista: { gt: 0 },
+} satisfies Prisma.ArticuloWhereInput;
+
 function isMissingTableError(error: unknown) {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -233,11 +241,7 @@ export async function getArticulos(params: URLSearchParams) {
   const pageNumber = Number.isFinite(page) && page > 0 ? page : 1;
   const limitNumber = Number.isFinite(limit) && limit > 0 ? limit : 20;
 
-  const whereClause: Prisma.ArticuloWhereInput = {
-    visible: "S",
-    precioMayorista: { gt: 0 },
-    precioMinorista: { gt: 0 },
-  };
+  const whereClause: Prisma.ArticuloWhereInput = { ...articuloPublicadoWhere };
 
   let idsCategoria: number[] | null = null;
   if (categoriaId) {
@@ -274,6 +278,27 @@ export async function getArticulos(params: URLSearchParams) {
         { articuloCod: { contains: term, mode: "insensitive" } },
         { articuloDes: { contains: term, mode: "insensitive" } },
         { articuloTextoWeb: { contains: term, mode: "insensitive" } },
+        { marcaDes: { contains: term, mode: "insensitive" } },
+        {
+          categoria: {
+            is: {
+              OR: [
+                { codigo: { contains: term, mode: "insensitive" } },
+                { nombre: { contains: term, mode: "insensitive" } },
+              ],
+            },
+          },
+        },
+        {
+          categoriaDetalle: {
+            is: {
+              OR: [
+                { codigo: { contains: term, mode: "insensitive" } },
+                { nombre: { contains: term, mode: "insensitive" } },
+              ],
+            },
+          },
+        },
       ],
     }));
   }
@@ -286,7 +311,9 @@ export async function getArticulos(params: URLSearchParams) {
         ? [{ [tipoPrecio === "minorista" ? "precioMinorista" : "precioMayorista"]: "desc" }]
         : sortBy === "description"
           ? [{ articuloDes: "asc" }]
-          : [{ destacado: "desc" }, { fechaPublicacion: "desc" }];
+          : sortBy === "newest"
+            ? [{ fechaPublicacion: "desc" }]
+            : [{ destacado: "desc" }, { fechaPublicacion: "desc" }];
   const [articulos, totalCount] = await prisma.$transaction([
     prisma.articulo.findMany({
       where: whereClause,
@@ -322,12 +349,7 @@ export async function getArticulos(params: URLSearchParams) {
 
 export async function getArticuloById(id: number) {
   const articulo = await prisma.articulo.findFirst({
-    where: {
-      id,
-      visible: "S",
-      precioMayorista: { gt: 0 },
-      precioMinorista: { gt: 0 },
-    },
+    where: { id, ...articuloPublicadoWhere },
     include: {
       imagenes: {
         orderBy: { orden: "asc" },
@@ -353,12 +375,7 @@ export async function getArticuloByCodigo(codigo: string) {
   }
 
   const articulo = await prisma.articulo.findFirst({
-    where: {
-      articuloCod: normalizedCode,
-      visible: "S",
-      precioMayorista: { gt: 0 },
-      precioMinorista: { gt: 0 },
-    },
+    where: { articuloCod: normalizedCode, ...articuloPublicadoWhere },
     include: {
       imagenes: { orderBy: { orden: "asc" } },
       imagenPrincipal: true,

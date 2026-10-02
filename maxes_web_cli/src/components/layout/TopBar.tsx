@@ -41,7 +41,7 @@ export default function TopBar({
           aria-label="Tipo de compra"
           value={tipoPrecio}
           onChange={(e) => setTipoPrecio(e.target.value as "mayorista" | "minorista")}
-          className="h-7 w-[6.4rem] justify-self-end rounded border border-black/15 bg-white px-2 text-[11px] font-bold uppercase text-[var(--color-foreground)] outline-none sm:h-8 sm:w-[7rem] sm:text-xs"
+          className="h-7 w-[7rem] justify-self-end rounded border border-black/15 bg-white px-2 text-[11px] font-bold uppercase text-[var(--color-foreground)] outline-none sm:h-8 sm:w-[7.7rem] sm:text-xs"
         >
           <option value="mayorista">Mayorista</option>
           <option value="minorista">Minorista</option>
