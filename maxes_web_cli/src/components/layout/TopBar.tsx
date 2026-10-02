@@ -16,7 +16,10 @@ export default function TopBar({
 
   return (
     <div className="bg-[var(--color-primary)] text-[var(--color-primary-foreground)]">
-      <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-4 py-2 text-[11px] font-semibold sm:gap-4 sm:px-8 sm:text-sm xl:px-6">
+      <div className="flex h-11 items-center justify-center px-4 sm:hidden">
+        <span className="text-xl font-black tracking-tight">M<span className="text-white">@</span>XES</span>
+      </div>
+      <div className="hidden w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-4 py-2 text-[11px] font-semibold sm:grid sm:gap-4 sm:px-8 sm:text-sm xl:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M12 21s-7-4.35-7-11a7 7 0 1 1 14 0c0 6.65-7 11-7 11Z" />

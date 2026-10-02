@@ -98,8 +98,8 @@ export default function HeaderSearch({
               event.currentTarget.blur();
             }
           }}
-          placeholder="¿Qué estás buscando? Encontrá productos, marcas y más..."
-          aria-label="¿Qué estás buscando? Encontrá productos, marcas y más"
+          placeholder="¿Qué estás buscando?"
+          aria-label="¿Qué estás buscando?"
           className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm font-medium text-[var(--color-foreground)] outline-none placeholder:text-[var(--color-muted-foreground)] sm:px-4"
         />
         <button

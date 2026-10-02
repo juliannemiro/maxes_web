@@ -62,8 +62,8 @@ export default function Header({
   if (isHomeHeader) {
     return (
       <header className="sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-foreground)] shadow-md">
-        <div className="grid min-h-[5.75rem] w-full grid-cols-[auto_minmax(0,40rem)_auto] items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-4 sm:py-5 lg:min-h-[7.2rem] lg:py-[1.65rem] xl:px-6">
-          <Link href="/" className="flex shrink-0 flex-col items-start leading-none">
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 sm:min-h-[5.75rem] sm:grid-cols-[auto_minmax(0,40rem)_auto] sm:justify-between sm:gap-2 sm:px-4 sm:py-4 lg:min-h-[7.2rem] lg:gap-4 lg:py-[1.65rem] xl:px-6">
+          <Link href="/" aria-label="Ir al inicio" className="hidden shrink-0 flex-col items-start leading-none sm:flex">
             <span className="text-4xl font-black tracking-tight text-[var(--color-header-foreground)] lg:text-[2.65rem]">
               M<span className="text-[var(--color-primary)]">@</span>XES
             </span>
@@ -80,20 +80,20 @@ export default function Header({
             size="large"
           />
 
-          <div className="flex shrink-0 items-center gap-5 lg:gap-6">
-            <Link href="/favoritos" aria-label="Ver favoritos" className="relative flex h-12 w-14 items-center justify-center rounded-md bg-white text-[var(--color-foreground)] transition hover:brightness-[0.98] lg:h-14 lg:w-[4.5rem]">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-5 lg:gap-6">
+            <Link href="/favoritos" aria-label="Ver favoritos" className="relative flex h-10 w-10 items-center justify-center rounded-md bg-white text-[var(--color-foreground)] transition hover:brightness-[0.98] sm:h-12 sm:w-14 lg:h-14 lg:w-[4.5rem]">
               <svg viewBox="0 0 24 24" className={`h-7 w-7 text-amber-500 ${favoritosCount > 0 ? "fill-amber-400" : "fill-transparent"}`} stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z" />
               </svg>
-              <span className="absolute -right-2 -top-2 inline-flex min-h-[1.7rem] min-w-[1.7rem] items-center justify-center rounded-full bg-amber-400 px-2 py-1 text-[0.8rem] font-black leading-none text-black">{favoritosCount}</span>
+              <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1 py-0.5 text-[0.65rem] font-black leading-none text-black sm:-right-2 sm:-top-2 sm:min-h-[1.7rem] sm:min-w-[1.7rem] sm:px-2 sm:py-1 sm:text-[0.8rem]">{favoritosCount}</span>
             </Link>
-            <button type="button" onClick={() => setOpen(true)} aria-label="Ver pedido" className="relative flex h-12 w-14 items-center justify-center rounded-md bg-white text-[var(--color-foreground)] transition hover:brightness-[0.98] lg:h-14 lg:w-[4.5rem]">
+            <button type="button" onClick={() => setOpen(true)} aria-label="Ver pedido" className="relative flex h-10 w-10 items-center justify-center rounded-md bg-white text-[var(--color-foreground)] transition hover:brightness-[0.98] sm:h-12 sm:w-14 lg:h-14 lg:w-[4.5rem]">
               <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <circle cx="9" cy="20" r="1.5" />
                 <circle cx="18" cy="20" r="1.5" />
                 <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.74L20 7H7" />
               </svg>
-              <span className="absolute -right-2 -top-2 inline-flex min-h-[1.7rem] min-w-[1.7rem] items-center justify-center rounded-full bg-[var(--color-primary)] px-2 py-1 text-[0.8rem] font-black leading-none text-[var(--color-primary-foreground)]">{cartCount}</span>
+              <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 py-0.5 text-[0.65rem] font-black leading-none text-[var(--color-primary-foreground)] sm:-right-2 sm:-top-2 sm:min-h-[1.7rem] sm:min-w-[1.7rem] sm:px-2 sm:py-1 sm:text-[0.8rem]">{cartCount}</span>
             </button>
           </div>
         </div>

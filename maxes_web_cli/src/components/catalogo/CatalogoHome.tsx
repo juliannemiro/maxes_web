@@ -152,21 +152,6 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
     selectedDetalleName ? { id: "subcategoria", label: selectedDetalleName, onRemove: () => handleSelectCategoriaDetalle(undefined) } : null,
     search.trim() ? { id: "busqueda", label: search.trim(), onRemove: () => setSearch("") } : null,
   ].filter((filter): filter is { id: string; label: string; onRemove: () => void } => filter !== null);
-  const primaryFilterId = search.trim()
-    ? "busqueda"
-    : selectedDetalleName
-      ? "subcategoria"
-      : selectedCategoriaName
-        ? "categoria"
-        : novedadesActive
-          ? "novedades"
-          : featuredOnly
-            ? "destacados"
-            : undefined;
-  const primaryFilter = activeFilters.find((filter) => filter.id === primaryFilterId);
-  const secondaryFilters = activeFilters.filter((filter) => filter.id !== primaryFilterId);
-  const activeFilterLabel = primaryFilter?.label || "TODOS LOS ARTICULOS";
-
   if (config?.mantenimiento) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4">
@@ -203,44 +188,34 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
         onReset={handleResetFilters}
       />
 
-      <section className="px-4 pt-6">
+      <section className="px-3 pt-4 sm:px-4 sm:pt-6">
         <Carrusel carruseles={carruseles} />
       </section>
 
-      <main id="catalogo-productos" className="w-full scroll-mt-36 px-4 pb-16 pt-8 xl:px-6">
-        <div className="mb-6 border-y border-black/10 bg-[var(--color-primary)] px-3 py-2 text-[var(--color-primary-foreground)] shadow-sm sm:px-4">
-          <div className="flex min-w-0 items-center gap-2">
+      <main id="catalogo-productos" className="w-full scroll-mt-36 px-3 pb-16 pt-5 sm:px-4 sm:pt-8 xl:px-6">
+        <div className="mb-4 border-y border-black/10 bg-[var(--color-primary)] px-3 py-3 text-[var(--color-primary-foreground)] shadow-sm sm:mb-6 sm:px-4 sm:py-2">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <h1 className="shrink-0 whitespace-nowrap text-sm font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-base lg:text-lg">
-                {activeFilterLabel}
-                <span className="ml-1 whitespace-nowrap text-xs font-bold text-black/65 sm:hidden">
-                  ({totalCount} Art.)
-                </span>
-                <span className="ml-2 hidden whitespace-nowrap text-sm font-bold text-black/65 sm:inline">
-                  ({totalCount} artículos)
-                </span>
-              </h1>
-
-              {secondaryFilters.map((filter) => (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={filter.onRemove}
-                  className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-black/15 bg-white/80 px-2.5 text-xs font-bold text-[var(--color-foreground)] transition hover:bg-white"
-                >
-                  <span>{filter.label}</span>
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-                </button>
-              ))}
-
-              {activeFilters.length > 0 && (
-                <button type="button" onClick={handleResetFilters} className="h-7 shrink-0 whitespace-nowrap rounded-full px-2 text-xs font-bold text-[var(--color-foreground)] underline decoration-2 underline-offset-2 transition hover:no-underline">
-                  Borrar filtros
-                </button>
+              {activeFilters.length === 0 ? (
+                <h1 className="shrink-0 whitespace-nowrap text-sm font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-base">
+                  Catálogo completo
+                  <span className="ml-1 text-xs font-bold text-black/65 sm:hidden">({totalCount} art.)</span>
+                  <span className="ml-2 hidden text-sm font-bold text-black/65 sm:inline">({totalCount} artículos)</span>
+                </h1>
+              ) : (
+                <>
+                  <p className="shrink-0 whitespace-nowrap text-sm font-black uppercase leading-tight text-[var(--color-foreground)] sm:text-base">Filtros aplicados</p>
+                  {activeFilters.map((filter) => (
+                    <button key={filter.id} type="button" onClick={filter.onRemove} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-black/15 bg-white/80 px-2.5 text-xs font-bold text-[var(--color-foreground)] transition hover:bg-white">
+                      <span>{filter.label}</span>
+                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+                    </button>
+                  ))}
+                </>
               )}
             </div>
 
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <div className="flex w-full shrink-0 items-center gap-1.5 sm:w-auto sm:gap-2">
               <p className="hidden text-xs font-semibold uppercase tracking-[0.2em] text-black/65 sm:block">
                 Ordenar
               </p>
@@ -248,7 +223,7 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
                 aria-label="Ordenar"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="h-8 w-[7.5rem] rounded-md border border-black/15 bg-white/70 px-2 text-xs font-semibold text-[var(--color-foreground)] outline-none sm:hidden"
+                className="h-9 min-w-0 flex-1 rounded-md border border-black/15 bg-white/80 px-2 text-xs font-semibold text-[var(--color-foreground)] outline-none sm:hidden"
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -277,7 +252,7 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="h-[430px] animate-pulse rounded-lg border border-[var(--color-border)] bg-white p-4" />
             ))}
@@ -288,7 +263,7 @@ export default function CatalogoHome({ sharedArticuloCodigo }: CatalogoHomeProps
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
               {articulos.map((articulo) => (
                 <ProductoCard key={articulo.id} articulo={articulo} />
               ))}

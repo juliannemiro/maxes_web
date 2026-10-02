@@ -126,15 +126,15 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
   const imagenAlt = altImagenArticulo(articulo);
 
   return (
-    <article className="flex h-full flex-col rounded-[18px] bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-      <div className="grid min-h-[3rem] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-1">
+    <article className="flex h-full min-w-0 flex-col rounded-[14px] bg-white p-2 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:rounded-[18px] sm:p-3">
+      <div className="grid min-h-[2.5rem] grid-cols-[2rem_minmax(0,1fr)_2rem] items-start gap-1 sm:min-h-[3rem] sm:grid-cols-[2.75rem_minmax(0,1fr)_2.75rem]">
         <CompartirArticulo
           articulo={articulo}
           precio={formatPrice(precioActual)}
           className="relative justify-self-start"
           menuAlign="left"
         />
-        <h3 className="flex min-h-[3rem] items-end justify-center text-center text-[16px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance">
+        <h3 className="flex min-h-[2.5rem] items-end justify-center text-center text-[13px] font-bold leading-[1.15] text-[var(--color-card-foreground)] text-balance sm:min-h-[3rem] sm:text-[16px]">
           {articulo.articulo_des || articulo.descripcion_publica || "Producto sin descripción"}
         </h3>
         <button
@@ -142,11 +142,11 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
           onClick={() => toggleFavorito(articulo.id)}
           aria-label={favorito ? "Quitar de favoritos" : "Agregar a favoritos"}
           aria-pressed={favorito}
-          className="flex h-11 w-11 items-center justify-center justify-self-end rounded-full bg-white text-[var(--color-muted-foreground)] transition hover:scale-105 hover:bg-amber-50"
+          className="flex h-8 w-8 items-center justify-center justify-self-end rounded-full bg-white text-[var(--color-muted-foreground)] transition hover:scale-105 hover:bg-amber-50 sm:h-11 sm:w-11"
         >
           <svg
             viewBox="0 0 24 24"
-            className={`h-7 w-7 transition ${
+            className={`h-5 w-5 transition sm:h-7 sm:w-7 ${
               favorito
                 ? "fill-amber-400 text-amber-500"
                 : "fill-transparent text-[var(--color-muted-foreground)]"
@@ -166,7 +166,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
         </p>
       )}
 
-      <div className="relative mt-1.5 aspect-[1/0.84] w-full overflow-hidden rounded-lg bg-white">
+      <div className="relative mt-1 aspect-square w-full overflow-hidden rounded-lg bg-white sm:mt-1.5 sm:aspect-[1/0.84]">
         {images.map((image, index) => (
           <OptimizedImage
             key={`${articulo.id}-${image}-${index}`}
@@ -234,7 +234,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
           {formatPrice(precioActual)}
         </p>
 
-        <div className="mt-1.5 flex items-stretch gap-1.5">
+        <div className="mt-1.5 flex items-stretch gap-1">
         <input
           type="text"
           value={comment}
@@ -242,7 +242,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
           placeholder="¿Comentarios?"
           aria-label="Comentarios optativos"
           maxLength={30}
-          className="min-w-0 flex-[1.1] rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-2 py-1 text-[11px] italic text-[var(--color-foreground)] outline-none placeholder:italic focus:border-[var(--color-primary)]"
+          className="hidden min-w-0 flex-[1.1] rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-2 py-1 text-[11px] italic text-[var(--color-foreground)] outline-none placeholder:italic focus:border-[var(--color-primary)] sm:block"
           />
           <CantidadSelector
             value={qty}
@@ -250,14 +250,14 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
             onDecrement={() => handleQtyChange(String(Math.max(0, Number.parseInt(qty || "0", 10) - 1)))}
             onIncrement={() => handleQtyChange(String((Number.parseInt(qty || "0", 10) || 0) + 1))}
             error={qtyError}
-            className="w-[6.9rem] rounded-md border-[var(--color-border)] bg-[var(--color-background)]"
-            buttonClassName="px-2 py-1 text-sm text-[var(--color-foreground)] hover:bg-black/5"
+            className="w-[5.6rem] rounded-md border-[var(--color-border)] bg-[var(--color-background)] sm:w-[6.9rem]"
+            buttonClassName="px-1.5 py-1 text-sm text-[var(--color-foreground)] hover:bg-black/5 sm:px-2"
             valueClassName="px-1 text-[11px] font-semibold text-[var(--color-foreground)] placeholder:text-[var(--color-muted-foreground)]"
           />
           <button
             type="button"
             onClick={handleAdd}
-            className={`min-w-[5.7rem] rounded-md px-3 py-1 text-[12px] font-bold transition-all duration-300 hover:brightness-95 ${
+            className={`min-w-0 flex-1 rounded-md px-1 py-1 text-[10px] font-bold transition-all duration-300 hover:brightness-95 sm:min-w-[5.7rem] sm:flex-none sm:px-3 sm:text-[12px] ${
               actionLabel === "✓"
                 ? "scale-[1.03] bg-emerald-500 text-white shadow-[0_0_0_3px_rgba(16,185,129,0.18)]"
                 : "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
@@ -276,7 +276,7 @@ export default function ProductoCard({ articulo }: ProductoCardProps) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-1 block w-full text-center text-[11px] font-semibold text-[var(--color-muted-foreground)] underline-offset-2 transition hover:text-[var(--color-foreground)] hover:underline"
+          className="mt-1 hidden w-full text-center text-[11px] font-semibold text-[var(--color-muted-foreground)] underline-offset-2 transition hover:text-[var(--color-foreground)] hover:underline sm:block"
         >
           Ver pedido
         </button>

@@ -121,7 +121,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 sm:items-center sm:px-4 sm:py-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -129,7 +129,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
         role="dialog"
         aria-modal="true"
         aria-labelledby={`producto-modal-title-${articulo.id}`}
-        className="relative flex w-full max-w-6xl flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl"
+        className="relative flex max-h-[88dvh] w-full max-w-6xl flex-col overflow-y-auto rounded-t-[24px] bg-white shadow-2xl sm:max-h-[90vh] sm:overflow-hidden sm:rounded-[28px]"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -152,8 +152,8 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
         />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <div className="flex min-h-0 flex-col bg-[linear-gradient(180deg,#fafafa_0%,#f3f3f3_100%)] p-8 sm:p-10">
-            <div className="relative flex min-h-[320px] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white">
+          <div className="flex min-h-0 flex-col bg-[linear-gradient(180deg,#fafafa_0%,#f3f3f3_100%)] p-4 sm:p-10">
+            <div className="relative flex h-[28vh] min-h-[11rem] max-h-[15rem] items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white sm:h-auto sm:max-h-none sm:min-h-[320px] sm:flex-1 sm:rounded-3xl">
               {gallery.map((image, index) => (
                 <OptimizedImage
                   key={`${articulo.id}-modal-${image}-${index}`}
@@ -194,7 +194,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
             </div>
 
             {gallery.length > 1 && (
-              <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+              <div className="mt-4 hidden gap-3 overflow-x-auto pb-1 sm:flex">
                 {gallery.map((image, index) => (
                   <button
                     key={`${articulo.id}-thumb-${index}`}
@@ -214,7 +214,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
           </div>
 
           <div className="flex min-h-0 flex-col">
-            <div className="flex flex-1 flex-col p-8 sm:p-10">
+            <div className="flex flex-1 flex-col p-4 sm:p-10">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
                   Cod: {articulo.codigo || "N/D"}
@@ -244,13 +244,13 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                 <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-slate-500">
                   Descripción
                 </p>
-                <div className="mt-2 min-h-[120px] max-h-[60vh] overflow-y-auto pr-2 text-sm leading-6 text-slate-700">
+                <div className="mt-2 max-h-28 overflow-y-auto pr-2 text-sm leading-6 text-slate-700 sm:min-h-[120px] sm:max-h-[60vh]">
                   {articulo.descripcion_detallada || articulo.descripcion_publica || "Sin descripción disponible."}
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-white p-8 sm:p-10">
+            <div className="sticky bottom-0 border-t border-slate-200 bg-white p-4 sm:static sm:p-10">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -259,7 +259,7 @@ export default function ProductoModal({ articulo, isOpen, onClose }: ProductoMod
                   placeholder="¿Comentarios?"
                   aria-label="Comentarios optativos"
                   maxLength={30}
-                  className="min-w-0 flex-[1.7] rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-3 text-sm italic text-[var(--color-foreground)] outline-none placeholder:italic focus:border-[var(--color-primary)]"
+                  className="hidden min-w-0 flex-[1.7] rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-3 text-sm italic text-[var(--color-foreground)] outline-none placeholder:italic focus:border-[var(--color-primary)] sm:block"
                 />
                 <CantidadSelector
                   value={qty}
