@@ -162,13 +162,9 @@ export function serializeArticulo(
 
 export async function getCategorias() {
   const categorias = await prisma.$queryRawUnsafe<CategoriaPublica[]>(`
-    SELECT DISTINCT c.categoria_origen_id AS id,c.codigo,c.nombre,c.activo
+    SELECT c.categoria_origen_id AS id,c.codigo,c.nombre,c.activo
     FROM categoria_web c
-    INNER JOIN articulo_web a ON a.categoria_id=c.categoria_origen_id
     WHERE c.activo=true
-      AND a.visible='S'
-      AND a.precio_mayorista>0
-      AND a.precio_minorista>0
     ORDER BY nombre,codigo
   `);
 
