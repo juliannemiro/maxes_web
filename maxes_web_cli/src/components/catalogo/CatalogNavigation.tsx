@@ -58,6 +58,10 @@ export default function CatalogNavigation({
     if (id === undefined) setIsOpen(false);
   };
 
+  // En escritorio, recorrer las categorías sólo previsualiza sus
+  // subcategorías. El filtro se aplica únicamente al hacer clic.
+  const previsualizarCategoria = (id: number) => setMenuCategoria(id);
+
   const openMobileCategories = () => {
     setMenuCategoria(selectedCategoria);
     setMobileStep("categorias");
@@ -111,7 +115,7 @@ export default function CatalogNavigation({
               <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-[var(--color-muted-foreground)]">Categorías</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <button type="button" onClick={() => selectCategoria(undefined)} className="rounded px-2 py-2.5 text-left text-sm font-semibold hover:bg-[var(--color-muted)]">Todas las categorías</button>
-                {sortedCategorias.map((categoria) => <button key={categoria.id} type="button" onClick={() => selectCategoria(categoria.id)} className={`rounded px-2 py-2.5 text-left text-sm transition hover:bg-[var(--color-muted)] ${menuCategoria === categoria.id ? "bg-[var(--color-primary)] font-bold" : ""}`}>{categoria.nombre || categoria.codigo}</button>)}
+                {sortedCategorias.map((categoria) => <button key={categoria.id} type="button" onMouseEnter={() => previsualizarCategoria(categoria.id)} onFocus={() => previsualizarCategoria(categoria.id)} onClick={() => selectCategoria(categoria.id)} className={`rounded px-2 py-2.5 text-left text-sm transition hover:bg-[var(--color-muted)] ${menuCategoria === categoria.id ? "bg-[var(--color-primary)] font-bold" : ""}`}>{categoria.nombre || categoria.codigo}</button>)}
               </div>
             </div>
             <div className="py-3 md:pl-5">
